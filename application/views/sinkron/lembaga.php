@@ -1,7 +1,5 @@
 <?php $this->load->view('admin/head'); ?>
 
-
-<main class="flex-1 p-4 md:p-6 overflow-y-auto">
     <!-- Header Halaman -->
     <div class="flex flex-col md:flex-row md:items-center justify-between mb-6">
         <div>
@@ -100,7 +98,6 @@
            border border-gray-200 dark:border-gray-700"> </pre>
     </div>
 
-</main>
 <?php $this->load->view('admin/foot'); ?>
 <script>
     let state = {

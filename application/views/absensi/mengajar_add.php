@@ -1,6 +1,6 @@
 <?php $this->load->view('admin/head'); ?>
 
-<main class="flex-1 p-4 md:p-6 overflow-y-auto">
+
     <!-- Header Halaman -->
     <div class="flex flex-col md:flex-row md:items-center justify-between mb-4">
         <div>
@@ -97,7 +97,7 @@
 
     </div>
 
-</main>
+
 
 <!-- Modal Tambah Mapel -->
 <div id="inputModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">

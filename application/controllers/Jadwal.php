@@ -19,7 +19,7 @@ class Jadwal extends MY_Controller
     public function index()
     {
         $usrdtl = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser'")->row();
-
+        $data['hideSidebar'] = true;
         $data['judul'] = 'Data Jadwal Pelajaran';
         $data['menu'] = 'jadwal';
         $data['sub'] = 'jadwal';

@@ -52,7 +52,7 @@
     }
 </style>
 
-<main class="flex-1 p-4 md:p-6 overflow-y-auto">
+
     <!-- Header Halaman -->
     <div class="flex flex-col md:flex-row md:items-center justify-between mb-4">
         <div>
@@ -356,7 +356,7 @@
     </div>
 
 
-</main>
+
 <?php $this->load->view('admin/foot'); ?>
 
 <script>

@@ -5,7 +5,7 @@
         @apply w-24 md:w-28 px-2 py-1 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500;
     }
 </style>
-<main class="flex-1 p-4 md:p-6 overflow-y-auto">
+
     <!-- Header Dashboard -->
     <div class="mb-6">
         <h2 class="text-2xl font-bold">Setting aplikasi</h2>
@@ -85,7 +85,7 @@
         </div>
     </div>
 
-</main>
+
 <?php $this->load->view('admin/foot'); ?>
 <script>
     function loadJam() {

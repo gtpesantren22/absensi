@@ -15,6 +15,7 @@ class Mapel extends MY_Controller
 
 		$this->mustLogin();
 		$this->AdminOrSuper();
+		$this->iduser = $this->session->userdata('id_user');
 	}
 
 	public function index()

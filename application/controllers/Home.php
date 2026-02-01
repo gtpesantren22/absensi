@@ -28,6 +28,10 @@ class Home extends MY_Controller
 			$data['jumlah_jadwal'] = $this->db->query("SELECT hari FROM jadwal WHERE id_lembaga = '$usrdtl->id_lembaga'")->num_rows();
 
 			$data['sekolah'] = $this->db->query("SELECT s.nama, s.alamat, s.nickname FROM user u JOIN lembaga s ON u.id_lembaga=s.id_lembaga WHERE id_user = '$this->iduser' ")->row();
+			$idguru = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser' ")->row();
+
+			$data['idguru'] = $idguru->id_guru;
+			$data['hadir'] = $this->model->getBy2('kehadiran_guru', 'id_guru', $idguru->id_guru, 'tanggal', date('Y-m-d'))->row();
 
 			$this->load->view('admin/home', $data);
 		} else if ($this->level === 'super_admin') {
@@ -38,6 +42,10 @@ class Home extends MY_Controller
 			$data['jumlah_siswa'] = $this->db->count_all('siswa');
 			$data['jumlah_kelas'] = $this->db_active->count_all('kelas');
 			$data['jumlah_jadwal'] = $this->db->count_all('jadwal');
+
+			$idguru = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser' ")->row();
+			$data['hadir'] = $this->model->getBy2('kehadiran_guru', 'id_guru', $idguru->id_guru, 'tanggal', date('Y-m-d'))->row();
+			$data['idguru'] = $idguru->id_guru;
 
 			$data['sekolah'] = $this->db->query("SELECT s.nama, s.alamat, s.nickname FROM user u JOIN lembaga s ON u.id_lembaga=s.id_lembaga WHERE id_user = '$this->iduser' ")->row();
 

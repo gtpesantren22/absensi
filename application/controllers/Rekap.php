@@ -18,8 +18,8 @@ class Rekap extends MY_Controller
 		$this->load->library('Dynamic_db'); // load dulu
 		$this->db_active = $this->dynamic_db->connect(); // baru panggil method connect()
 
-		$this->AdminOrSuper();
 		$this->mustLogin();
+		$this->AdminOrSuper();
 		$this->iduser = $this->session->userdata('id_user');
 	}
 

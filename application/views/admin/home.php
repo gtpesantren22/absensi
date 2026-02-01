@@ -1,5 +1,5 @@
 <?php $this->load->view('admin/head'); ?>
-<main class="flex-1 p-4 md:p-6 overflow-y-auto">
+
     <!-- Header Dashboard -->
     <div class="mb-6">
         <h2 class="text-2xl font-bold">Dashboard Absensi</h2>
@@ -65,6 +65,86 @@
 
         </div>
 
+    </div>
+
+    <div class="max-w-xl mx-auto mb-4">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-md p-4">
+
+            <!-- HEADER -->
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">
+                        Kehadiran Hari Ini
+                    </h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                        <?= tanggal_indo(date('d-m-Y'), true) ?>
+                    </p>
+                </div>
+                <?php if ($hadir): ?>
+                    <span class="px-3 py-1 text-sm rounded-full 
+                bg-green-100 text-green-700 
+                dark:bg-green-900 dark:text-green-300">
+                        Hadir
+                    </span>
+                <?php endif ?>
+            </div>
+
+            <!-- ABSENSI DATANG -->
+            <div class="border border-gray-200 dark:border-gray-700 rounded-xl p-4 mb-4">
+                <div class="flex items-center justify-between mb-2">
+                    <h4 class="font-medium text-gray-800 dark:text-gray-100">
+                        Absensi Datang
+                    </h4>
+                    <span class="text-sm text-green-600 dark:text-green-400 font-medium">
+                        Waktu
+                    </span>
+                </div>
+
+                <div class="flex justify-between text-sm mb-3">
+                    <span class="text-gray-500 dark:text-gray-400">Jam Kehadiran</span>
+                    <span class="font-medium text-gray-800 dark:text-gray-100">
+                        <?= $hadir ? date('H:i', strtotime($hadir->waktu)) : '--' ?>
+                    </span>
+                </div>
+
+                <?php if (!$hadir): ?>
+                    <!-- Tombol muncul jika belum absen -->
+                    <button onclick="window.location.href='<?= base_url() ?>qrcode/scan/masuk'"
+                        class="w-full py-2 rounded-lg bg-primary-600 hover:bg-primary-700 
+                       text-white font-medium transition">
+                        Absen Datang
+                    </button>
+                <?php endif ?>
+            </div>
+
+            <?php if ($hadir): ?>
+                <!-- ABSENSI PULANG -->
+                <div class="border border-gray-200 dark:border-gray-700 rounded-xl p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="font-medium text-gray-800 dark:text-gray-100">
+                            Absensi Pulang
+                        </h4>
+                        <span class="text-sm text-yellow-600 dark:text-yellow-400 font-medium">
+                            Waktu
+                        </span>
+                    </div>
+
+                    <div class="flex justify-between text-sm mb-3">
+                        <span class="text-gray-500 dark:text-gray-400">Jam Kepulangan</span>
+                        <span class="font-medium text-gray-800 dark:text-gray-100">
+                            <?= $hadir->pulang != null ? date('H:i', strtotime($hadir->pulang)) : '--' ?>
+                        </span>
+                    </div>
+                    <?php if ($hadir && $hadir->pulang === null): ?>
+                        <button onclick="window.location.href='<?= base_url() ?>qrcode/scan/pulang'"
+                            class="w-full py-2 rounded-lg bg-primary-600 hover:bg-primary-700 
+                       text-white font-medium transition">
+                            Absen Pulang
+                        </button>
+                    <?php endif ?>
+                </div>
+            <?php endif ?>
+        </div>
     </div>
 
     <!-- Statistik Utama -->
@@ -259,5 +339,5 @@
             </div>
         </div> -->
     </div>
-</main>
+
 <?php $this->load->view('admin/foot'); ?>

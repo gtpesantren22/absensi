@@ -1,3 +1,4 @@
+</main>
 </div>
 
 <!-- Footer -->
@@ -30,19 +31,48 @@
 
 <script>
     // Toggle Sidebar di Mobile
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    const sidebar = document.getElementById('sidebar');
-    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    // const header = document.querySelector('header');
+    // const sidebar = document.getElementById('sidebar');
+    // const overlay = document.getElementById('sidebarOverlay');
 
-    sidebarToggle.addEventListener('click', () => {
-        sidebar.classList.toggle('-translate-x-full');
-        sidebarOverlay.style.display = sidebar.classList.contains('-translate-x-full') ? 'none' : 'block';
+    // const h = header.offsetHeight;
+    // sidebar.style.top = h + 'px';
+    // overlay.style.top = h + 'px';
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const sidebar = document.getElementById('sidebar');
+        const toggle = document.getElementById('sidebarToggle');
+        const overlay = document.getElementById('sidebarOverlay');
+        const main = document.getElementById('mainContent');
+
+        if (!sidebar || !toggle || !overlay) return;
+
+        const open = () => {
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+            if (window.innerWidth >= 768) main.classList.add('md:ml-64');
+        };
+
+        const close = () => {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+            main.classList.remove('md:ml-64');
+        };
+
+        toggle.addEventListener('click', () =>
+            sidebar.classList.contains('-translate-x-full') ? open() : close()
+        );
+
+        overlay.addEventListener('click', close);
+
+        // Desktop resize safety
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 768 && !sidebar.classList.contains('-translate-x-full')) {
+                main.classList.add('md:ml-64');
+            }
+        });
     });
 
-    sidebarOverlay.addEventListener('click', () => {
-        sidebar.classList.add('-translate-x-full');
-        sidebarOverlay.style.display = 'none';
-    });
     document.addEventListener('click', (e) => {
         const toggle = e.target.closest('[data-dropdown-toggle]');
         if (!toggle) return;

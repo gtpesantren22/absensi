@@ -1,5 +1,5 @@
 <?php $this->load->view('admin/head'); ?>
-<main class="flex-1 p-4 md:p-6 overflow-y-auto">
+
     <!-- Header Dashboard -->
     <div class="mb-6">
         <h2 class="text-2xl font-bold">Dashboard Guru</h2>
@@ -228,5 +228,5 @@
 
     </div>
 
-</main>
+
 <?php $this->load->view('admin/foot'); ?>
