@@ -14,6 +14,7 @@ class Sinkron extends MY_Controller
 		$this->mustLogin();
 		$this->onlyAdminSuper();
 		$this->iduser = $this->session->userdata('id_user');
+		$this->id_lembaga = $this->db->query("SELECT id_lembaga FROM user WHERE id_user = '$this->iduser'")->row('id_lembaga');
 	}
 
 	public function guru()
@@ -512,5 +513,35 @@ class Sinkron extends MY_Controller
 
 		$json = json_decode($result, true);
 		return $json ?? null;
+	}
+
+	public function akun()
+	{
+		$id = $this->input->post('id', true);
+
+		$guru = $this->db->query("SELECT * FROM guru WHERE id_guru = '$id' ")->row();
+		$reg = $this->db->query("SELECT * FROM registrasi WHERE id_guru = '$id' AND satminkal ")->row();
+		$passs = generatePassword6();
+		$cek = $this->db->query("SELECT * FROM user WHERE id_guru = '$id' ")->row();
+		if (!$cek) {
+			$userdata = [
+				'id_user' => $this->uuid->v4(),
+				'nama' => $guru->nama,
+				'jabatan' => 'Guru',
+				'username' => generateUsernameUnique($guru->nama),
+				'password' => password_hash($passs, PASSWORD_BCRYPT),
+				'pass_v' => $passs,
+				'level' => 'guru',
+				'id_guru' => $id,
+				'id_lembaga' => $reg->id_lembaga
+			];
+			$sql = $this->db->insert('user', $userdata);
+		}
+
+		if ($sql) {
+			echo json_encode(['status' => true]);
+		} else {
+			echo json_encode(['status' => false]);
+		}
 	}
 }
