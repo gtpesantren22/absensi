@@ -129,6 +129,7 @@
 
 
 
+
 <?php $this->load->view('admin/foot'); ?>
 <script>
     let id_kelas = '<?= $data_kelas->id_kelas ?>';

@@ -264,10 +264,10 @@ class Kelas extends MY_Controller
 		$this->db->join('siswa', 'registrasi_siswa.id_siswa = siswa.id_siswa', 'left');
 		if (!empty($search)) {
 			$this->db->group_start()
-				->like('siswa.kode_siswa', $search)
+				->like('siswa.nisn', $search)
 				->or_like('siswa.nama', $search)
 				->or_like('siswa.jkl', $search)
-				->or_like('siswa.no_hp', $search)
+				->or_like('siswa.alamat', $search)
 				->group_end();
 		}
 		// hitung siswa unik
@@ -285,10 +285,10 @@ class Kelas extends MY_Controller
 		$this->db->join('siswa', 'registrasi_siswa.id_siswa = siswa.id_siswa', 'left');
 		if (!empty($search)) {
 			$this->db->group_start()
-				->like('siswa.kode_siswa', $search)
+				->like('siswa.nisn', $search)
 				->or_like('siswa.nama', $search)
 				->or_like('siswa.jkl', $search)
-				->or_like('siswa.no_hp', $search)
+				->or_like('siswa.alamat', $search)
 				->group_end();
 		}
 		// hitung siswa unik
