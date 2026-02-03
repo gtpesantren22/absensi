@@ -3,6 +3,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
 require FCPATH . 'vendor/autoload.php';
 
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
 class Kelas extends MY_Controller
 {
@@ -180,6 +181,10 @@ class Kelas extends MY_Controller
 		$sheet->setCellValue('A2', 'Nama Siswa');
 		$sheet->setCellValue('B2', 'NISN');
 		// Set lebar kolom
+		/* 🔥 PAKSA KOLOM B JADI TEXT */
+		$sheet->getStyle('B')->getNumberFormat()
+			->setFormatCode(NumberFormat::FORMAT_TEXT);
+
 		foreach (range('A', 'B') as $col) {
 			$sheet->getColumnDimension($col)->setAutoSize(true);
 		}
