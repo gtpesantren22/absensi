@@ -79,19 +79,24 @@ class User extends MY_Controller
 	{
 		$gurudata = $this->db->query("SELECT guru.* FROM registrasi JOIN guru ON registrasi.id_guru=guru.id_guru WHERE registrasi.id_lembaga = '$this->id_lembaga' AND satminkal = 1 ")->result();
 		foreach ($gurudata as $guru) {
+			$cek = $this->db->query("SELECT * FROM user WHERE id_guru = '$guru->id_guru' ")->row();
 			$passs = generatePassword6();
-			$userdata = [
-				'id_user' => $this->uuid->v4(),
-				'nama' => $guru->nama,
-				'jabatan' => 'Guru',
-				'username' => generateUsernameUnique($guru->nama),
-				'password' => password_hash($passs, PASSWORD_BCRYPT),
-				'pass_v' => $passs,
-				'level' => 'guru',
-				'id_guru' => $guru->id_guru,
-				'id_lembaga' => $this->id_lembaga
-			];
-			$sql = $this->db->insert('user', $userdata);
+			if (!$cek) {
+				$userdata = [
+					'id_user' => $this->uuid->v4(),
+					'nama' => $guru->nama,
+					'jabatan' => 'Guru',
+					'username' => generateUsernameUnique($guru->nama),
+					'password' => password_hash($passs, PASSWORD_BCRYPT),
+					'pass_v' => $passs,
+					'level' => 'guru',
+					'id_guru' => $guru->id_guru,
+					'id_lembaga' => $this->id_lembaga
+				];
+				$sql = $this->db->insert('user', $userdata);
+			} else {
+				continue;
+			}
 		}
 		if ($sql) {
 			echo json_encode(['status' => true]);
