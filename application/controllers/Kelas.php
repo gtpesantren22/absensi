@@ -452,7 +452,8 @@ class Kelas extends MY_Controller
 			if (empty($row[1])) continue;
 
 			// Cari id_siswa berdasarkan nisn
-			$siswa = $this->model->getBy('siswa', 'nisn', trim($row[1]))->row();
+			$nisn = trim($row[1]);
+			$siswa = $this->db->query("SELECT * FROM siswa WHERE nisn = '$nisn' ")->row();
 			if ($siswa) {
 				$dataInsert[] = [
 					'id_kelas' => $id_kelas,
