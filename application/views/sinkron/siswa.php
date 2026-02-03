@@ -13,98 +13,98 @@
     }
 </style>
 
-    <!-- Header Halaman -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between mb-6">
-        <div>
-            <h2 class="text-2xl font-bold">Data Siswa</h2>
-            <p class="text-gray-600 dark:text-gray-400">Halaman kelola data siswa</p>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2 mt-4 md:mt-0">
-
-            <button id="start" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
-                <i class="fas fa-refresh mr-2"></i>
-                Sinkron Data Siswa
-            </button>
-        </div>
+<!-- Header Halaman -->
+<div class="flex flex-col md:flex-row md:items-center justify-between mb-6">
+    <div>
+        <h2 class="text-2xl font-bold">Data Siswa</h2>
+        <p class="text-gray-600 dark:text-gray-400">Halaman kelola data siswa</p>
     </div>
 
+    <div class="flex flex-wrap items-center gap-2 mt-4 md:mt-0">
 
-    <!-- Tabel Data Siswa -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl flux-shadow overflow-hidden mb-6">
-        <!-- Header Tabel dengan Aksi -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-            <h3 class="font-bold text-lg">Daftar Siswa</h3>
+        <button id="start" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
+            <i class="fas fa-refresh mr-2"></i>
+            Sinkron Data Siswa
+        </button>
+    </div>
+</div>
 
-            <div class="flex items-center space-x-2 mt-2 md:mt-0">
-                <div class="relative">
-                    <select id="perPage" class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
-                        <option value="5">5</option>
-                        <option value="10" selected>10</option>
-                        <option value="25">25</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                    </select>
-                </div>
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i class="fas fa-search text-gray-400"></i>
-                    </div>
-                    <input type="search" id="search" class="pl-10 pr-4 py-2 w-full md:w-64 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Cari siswa...">
-                </div>
+
+<!-- Tabel Data Siswa -->
+<div class="bg-white dark:bg-gray-800 rounded-xl flux-shadow overflow-hidden mb-6">
+    <!-- Header Tabel dengan Aksi -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <h3 class="font-bold text-lg">Daftar Siswa</h3>
+
+        <div class="flex items-center space-x-2 mt-2 md:mt-0">
+            <div class="relative">
+                <select id="perPage" class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
             </div>
-        </div>
-
-        <!-- Tabel -->
-        <div class="overflow-x-auto px-4">
-            <table class="w-full" id="datatable">
-                <thead>
-                    <tr class="bg-gray-50 dark:bg-gray-700/50 text-left text-sm text-gray-500 dark:text-gray-400">
-                        <th onclick="sort('nisn')" class="py-3 px-4 font-medium cursor-pointer">NISN</th>
-                        <th onclick="sort('nama')" class="py-3 px-4 font-medium cursor-pointer">Nama Siswa</th>
-                        <th onclick="sort('jkl')" class="py-3 px-4 font-medium cursor-pointer">Jenis Kelamin</th>
-                        <th onclick="sort('alamat')" class="py-3 px-4 font-medium cursor-pointer">Alamat</th>
-                        <th class="py-3 px-4 font-medium">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700" id="tableBody">
-                    <!-- Baris Data 1 -->
-
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pagination -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700">
-            <div class="text-sm text-gray-500 dark:text-gray-400 mb-2 md:mb-0">
-                Menampilkan <span id="startRecord">1</span> sampai <span id="endRecord">10</span> dari <span id="totalRecords">100</span> entri
-            </div>
-            <div class="flex items-center space-x-2" id="pagination">
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+                <input type="search" id="search" class="pl-10 pr-4 py-2 w-full md:w-64 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Cari siswa...">
             </div>
         </div>
     </div>
 
-    <div id="pageInfo" class="hidden">
-        <div class="mt-6">
-            <div class="flex justify-between text-sm mb-1
+    <!-- Tabel -->
+    <div class="overflow-x-auto px-4">
+        <table class="w-full" id="datatable">
+            <thead>
+                <tr class="bg-gray-50 dark:bg-gray-700/50 text-left text-sm text-gray-500 dark:text-gray-400">
+                    <th onclick="sort('nisn')" class="py-3 px-4 font-medium cursor-pointer">NISN</th>
+                    <th onclick="sort('nama')" class="py-3 px-4 font-medium cursor-pointer">Nama Siswa</th>
+                    <th onclick="sort('jkl')" class="py-3 px-4 font-medium cursor-pointer">Jenis Kelamin</th>
+                    <th onclick="sort('alamat')" class="py-3 px-4 font-medium cursor-pointer">Alamat</th>
+                    <th class="py-3 px-4 font-medium">Aksi</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700" id="tableBody">
+                <!-- Baris Data 1 -->
+
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700">
+        <div class="text-sm text-gray-500 dark:text-gray-400 mb-2 md:mb-0">
+            Menampilkan <span id="startRecord">1</span> sampai <span id="endRecord">10</span> dari <span id="totalRecords">100</span> entri
+        </div>
+        <div class="flex items-center space-x-2" id="pagination">
+        </div>
+    </div>
+</div>
+
+<div id="pageInfo" class="hidden">
+    <div class="mt-6">
+        <div class="flex justify-between text-sm mb-1
                 text-gray-700 dark:text-gray-300">
-                <span id="progressText">0 / 0</span>
-                <span id="progressPercent">0%</span>
-            </div>
-
-            <div class="w-full rounded-full h-4 overflow-hidden
-                bg-gray-200 dark:bg-gray-700">
-                <div id="progressBar"
-                    class="h-4 transition-all duration-300
-                   bg-green-500 dark:bg-emerald-400"
-                    style="width: 0%">
-                </div>
-            </div>
+            <span id="progressText">0 / 0</span>
+            <span id="progressPercent">0%</span>
         </div>
 
-        <!-- Log -->
-        <pre id="log"
-            class="mt-4 h-48 overflow-auto text-xs p-3 rounded
+        <div class="w-full rounded-full h-4 overflow-hidden
+                bg-gray-200 dark:bg-gray-700">
+            <div id="progressBar"
+                class="h-4 transition-all duration-300
+                   bg-green-500 dark:bg-emerald-400"
+                style="width: 0%">
+            </div>
+        </div>
+    </div>
+
+    <!-- Log -->
+    <pre id="log"
+        class="mt-4 h-48 overflow-auto text-xs p-3 rounded
            bg-gray-100 text-gray-800
            dark:bg-gray-900 dark:text-green-400
            border border-gray-200 dark:border-gray-700">
@@ -211,6 +211,7 @@
                 </td>
                 <td class="p-2">${row.alamat}</td>
                 <td class="p-2">
+                    <button onclick="syncOneSiswa('${row.id_siswa}')" class="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600"><i class="fa fa-refresh"></i></button>
                     <button onclick="editData('${row.id_siswa}')" class="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Edit</button>
                     <button data-id="${row.id_siswa}" class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 tombol-hapus">Hapus</button>
                 </td>
@@ -401,6 +402,33 @@
             error: function() {
                 $('#log').append("❌ Error, retry...\n");
                 setTimeout(syncNext, 3000);
+            }
+        });
+
+    }
+
+    function syncOneSiswa(id_siswa) {
+        
+        $.ajax({
+            url: '<?= base_url('sinkron/sync_siswa') ?>',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                siswa: {
+                    id_siswa: id_siswa
+                }
+            }),
+
+            timeout: 20000,
+            success: function(res) {
+                let r = typeof res === 'string' ? JSON.parse(res) : res;
+
+                $('#log').append("✅ " + r.msg + "\n");
+
+                loadData();
+            },
+            error: function() {
+                $('#log').append("❌ Error, retry...\n");
             }
         });
 

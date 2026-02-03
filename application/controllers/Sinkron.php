@@ -544,4 +544,104 @@ class Sinkron extends MY_Controller
 			echo json_encode(['status' => false]);
 		}
 	}
+
+	public function sync_siswa()
+	{
+		$raw = file_get_contents('php://input');
+		$payload = json_decode($raw, true);
+
+		if (!is_array($payload)) {
+			echo json_encode(['status' => false, 'msg' => 'Payload tidak valid']);
+			return;
+		}
+
+		$siswa = $payload['siswa'] ?? null;
+
+		if (!$siswa || !isset($siswa['id_siswa'])) {
+			echo json_encode(['status' => false, 'msg' => 'Data siswa kosong']);
+			return;
+		}
+
+
+		$this->db->trans_start();
+
+		// ======================
+		// 1. SIMPAN / UPDATE siswa
+		// ======================
+
+		// $datasiswa = [
+		// 	'nama'     => $siswa['nama'],
+		// 	'nisn'     => $siswa['nisn'],
+		// 	'jkl'     => $siswa['jkl'],
+		// ];
+
+		// $ceksiswa = $this->db
+		// 	->get_where('siswa', ['id_siswa' => $siswa['id_siswa']])
+		// 	->row();
+
+		// if ($ceksiswa) {
+		// 	$this->db->where('id_siswa', $ceksiswa->id_siswa)->update('siswa', $datasiswa);
+		// 	$idsiswa = $ceksiswa->id_siswa;
+		// } else {
+		// 	$datasiswa['id_siswa'] = $siswa['id_siswa'];
+		// 	$this->db->insert('siswa', $datasiswa);
+		// }
+
+		// ======================
+		// 2. AMBIL DETAIL siswa
+		// ======================
+		$idsiswa = $siswa['id_siswa'];
+		$detail = $this->getDetail("https://data.ppdwk.com/api/pd/show/" . $siswa['id_siswa']);
+		$this->db
+			->where('id_siswa', $idsiswa)
+			->delete('registrasi_siswa');
+		// var_dump($detail);
+		// exit();
+
+		if ($detail && isset($detail['registrasi_pd'])) {
+
+			$this->db->where('id_siswa', $idsiswa)->update('siswa', [
+				'nama'     => $detail['nama'],
+				'nisn'     => $detail['nisn'],
+				'jkl'     => $detail['jenis_kelamin'] == 'L' ? 'Laki-laki' : 'Perempuan'
+			]);
+			if ($detail['wilayah']) {
+				$this->db->where('id_siswa', $idsiswa)->update('siswa', [
+					'alamat' => $detail['wilayah']['nama'] . '-' . $detail['wilayah']['parrent_recursive']['nama'] . '-' . $detail['wilayah']['parrent_recursive']['parrent_recursive']['nama']
+				]);
+			}
+
+			foreach ($detail['registrasi_pd'] as $reg) {
+
+				$idLembaga = $reg['lembaga_id'] ?? null;
+				if (!$idLembaga) continue;
+
+				$keluarpd = $reg['jenis_keluar'] ?? null;
+				if ($keluarpd != null) continue;
+
+				// ======================
+				// 3. SIMPAN REGISTRASI
+				// ======================
+				$exists = $this->db->get_where('registrasi_siswa', [
+					'id_siswa'    => $idsiswa,
+					'id_lembaga' => $idLembaga
+				])->row();
+
+				if (!$exists) {
+					$this->db->insert('registrasi_siswa', [
+						'id_siswa'    => $idsiswa,
+						'id_lembaga' => $idLembaga,
+						'created_at' => date('Y-m-d H:i:s')
+					]);
+				}
+			}
+		}
+
+		$this->db->trans_complete();
+
+		echo json_encode([
+			'status' => true,
+			'msg' => 'Siswa ' . $detail['nama'] . ' + registrasi tersinkron'
+		]);
+	}
 }
