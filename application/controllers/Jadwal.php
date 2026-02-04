@@ -14,6 +14,9 @@ class Jadwal extends MY_Controller
 
         $this->mustLogin();
         $this->AdminOrSuper();
+
+        $usrdtl = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser' ")->row();
+        $this->id_lembaga = $usrdtl->id_lembaga;
     }
 
     public function index()
@@ -172,6 +175,14 @@ class Jadwal extends MY_Controller
     {
         $usrdtl = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser'")->row();
 
+        $jam_dari = $this->input->post('jam_dari');
+        $jam_sampai = $this->input->post('jam_sampai');
+
+        $cekjam = $this->model->getBy('setting', 'key', 'jml_jp')->row();
+        if ($jam_dari > $cekjam->isi || $jam_sampai > $cekjam->isi) {
+            echo json_encode(['status' => 'error', 'message' => 'jam input melebihi. Max jam ke-' . $cekjam->isi]);
+            exit;
+        }
         $id_kelas = $this->input->post('id_kelas');
         $id_mapel = $this->input->post('id_mapel');
         $id_guru = $this->input->post('id_guru');
@@ -187,8 +198,8 @@ class Jadwal extends MY_Controller
             'id_kelas' => $id_kelas,
             'id_mapel' => $id_mapel,
             'id_guru' => $id_guru,
-            'jam_dari' => $this->input->post('jam_dari'),
-            'jam_sampai' => $this->input->post('jam_sampai'),
+            'jam_dari' => $jam_dari,
+            'jam_sampai' => $jam_sampai,
             'id_lembaga' => $usrdtl->id_lembaga
         ];
         $dataDtl = [
@@ -197,8 +208,8 @@ class Jadwal extends MY_Controller
             'id_kelas' => $dtkelas->nama,
             'id_mapel' => $dtmapel->nama,
             'id_guru' => $dtguru->nama,
-            'jam_dari' => $this->input->post('jam_dari'),
-            'jam_sampai' => $this->input->post('jam_sampai'),
+            'jam_dari' => $jam_dari,
+            'jam_sampai' => $jam_sampai,
             'id_lembaga' => $dtlembaga->nama
         ];
 
@@ -290,15 +301,114 @@ class Jadwal extends MY_Controller
         if (empty($bentrok)) {
             echo '<span class="ml-2 text-green-600 font-medium">Tidak ada bentrok jadwal.</span>';
         } else {
-            echo '<div class="ml-2 text-red-600 dark:text-red-100 font-medium">';
-            // echo '<strong>Ada bentrok jadwal:</strong><br>';
+            echo '<div class="ml-2 text-red-600 dark:text-red-100 font-medium"><ul>';
             foreach ($bentrok as $b) {
-                echo "- <strong>{$b['lembaga']}</strong> — Guru <strong>{$b['guru']}</strong> pada hari <strong>{$b['hari']}</strong> {$b['jam']} mengajar di kelas <strong>{$b['kelas1']}</strong> ({$b['mapel1']}) dan kelas <strong>{$b['kelas2']}</strong> ({$b['mapel2']})<br>";
+                $dt = $this->db->where('id_jadwal', $b->id_jadwal)->get('jadwal_dtl')->row();
+                echo "<li>Guru <strong>{$dt->id_guru}</strong> pada hari ini : <br>
+                 => jam {$dt->jam_dari}-{$dt->jam_sampai} mengajar di kelas <strong>{$dt->id_kelas}</strong> ({$dt->id_mapel}) di lembaga <strong>{$dt->id_lembaga}</strong></li>";
             }
-            echo '</div>';
+            echo '</ul></div>';
         }
     }
+
     public function cek_bentrok_hari($hari)
+    {
+        // 1️⃣ Ambil semua jadwal di hari tersebut
+        $jadwal = $this->db
+            ->where('hari', $hari)
+            // ->where('id_lembaga', $this->id_lembaga)
+            ->order_by('id_guru')
+            ->order_by('jam_dari')
+            ->get('jadwal')
+            ->result();
+
+        if (count($jadwal) === 0) {
+            echo json_encode([
+                'status' => true,
+                'message' => 'Tidak ada jadwal pada hari ini',
+                'data' => []
+            ]);
+            return;
+        }
+
+        // 2️⃣ Kelompokkan jadwal per guru
+        $groupGuru = [];
+        foreach ($jadwal as $j) {
+            $groupGuru[$j->id_guru][] = $j;
+        }
+
+        // 3️⃣ Cari bentrok
+        $bentrok = [];
+
+        foreach ($groupGuru as $id_guru => $list) {
+
+            $total = count($list);
+
+            for ($i = 0; $i < $total; $i++) {
+                for ($j = $i + 1; $j < $total; $j++) {
+
+                    $a = $list[$i];
+                    $b = $list[$j];
+
+                    // OVERLAP CHECK
+                    if (
+                        $a->jam_dari <= $b->jam_sampai &&
+                        $a->jam_sampai >= $b->jam_dari
+                    ) {
+
+                        // simpan dua-duanya
+                        $bentrok[$a->id_jadwal] = $a;
+                        $bentrok[$b->id_jadwal] = $b;
+                    }
+                }
+            }
+        }
+
+        $id_lembaga_login = $this->id_lembaga;
+        $adaBentrokLembaga = false;
+        foreach ($bentrok as $row) {
+            if ($row->id_lembaga === $id_lembaga_login) {
+                $adaBentrokLembaga = true;
+                break;
+            }
+        }
+
+        // ❌ Kalau TIDAK ADA bentrok milik lembaga login
+        if (!$adaBentrokLembaga) {
+            $bentrok = [];
+        }
+
+        // 4️⃣ Output
+        // if (empty($bentrok)) {
+        //     $this->output
+        //         ->set_content_type('application/json')
+        //         ->set_output(json_encode([
+        //             'status' => true,
+        //             'message' => 'Tidak ada jadwal bentrok',
+        //             'data' => []
+        //         ]));
+        //     return;
+        // }
+
+        // $this->output
+        //     ->set_content_type('application/json')
+        //     ->set_output(json_encode([
+        //         'status' => false,
+        //         'message' => 'Jadwal bentrok ditemukan',
+        //         'total' => count($bentrok),
+        //         'data' => array_values($bentrok)
+        //     ]));
+
+        // OtputOk
+        if (empty($bentrok)) {
+            $data = [];
+        } else {
+            $data = array_values($bentrok);
+        }
+        return $data;
+    }
+
+    public function cek_bentrok_hari_old($hari)
     {
         $jadwal = $this->db
             ->select('
