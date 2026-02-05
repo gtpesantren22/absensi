@@ -14,9 +14,6 @@ class Jadwal extends MY_Controller
 
         $this->mustLogin();
         $this->AdminOrSuper();
-
-        $usrdtl = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser' ")->row();
-        $this->id_lembaga = $usrdtl->id_lembaga;
     }
 
     public function index()
@@ -299,15 +296,63 @@ class Jadwal extends MY_Controller
         $bentrok = $this->cek_bentrok_hari($day);
 
         if (empty($bentrok)) {
-            echo '<span class="ml-2 text-green-600 font-medium">Tidak ada bentrok jadwal.</span>';
+
+            echo '
+                <span class="ml-2 inline-flex items-center gap-2 
+                    text-green-700 dark:text-green-400 font-medium">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" 
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" 
+                            stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Tidak ada bentrok jadwal
+                </span>';
         } else {
-            echo '<div class="ml-2 text-red-600 dark:text-red-100 font-medium"><ul>';
+
+            echo '
+                <div class="ml-2 mt-2">
+                    <ul class="space-y-2">';
+
             foreach ($bentrok as $b) {
-                $dt = $this->db->where('id_jadwal', $b->id_jadwal)->get('jadwal_dtl')->row();
-                echo "<li>Guru <strong>{$dt->id_guru}</strong> pada hari ini : <br>
-                 => jam {$dt->jam_dari}-{$dt->jam_sampai} mengajar di kelas <strong>{$dt->id_kelas}</strong> ({$dt->id_mapel}) di lembaga <strong>{$dt->id_lembaga}</strong></li>";
+
+                $dt = $this->db
+                    ->query("SELECT * FROM jadwal_dtl WHERE id_jadwal = ?", [$b->id_jadwal])
+                    ->row();
+
+                if (!$dt) continue;
+
+                echo '
+                        <li class="
+                            px-4 py-2 rounded-lg border
+                            border-red-200 dark:border-red-800
+                            bg-red-50 dark:bg-red-900/20
+                            text-red-800 dark:text-red-100
+                            text-sm
+                            flex items-center justify-between gap-4
+                            whitespace-nowrap
+                        ">
+                            <span class="truncate">
+                                Guru <strong>' . $dt->id_guru . '</strong> • 
+                                Jam <strong>' . $dt->jam_dari . '-' . $dt->jam_sampai . '</strong> • 
+                                Kelas <strong>' . $dt->id_kelas . '</strong> 
+                                <span class="opacity-70">(' . $dt->id_mapel . ')</span> • 
+                                Lembaga <strong>' . $dt->id_lembaga . '</strong>
+                            </span>
+
+                            <span class="
+                                shrink-0 text-xs px-2 py-0.5 rounded-full
+                                bg-red-100 dark:bg-red-800
+                                text-red-700 dark:text-red-200
+                                font-semibold
+                            ">
+                                Bentrok
+                            </span>
+                        </li>';
             }
-            echo '</ul></div>';
+
+            echo '
+                    </ul>
+                </div>';
         }
     }
 
@@ -316,19 +361,13 @@ class Jadwal extends MY_Controller
         // 1️⃣ Ambil semua jadwal di hari tersebut
         $jadwal = $this->db
             ->where('hari', $hari)
-            // ->where('id_lembaga', $this->id_lembaga)
             ->order_by('id_guru')
             ->order_by('jam_dari')
             ->get('jadwal')
             ->result();
 
         if (count($jadwal) === 0) {
-            echo json_encode([
-                'status' => true,
-                'message' => 'Tidak ada jadwal pada hari ini',
-                'data' => []
-            ]);
-            return;
+            return $data = [];
         }
 
         // 2️⃣ Kelompokkan jadwal per guru
@@ -364,42 +403,6 @@ class Jadwal extends MY_Controller
             }
         }
 
-        $id_lembaga_login = $this->id_lembaga;
-        $adaBentrokLembaga = false;
-        foreach ($bentrok as $row) {
-            if ($row->id_lembaga === $id_lembaga_login) {
-                $adaBentrokLembaga = true;
-                break;
-            }
-        }
-
-        // ❌ Kalau TIDAK ADA bentrok milik lembaga login
-        if (!$adaBentrokLembaga) {
-            $bentrok = [];
-        }
-
-        // 4️⃣ Output
-        // if (empty($bentrok)) {
-        //     $this->output
-        //         ->set_content_type('application/json')
-        //         ->set_output(json_encode([
-        //             'status' => true,
-        //             'message' => 'Tidak ada jadwal bentrok',
-        //             'data' => []
-        //         ]));
-        //     return;
-        // }
-
-        // $this->output
-        //     ->set_content_type('application/json')
-        //     ->set_output(json_encode([
-        //         'status' => false,
-        //         'message' => 'Jadwal bentrok ditemukan',
-        //         'total' => count($bentrok),
-        //         'data' => array_values($bentrok)
-        //     ]));
-
-        // OtputOk
         if (empty($bentrok)) {
             $data = [];
         } else {
