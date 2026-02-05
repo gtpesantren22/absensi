@@ -565,27 +565,7 @@ class Sinkron extends MY_Controller
 
 		$this->db->trans_start();
 
-		// ======================
-		// 1. SIMPAN / UPDATE siswa
-		// ======================
 
-		// $datasiswa = [
-		// 	'nama'     => $siswa['nama'],
-		// 	'nisn'     => $siswa['nisn'],
-		// 	'jkl'     => $siswa['jkl'],
-		// ];
-
-		// $ceksiswa = $this->db
-		// 	->get_where('siswa', ['id_siswa' => $siswa['id_siswa']])
-		// 	->row();
-
-		// if ($ceksiswa) {
-		// 	$this->db->where('id_siswa', $ceksiswa->id_siswa)->update('siswa', $datasiswa);
-		// 	$idsiswa = $ceksiswa->id_siswa;
-		// } else {
-		// 	$datasiswa['id_siswa'] = $siswa['id_siswa'];
-		// 	$this->db->insert('siswa', $datasiswa);
-		// }
 
 		// ======================
 		// 2. AMBIL DETAIL siswa
@@ -642,6 +622,94 @@ class Sinkron extends MY_Controller
 		echo json_encode([
 			'status' => true,
 			'msg' => 'Siswa ' . $detail['nama'] . ' + registrasi tersinkron'
+		]);
+	}
+
+	public function sync_guru()
+	{
+		$raw = file_get_contents('php://input');
+		$payload = json_decode($raw, true);
+
+		if (!is_array($payload)) {
+			echo json_encode(['status' => false, 'msg' => 'Payload tidak valid']);
+			return;
+		}
+
+		$guru = $payload['guru'] ?? null;
+
+		if (!$guru || !isset($guru['id_guru'])) {
+			echo json_encode(['status' => false, 'msg' => 'Data guru kosong']);
+			return;
+		}
+
+
+		$this->db->trans_start();
+
+		$idGuru = $guru['id_guru'];
+		$detail = $this->getDetail("https://data.ppdwk.com/api/ptk/show/" . $guru['id_guru']);
+		$this->db
+			->where('id_guru', $idGuru)
+			->delete('registrasi');
+		// var_dump($detail);
+		// var_dump($detail);
+		// exit();
+
+		if ($detail && isset($detail['registrasi_ptk'])) {
+
+			$dataGuru = [
+				'nama'     => $detail['nama'],
+				'no_hp'     => $detail['telpon'],
+				'jkl'     => $detail['jenis_kelamin'] == 'L' ? 'Laki-laki' : 'Perempuan',
+			];
+
+			$cekGuru = $this->db
+				->get_where('guru', ['id_guru' => $guru['id_guru']])
+				->row();
+
+			if ($cekGuru) {
+				$this->db->where('id_guru', $cekGuru->id_guru)->update('guru', $dataGuru);
+			} else {
+				$dataGuru['id_guru'] = $guru['id_guru'];
+				$dataGuru['created_at'] = date('Y-m-d H:i:s');
+				$this->db->insert('guru', $dataGuru);
+
+				$id = (int)$this->db->insert_id();
+				$kode = kodeFromNumber($id);
+				$this->db->where('id_guru', $idGuru)->update('guru', [
+					'kode_guru' => $kode
+				]);
+			}
+
+			foreach ($detail['registrasi_ptk'] as $reg) {
+
+				$idLembaga = $reg['lembaga_id'] ?? null;
+				$induk = $reg['ptk_induk'] ?? null;
+				if (!$idLembaga) continue;
+
+				// ======================
+				// 3. SIMPAN REGISTRASI
+				// ======================
+				$exists = $this->db->get_where('registrasi', [
+					'id_guru'    => $idGuru,
+					'id_lembaga' => $idLembaga
+				])->row();
+
+				if (!$exists) {
+					$this->db->insert('registrasi', [
+						'id_guru'    => $idGuru,
+						'id_lembaga' => $idLembaga,
+						'satminkal' => $induk,
+						'created_at' => date('Y-m-d H:i:s'),
+					]);
+				}
+			}
+		}
+
+		$this->db->trans_complete();
+
+		echo json_encode([
+			'status' => true,
+			'msg' => 'Guru ' . $guru['nama'] . ' + registrasi tersinkron'
 		]);
 	}
 }

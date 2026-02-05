@@ -263,6 +263,7 @@
                 </td>
                 <td class="p-2">${row.no_hp}</td>
                 <td class="p-2">
+                    <button onclick="syncOneGuru('${row.id_guru}')" class="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600"><i class="fa fa-refresh"></i></button>
                     <button onclick="editData('${row.id_guru}')" class="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Edit</button>
                     <button data-id="${row.id_guru}" class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 tombol-hapus">Hapus</button>
                     <button data-id="${row.id_guru}" class="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 tombol-akun">Akun</button>
@@ -473,6 +474,33 @@
             error: function() {
                 $('#log').append("❌ Error, retry...\n");
                 setTimeout(syncNext, 3000);
+            }
+        });
+
+    }
+
+    function syncOneGuru(id_guru) {
+
+        $.ajax({
+            url: '<?= base_url('sinkron/sync_guru') ?>',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                guru: {
+                    id_guru: id_guru
+                }
+            }),
+
+            timeout: 20000,
+            success: function(res) {
+                let r = typeof res === 'string' ? JSON.parse(res) : res;
+
+                $('#log').append("✅ " + r.msg + "\n");
+
+                loadData();
+            },
+            error: function() {
+                $('#log').append("❌ Error, retry...\n");
             }
         });
 

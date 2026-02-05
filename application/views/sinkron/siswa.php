@@ -22,6 +22,11 @@
 
     <div class="flex flex-wrap items-center gap-2 mt-4 md:mt-0">
 
+        <input type="number" id="onePage" class="p-4 py-2 w-full md:w-64 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Input nomor page...">
+        <button id="sincOne" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
+            <i class="fas fa-refresh mr-2"></i>
+            Sinc One Page
+        </button>
         <button id="start" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
             <i class="fas fa-refresh mr-2"></i>
             Sinkron Data Siswa
@@ -339,6 +344,16 @@
         $('#pageInfo').removeClass('hidden');
         updateProgress();
         loadPage();
+    });
+    $('#sincOne').click(function() {
+        page = $('#onePage').val();
+        done = 0;
+        total = 0;
+        $('#log').html('');
+        $('#pageInfo').removeClass('hidden');
+        updateProgress();
+        loadPage();
+        // alert(page)
     });
 
     function loadPage() {
