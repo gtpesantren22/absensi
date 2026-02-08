@@ -26,7 +26,7 @@
             <!-- Tombol Tambah Siswa -->
             <button onclick="openModal('uploadGuruModal')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
                 <i class="fas fa-upload mr-2"></i>
-                Upload Guru
+                Upload Guru  
             </button>
             <button onclick="openModal('tambahGuruModal')" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
                 <i class="fas fa-plus mr-2"></i>

@@ -12,6 +12,7 @@ class Absensiguru extends MY_Controller
 
         $this->mustLogin();
         $this->onlyPiket();
+        $this->AdminOrSuper();
 
         $this->iduser = $this->session->userdata('id_user');
         $usrdtl = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser' ")->row();

@@ -22,7 +22,10 @@ class MY_Controller extends CI_Controller
     }
     protected function AdminOrSuper()
     {
-        if ($this->session->userdata('level') !== 'admin' && $this->session->userdata('level') !== 'super_admin') {
+        $allowed = ['admin', 'super_admin'];
+
+        if (!in_array($this->session->userdata('level'), $allowed)) {
+            // tidak punya akses
             show_error('Akses ditolak', 403);
         }
     }

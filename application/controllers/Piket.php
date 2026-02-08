@@ -11,7 +11,7 @@ class Piket extends MY_Controller
         $this->db_active = $this->dynamic_db->connect(); // baru panggil method connect()
 
         $this->mustLogin();
-        $this->onlyAdminSuper();
+        $this->AdminOrSuper();
 
         $this->iduser = $this->session->userdata('id_user');
         $usrdtl = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser' ")->row();
