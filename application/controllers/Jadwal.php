@@ -14,11 +14,12 @@ class Jadwal extends MY_Controller
 
         $this->mustLogin();
         $this->AdminOrSuper();
+        $usrdtl = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser'")->row();
+        $this->id_lembaga = $usrdtl->id_lembaga;
     }
 
     public function index()
     {
-        $usrdtl = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser'")->row();
         $data['hideSidebar'] = true;
         $data['judul'] = 'Data Jadwal Pelajaran';
         $data['menu'] = 'jadwal';
@@ -36,7 +37,7 @@ class Jadwal extends MY_Controller
             ->select('guru.*')
             ->from('registrasi')
             ->join('guru', 'registrasi.id_guru=guru.id_guru')
-            ->where('registrasi.id_lembaga', $usrdtl->id_lembaga)
+            ->where('registrasi.id_lembaga', $this->id_lembaga)
             ->order_by('guru.nama', 'ASC')
             ->get()
             ->result();
@@ -69,7 +70,7 @@ class Jadwal extends MY_Controller
             FROM jadwal j
             LEFT JOIN guru g ON j.id_guru = g.id_guru
             WHERE j.hari = ? AND id_lembaga = ?
-        ", [$day, $usrdtl->id_lembaga])->result_array();
+        ", [$day, $this->id_lembaga])->result_array();
 
 
         $mapelIds = array_unique(array_filter(array_column($jadwalList, 'id_mapel')));
@@ -187,7 +188,7 @@ class Jadwal extends MY_Controller
         $dtkelas = $this->model->getBy('kelas', 'id_kelas', $id_kelas)->row();
         $dtmapel = $this->model->getBy('mapel', 'id_mapel', $id_mapel)->row();
         $dtguru = $this->db->query("SELECT * FROM guru WHERE id_guru = '$id_guru' ")->row();
-        $dtlembaga = $this->db->query("SELECT * FROM lembaga WHERE id_lembaga = '$usrdtl->id_lembaga' ")->row();
+        $dtlembaga = $this->db->query("SELECT * FROM lembaga WHERE id_lembaga = '$this->id_lembaga' ")->row();
         $idnew = $this->uuid->v4();
         $data = [
             'id_jadwal' => $idnew,
@@ -197,7 +198,7 @@ class Jadwal extends MY_Controller
             'id_guru' => $id_guru,
             'jam_dari' => $jam_dari,
             'jam_sampai' => $jam_sampai,
-            'id_lembaga' => $usrdtl->id_lembaga
+            'id_lembaga' => $this->id_lembaga
         ];
         $dataDtl = [
             'id_jadwal' => $idnew,
@@ -320,41 +321,62 @@ class Jadwal extends MY_Controller
                     ->row();
 
                 if (!$dt) continue;
-
-                echo '
-                        <li class="
-                            px-4 py-2 rounded-lg border
+                if ($b->id_lembaga === $this->id_lembaga) {
+                    echo '
+                    <li class="
+                            px-3 py-2
+                            rounded-lg border
                             border-red-200 dark:border-red-800
                             bg-red-50 dark:bg-red-900/20
                             text-red-800 dark:text-red-800
                             text-sm
-                            flex items-center justify-between gap-4
+                            flex items-center justify-between
+                            gap-3
                             whitespace-nowrap
                         ">
-                            <span class="truncate">
-                                Guru <strong>' . $dt->id_guru . '</strong> • 
-                                Jam <strong>' . $dt->jam_dari . '-' . $dt->jam_sampai . '</strong> • 
-                                Kelas <strong>' . $dt->id_kelas . '</strong> 
-                                <span class="opacity-70">(' . $dt->id_mapel . ')</span> • 
-                                Lembaga <strong>' . $dt->id_lembaga . '</strong>
+                            <!-- Info Guru -->
+                            <span class="truncate font-medium">
+                                Guru <strong>' . $dt->id_guru . '</strong>
                             </span>
 
-                            <span class="
-                                shrink-0 text-xs px-2 py-0.5 rounded-full
-                                bg-red-100 dark:bg-red-800
-                                text-red-700 dark:text-red-200
-                                font-semibold
-                            ">
-                                Bentrok
-                            </span>
-                        </li>';
+                            <!-- Badge -->
+                            <div class="flex items-center gap-2 shrink-0">
+                                <span class="
+                                    text-xs px-2 py-0.5 rounded-full
+                                    bg-red-100 dark:bg-red-800
+                                    text-red-700 dark:text-red-200
+                                    font-semibold
+                                ">
+                                    Bentrok
+                                </span>
+
+                                <span 
+                                onclick="cekBentrokOne(\'' . $dt->id_jadwal . '\')"
+                                class="cursor-pointer
+                                    text-xs px-2 py-0.5 rounded-full
+                                    bg-blue-100 dark:bg-blue-800
+                                    text-blue-700 dark:text-blue-200
+                                    font-semibold
+                                ">
+                                    Cek
+                                </span>
+                            </div>
+                        </li>    
+                    ';
+                }
             }
 
             echo '
-                    </ul>
-                </div>';
+                                </ul>
+                                </div>';
         }
     }
+
+
+    // Jam <strong>' . $dt->jam_dari . '-' . $dt->jam_sampai . '</strong> • 
+    //                             Kelas <strong>' . $dt->id_kelas . '</strong> 
+    //                             <span class="opacity-70">(' . $dt->id_mapel . ')</span> • 
+    //                             Lembaga <strong>' . $dt->id_lembaga . '</strong>
 
     public function cek_bentrok_hari($hari)
     {
@@ -411,127 +433,42 @@ class Jadwal extends MY_Controller
         return $data;
     }
 
-    public function cek_bentrok_hari_old($hari)
+    public function cek_bentrok_one()
     {
+        $id_jadwal = $this->input->post('id_jadwal');
+
+        // Jadwal acuan
         $jadwal = $this->db
-            ->select('
-            j.id_jadwal,
-            j.id_guru,
-            g.nama AS guru,
-            l.nama AS lembaga,
-            j.id_kelas,
-            j.id_mapel,
-            j.hari,
-            j.jam_dari,
-            j.jam_sampai
-        ')
-            ->from('jadwal j')
-            ->join('guru g', 'g.id_guru = j.id_guru')
-            ->join('lembaga l', 'l.id_lembaga = j.id_lembaga')
-            ->where('j.hari', $hari)
-            ->order_by('j.id_guru, j.jam_dari')
-            ->get()
+            ->where('id_jadwal', $id_jadwal)
+            ->get('jadwal')
+            ->row();
+        $jadwalDt = $this->db
+            ->where('id_jadwal', $id_jadwal)
+            ->get('jadwal_dtl')
+            ->row();
+
+        if (!$jadwal) {
+            echo json_encode(['status' => false]);
+            return;
+        }
+
+        // Jadwal bentrok
+        $bentrok = $this->db
+            ->select('jadwal_dtl.*')
+            ->join('jadwal_dtl', 'jadwal.id_jadwal=jadwal_dtl.id_jadwal')
+            ->where('jadwal.hari', $jadwal->hari)
+            ->where('jadwal.id_guru', $jadwal->id_guru)
+            ->where('jadwal.id_jadwal !=', $id_jadwal)
+            ->where('jadwal.jam_dari <=', $jadwal->jam_sampai)
+            ->where('jadwal.jam_sampai >=', $jadwal->jam_dari)
+            ->get('jadwal')
             ->result();
 
-        if (empty($jadwal)) {
-            return [];
-        }
-
-        // ===============================
-        // MAP KELAS
-        // ===============================
-        $kelasIds = array_unique(array_column($jadwal, 'id_kelas'));
-        $kelasMap = [];
-
-        if ($kelasIds) {
-            $kelasList = $this->db_active
-                ->select('id_kelas, nama')
-                ->where_in('id_kelas', $kelasIds)
-                ->get('kelas')
-                ->result_array();
-
-            foreach ($kelasList as $k) {
-                $kelasMap[$k['id_kelas']] = $k['nama'];
-            }
-        }
-
-        // ===============================
-        // MAP MAPEL
-        // ===============================
-        $mapelIds = array_unique(array_column($jadwal, 'id_mapel'));
-        $mapelMap = [];
-
-        if ($mapelIds) {
-            $mapelList = $this->db_active
-                ->select('id_mapel, nama')
-                ->where_in('id_mapel', $mapelIds)
-                ->get('mapel')
-                ->result_array();
-
-            foreach ($mapelList as $m) {
-                $mapelMap[$m['id_mapel']] = $m['nama'];
-            }
-        }
-
-        // ===============================
-        // GROUP PER GURU + HARI
-        // ===============================
-        $grouped = [];
-
-        foreach ($jadwal as $j) {
-            // CAST KE INTEGER (WAJIB!)
-            $j->jam_dari   = (int) $j->jam_dari;
-            $j->jam_sampai = (int) $j->jam_sampai;
-
-            $key = $j->id_guru . '-' . $j->hari;
-            $grouped[$key][] = $j;
-        }
-
-        // ===============================
-        // CEK BENTROK
-        // ===============================
-        $bentrok = [];
-
-        foreach ($grouped as $items) {
-
-            usort($items, function ($a, $b) {
-                return $a->jam_dari <=> $b->jam_dari;
-            });
-
-            $count = count($items);
-
-            for ($i = 0; $i < $count; $i++) {
-                for ($j = $i + 1; $j < $count; $j++) {
-
-                    // sudah aman → break
-                    if ($items[$i]->jam_sampai < $items[$j]->jam_dari) {
-                        break;
-                    }
-
-                    // OVERLAP
-                    if (
-                        $items[$i]->jam_dari <= $items[$j]->jam_sampai &&
-                        $items[$i]->jam_sampai >= $items[$j]->jam_dari
-                    ) {
-                        $bentrok[] = [
-                            'guru'     => $items[$i]->guru,
-                            'lembaga'  => $items[$i]->lembaga,
-                            'hari'     => $items[$i]->hari,
-                            'jam'      => 'Jam ' .
-                                max($items[$i]->jam_dari, $items[$j]->jam_dari) .
-                                '–' .
-                                min($items[$i]->jam_sampai, $items[$j]->jam_sampai),
-                            'kelas1'   => $kelasMap[$items[$i]->id_kelas] ?? '-',
-                            'mapel1'   => $mapelMap[$items[$i]->id_mapel] ?? '-',
-                            'kelas2'   => $kelasMap[$items[$j]->id_kelas] ?? '-',
-                            'mapel2'   => $mapelMap[$items[$j]->id_mapel] ?? '-',
-                        ];
-                    }
-                }
-            }
-        }
-
-        // 🔥 INI YANG TADI HILANG
-        return $bentrok;
+        echo json_encode([
+            'status' => true,
+            'guru' => $jadwalDt->id_guru,
+            'jadwal' => $jadwalDt,
+            'bentrok' => $bentrok
+        ]);
     }
 }

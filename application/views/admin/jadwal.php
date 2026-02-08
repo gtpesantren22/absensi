@@ -355,6 +355,41 @@
     </div>
 </div>
 
+<!-- MODAL -->
+<div id="bentrokModal"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50">
+
+    <div class="
+        bg-white dark:bg-gray-800
+        w-full max-w-3xl rounded-xl shadow-lg
+        p-6
+    ">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-white">
+                Detail Bentrok Jadwal
+            </h3>
+            <button onclick="closeBentrokModal()"
+                class="text-gray-500 hover:text-red-500 text-xl">
+                &times;
+            </button>
+        </div>
+
+        <!-- Content -->
+        <div id="bentrokContent" class="space-y-2"></div>
+
+        <!-- Footer -->
+        <div class="mt-4 text-right">
+            <button onclick="closeBentrokModal()"
+                class="px-4 py-2 text-sm rounded-lg
+                bg-gray-200 dark:bg-gray-700
+                text-gray-800 dark:text-gray-200
+                hover:bg-gray-300 dark:hover:bg-gray-600">
+                Tutup
+            </button>
+        </div>
+    </div>
+</div>
 
 
 <?php $this->load->view('admin/foot'); ?>
@@ -500,4 +535,85 @@
         });
         // alert(id)
     });
+
+
+    function cekBentrokOne(idJadwal) {
+        fetch('<?= site_url("jadwal/cek_bentrok_one") ?>', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: 'id_jadwal=' + idJadwal
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (!res.status) {
+                    alert('Data tidak ditemukan');
+                    return;
+                }
+
+                // <p class="text-xs font-semibold text-blue-700 dark:text-blue-200 mb-1">
+                //     Jadwal Acuan
+                // </p>
+                let html = `
+                    <p class="text-md font-semibold text-teal-600 dark:text-teal-300 mb-2">
+                        Guru : ${res.guru}
+                    </p>
+                    <!-- JADWAL ACUAN -->
+                    <div class="mb-4 p-3 rounded-lg
+                        bg-blue-50 dark:bg-blue-900/20
+                        border border-blue-200 dark:border-blue-800">
+                        <p class="text-sm whitespace-nowrap overflow-x-auto">
+                            Jam <strong>${res.jadwal.jam_dari}-${res.jadwal.jam_sampai}</strong> •
+                            Kelas <strong>${res.jadwal.id_kelas}</strong>
+                            <span class="opacity-70">(${res.jadwal.id_mapel})</span> •
+                            Lembaga <strong>${res.jadwal.id_lembaga}</strong>
+                        </p>
+                    </div>
+                    `;
+
+                if (res.bentrok.length === 0) {
+                    html += `
+            <p class="text-green-600 text-sm">
+                Tidak ada bentrok jadwal.
+            </p>`;
+                } else {
+                    html += `
+            <p class="text-xs font-semibold text-red-600 dark:text-red-300 mb-2">
+                Bentrok Dengan
+            </p>
+            <ul class="space-y-2">`;
+
+                    res.bentrok.forEach(b => {
+                        html += `
+                <li class="p-3 rounded-lg
+                        bg-red-50 dark:bg-red-900/20
+                        border border-red-200 dark:border-red-800
+                        text-sm
+                        whitespace-nowrap
+                        overflow-x-auto">
+                    Jam <strong>${b.jam_dari}-${b.jam_sampai}</strong> •
+                    Kelas <strong>${b.id_kelas}</strong>
+                    <span class="opacity-70">(${b.id_mapel})</span> •
+                    Lembaga <strong>${b.id_lembaga}</strong>
+                </li>`;
+                    });
+
+                    html += `</ul>`;
+                }
+
+                document.getElementById('bentrokContent').innerHTML = html;
+                openBentrokModal();
+            });
+    }
+
+    function openBentrokModal() {
+        document.getElementById('bentrokModal').classList.remove('hidden');
+        document.getElementById('bentrokModal').classList.add('flex');
+    }
+
+    function closeBentrokModal() {
+        document.getElementById('bentrokModal').classList.add('hidden');
+        document.getElementById('bentrokModal').classList.remove('flex');
+    }
 </script>
