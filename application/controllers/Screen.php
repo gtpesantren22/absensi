@@ -9,9 +9,10 @@ class Screen extends MY_Controller
         $this->load->model('Modeldata', 'model');
         $this->load->library('Dynamic_db'); // load dulu
         $this->db_active = $this->dynamic_db->connect(); // baru panggil method connect()
+
     }
 
-    public function apel_guru($tgl, $namalembaga)
+    public function apel_guru($tgl, $idl)
     {
         $hari_ini = $tgl;
         // $hari_ini = date('2025-01-07');
@@ -25,7 +26,7 @@ class Screen extends MY_Controller
         }
 
         $dataJadwal = $this->db_active->query("SELECT * FROM apel_guru WHERE tanggal = '$tglni' ");
-        $data['lembaga'] = $namalembaga;
+        $data['lembaga'] = $this->db->query("SELECT * FROM lembaga WHERE id_lembaga = '$idl' ")->row();
         $data['hadir'] = $this->db_active->query("SELECT COUNT(*) as ttl FROM apel_guru WHERE tanggal = '$tglni' AND ket = 'hadir' ")->row();
         $data['izin'] = $this->db_active->query("SELECT COUNT(*) as ttl FROM apel_guru WHERE tanggal = '$tglni' AND ket = 'izin' ")->row();
         $data['alpha'] = $this->db_active->query("SELECT COUNT(*) as ttl FROM apel_guru WHERE tanggal = '$tglni' AND ket = 'alpha' ")->row();
