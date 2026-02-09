@@ -7,7 +7,6 @@
             <h2 class="text-2xl font-bold">Data Absensi Kehadiran Guru</h2>
             <p class="text-gray-600 dark:text-gray-400">Halaman kelola data absensi kehadiran guru</p>
         </div>
-        `
         <div class="flex flex-wrap items-center gap-2 mt-4 md:mt-0">
 
             <button onclick="window.location.href='<?= base_url('kehadiranguru/kehadiran_add') ?>'" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">

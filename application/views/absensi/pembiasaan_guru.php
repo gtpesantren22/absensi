@@ -1,78 +1,78 @@
 <?php $this->load->view('admin/head'); ?>
 
 
-    <!-- Header Halaman -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between mb-6">
-        <div>
-            <h2 class="text-2xl font-bold">Data Absensi Pembiasaan Guru</h2>
-            <p class="text-gray-600 dark:text-gray-400">Halaman kelola data absensi pembiasaan guru</p>
-        </div>
+<!-- Header Halaman -->
+<div class="flex flex-col md:flex-row md:items-center justify-between mb-6">
+    <div>
+        <h2 class="text-2xl font-bold">Data Absensi Pembiasaan Guru</h2>
+        <p class="text-gray-600 dark:text-gray-400">Halaman kelola data absensi pembiasaan guru</p>
+    </div>
 
-        <div class="flex flex-wrap items-center gap-2 mt-4 md:mt-0">
+    <div class="flex flex-wrap items-center gap-2 mt-4 md:mt-0">
 
-            <button onclick="window.location.href='<?= base_url('absensiguru/set_pembiasaan') ?>'" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
-                <i class="fas fa-cog mr-2"></i>
-                Setting Guru
-            </button>
-            <button onclick="window.location.href='<?= base_url('absensiguru/pembiasaan_add') ?>'" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
-                <i class="fas fa-plus mr-2"></i>
-                Buat Absensi
-            </button>
+        <button onclick="window.location.href='<?= base_url('absensiguru/set_pembiasaan') ?>'" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
+            <i class="fas fa-cog mr-2"></i>
+            Setting Guru
+        </button>
+        <button onclick="window.location.href='<?= base_url('absensiguru/pembiasaan_add') ?>'" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
+            <i class="fas fa-plus mr-2"></i>
+            Buat Absensi
+        </button>
+    </div>
+</div>
+
+
+<!-- Tabel Data -->
+<div class="bg-white dark:bg-gray-800 rounded-xl flux-shadow overflow-hidden mb-6">
+    <!-- Header Tabel dengan Aksi -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <h3 class="font-bold text-lg">Daftar Absensi</h3>
+
+        <div class="flex items-center space-x-2 mt-2 md:mt-0">
+            <div class="relative">
+                <select id="perPage" class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2  focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
+                </div>
+                <input type="search" id="search" class="pl-10 pr-4 py-2 w-full md:w-64 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Cari tanggal...">
+            </div>
         </div>
     </div>
 
+    <!-- Tabel -->
+    <div class="overflow-x-auto px-4">
+        <table class="w-full" id="datatable">
+            <thead>
+                <tr class="bg-gray-50 dark:bg-gray-700/50 text-left text-sm text-gray-500 dark:text-gray-400">
+                    <th onclick="sort('tanggal')" class="py-3 px-4 font-medium cursor-pointer">Tanggal</th>
+                    <th class="py-3 px-4 font-medium cursor-pointer">Jumlah</th>
+                    <th class="py-3 px-4 font-medium">Aksi</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700" id="tableBody">
+                <!-- Baris Data 1 -->
 
-    <!-- Tabel Data -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl flux-shadow overflow-hidden mb-6">
-        <!-- Header Tabel dengan Aksi -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-            <h3 class="font-bold text-lg">Daftar Absensi</h3>
+            </tbody>
+        </table>
+    </div>
 
-            <div class="flex items-center space-x-2 mt-2 md:mt-0">
-                <div class="relative">
-                    <select id="perPage" class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2  focus:outline-none focus:ring-2 focus:ring-primary-500">
-                        <option value="5">5</option>
-                        <option value="10" selected>10</option>
-                        <option value="25">25</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                    </select>
-                </div>
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i class="fas fa-search text-gray-400"></i>
-                    </div>
-                    <input type="search" id="search" class="pl-10 pr-4 py-2 w-full md:w-64 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Cari tanggal...">
-                </div>
-            </div>
+    <!-- Pagination -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700">
+        <div class="text-sm text-gray-500 dark:text-gray-400 mb-2 md:mb-0">
+            Menampilkan <span id="startRecord">1</span> sampai <span id="endRecord">10</span> dari <span id="totalRecords">100</span> entri
         </div>
-
-        <!-- Tabel -->
-        <div class="overflow-x-auto px-4">
-            <table class="w-full" id="datatable">
-                <thead>
-                    <tr class="bg-gray-50 dark:bg-gray-700/50 text-left text-sm text-gray-500 dark:text-gray-400">
-                        <th onclick="sort('tanggal')" class="py-3 px-4 font-medium cursor-pointer">Tanggal</th>
-                        <th class="py-3 px-4 font-medium cursor-pointer">Jumlah</th>
-                        <th class="py-3 px-4 font-medium">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700" id="tableBody">
-                    <!-- Baris Data 1 -->
-
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pagination -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700">
-            <div class="text-sm text-gray-500 dark:text-gray-400 mb-2 md:mb-0">
-                Menampilkan <span id="startRecord">1</span> sampai <span id="endRecord">10</span> dari <span id="totalRecords">100</span> entri
-            </div>
-            <div class="flex items-center space-x-2" id="pagination">
-            </div>
+        <div class="flex items-center space-x-2" id="pagination">
         </div>
     </div>
+</div>
 
 
 
@@ -120,6 +120,7 @@
                 <td class="p-2">
                     <button onclick="window.location.href='<?php echo base_url() ?>absensiguru/pembiasaan_add/${row.tanggal}'" class="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Edit</button>
                     <button data-id="${row.tanggal}" class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 tombol-hapus">Hapus</button>
+                    <button onclick="window.open('<?php echo base_url() ?>absensiguru/screenApelGuru/${row.tanggal}','_blank')" class="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600"><i class="fas fa-download"></i></button>
                 </td>
             </tr>
         `;

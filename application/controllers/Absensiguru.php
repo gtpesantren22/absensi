@@ -272,4 +272,28 @@ class Absensiguru extends MY_Controller
         $this->model->hapus3('apel_guru', 'tanggal', $id, 'id_guru !=', '0', 'ket !=', '');
         echo json_encode(['success' => true]);
     }
+
+    public function screenApelGuru($tgl)
+    {
+        $lembaga = $this->db->query("SELECT * FROM lembaga WHERE id_lembaga = '$this->id_lembaga' ")->row();
+
+        $curl2 = curl_init();
+
+        curl_setopt_array(
+            $curl2,
+            array(
+                CURLOPT_URL => 'http://31.97.179.141:3100/capture?url=' . base_url() . 'screen/apel_guru/' . $tgl . '&filename=APEL-GURU-' . $lembaga->nickname . '_' . $tgl,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'GET'
+            )
+        );
+
+        $response = curl_exec($curl2);
+        curl_close($curl2);
+    }
 }

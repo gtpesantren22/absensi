@@ -153,7 +153,7 @@ class Jadwal extends MY_Controller
                                 class="rounded p-1 mb-1 text-white item-jadwal text-md justify-items-center cursor-pointer fade-in"
                                 style="background-color: ' . $bg . '"
                                 data-jadwal-id="' . $jid . '">
-                                <div class="font-medium">' . $gurukd . ' ' . $kdmapel . '</div>
+                                <div class="font-medium">' . $gurukd . '-' . $kdmapel . '</div>
                             </div>
                         ';
                     }
