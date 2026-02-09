@@ -12,7 +12,7 @@
 <body class="bg-gray-50 p-6">
     <div id="capture" class="max-w-xl mx-auto bg-white rounded-lg shadow-md p-6">
         <h1 class="text-xl font-bold text-gray-800 mb-1 text-center">Rekap Kehadiran Apel Pembaisaan Guru</h1>
-        <h1 class="text-xl font-bold text-gray-800 mb-1 text-center"><?= $lembaga->nama ?></h1>
+        <h1 class="text-xl font-bold text-gray-800 mb-1 text-center"><?= $lembaga ?></h1>
         <h1 class="text-l font-bold text-gray-600 mb-6 text-center"><?= tanggal_indo($tanggal, true) ?></h1>
 
 

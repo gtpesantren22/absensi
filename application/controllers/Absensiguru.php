@@ -282,7 +282,7 @@ class Absensiguru extends MY_Controller
         curl_setopt_array(
             $curl2,
             array(
-                CURLOPT_URL => 'http://31.97.179.141:3100/capture?url=' . base_url() . 'screen/apel_guru/' . $tgl . '&filename=APEL-GURU-' . $lembaga->nickname . '_' . $tgl,
+                CURLOPT_URL => 'http://31.97.179.141:3100/capture?url=' . base_url() . 'screen/apel_guru/' . $tgl . '/' . $lembaga->nama . '&filename=APEL-GURU-' . $lembaga->nickname . '_' . $tgl,
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_ENCODING => '',
                 CURLOPT_MAXREDIRS => 10,
