@@ -56,7 +56,7 @@
         </div>
 
         <div class="mt-6 text-sm text-gray-500">
-            <p>Catatan: Rekap ini dihasilkan secara pada <?= date('d-m-Y H:i:s') ?></p>
+            <p>Catatan: Rekap ini didownload pad pada <?= date('d-m-Y H:i:s') ?></p>
         </div>
     </div>
 </body>

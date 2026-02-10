@@ -326,4 +326,80 @@ class Mengajar extends MY_Controller
         $this->model->hapus3('kehadiran_guru', 'tanggal', $id, 'id_guru !=', '0', 'ket !=', '');
         echo json_encode(['success' => true]);
     }
+
+    public function screenMengajarGuru($tgl)
+    {
+        $lembaga = $this->db->query("SELECT * FROM lembaga WHERE id_lembaga = '$this->id_lembaga' ")->row();
+        $nick = $lembaga->nickname;
+        $curl2 = curl_init();
+
+        curl_setopt_array(
+            $curl2,
+            array(
+                CURLOPT_URL => 'http://31.97.179.141:3100/capture?url=' . base_url() . 'screen/mengajar_guru/' . $tgl . '/' . $lembaga->id_lembaga . '&filename=KBM-GURU-' . $nick . '_' . $tgl,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'GET'
+            )
+        );
+
+        $response = curl_exec($curl2);
+        curl_close($curl2);
+
+        $result = json_decode($response, true);
+
+        // === VALIDASI RESPONSE ===
+        if (!$result || !isset($result['status'])) {
+            show_error('Response API tidak valid');
+        }
+
+        // === JIKA STATUS TRUE ===
+        if ($result['status'] === true) {
+
+            // URL FILE SUDAH DITENTUKAN
+            $fileUrl = "http://31.97.179.141:3100/capture-result/KBM-GURU-$nick"  . "_$tgl.png";
+            $fileName = "KBM-GURU-$nick"  . "_$tgl.png";
+
+            // === AMBIL FILE DARI URL ===
+            $ch = curl_init($fileUrl);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_TIMEOUT => 60,
+            ]);
+
+            $fileData = curl_exec($ch);
+
+            if ($fileData === false) {
+                $error = curl_error($ch);
+                curl_close($ch);
+                show_error('Gagal download file: ' . $error);
+            }
+
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($httpCode !== 200) {
+                show_error('Gagal download file. HTTP Code: ' . $httpCode);
+            }
+
+            // === FORCE DOWNLOAD ===
+            header('Content-Description: File Transfer');
+            header('Content-Type: image/png');
+            header('Content-Disposition: attachment; filename="' . $fileName . '"');
+            header('Content-Length: ' . strlen($fileData));
+            header('Cache-Control: must-revalidate');
+            header('Pragma: public');
+
+            echo $fileData;
+            exit;
+        } else {
+            show_error('Status false, download dibatalkan');
+        }
+    }
 }
