@@ -33,6 +33,7 @@ class Kbm extends MY_Controller
 		$data['kelas'] = $this->db->query("SELECT id_kelas FROM jadwal WHERE hari = '$days' AND id_lembaga = '$this->id_lembaga' GROUP BY id_kelas ORDER BY id_kelas ASC ");
 		$data['harini'] = $days;
 		$data['dateDays'] = date('Y-m-d');
+		$data['id_lembaga'] = $this->id_lembaga;
 
 		$this->load->view('absensi/kbm', $data);
 	}
