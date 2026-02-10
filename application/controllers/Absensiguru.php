@@ -308,13 +308,30 @@ class Absensiguru extends MY_Controller
 
             // URL FILE SUDAH DITENTUKAN
             $fileUrl = "http://31.97.179.141:3100/capture-result/APEL-GURU-$nick"  . "_$tgl.png";
-            $fileName = "rekap-absensi.png";
+            $fileName = "APEL-GURU-$nick"  . "_$tgl.png";
 
             // === AMBIL FILE DARI URL ===
-            $fileData = file_get_contents($fileUrl);
+            $ch = curl_init($fileUrl);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_TIMEOUT => 60,
+            ]);
+
+            $fileData = curl_exec($ch);
 
             if ($fileData === false) {
-                show_error('Gagal mengambil file dari URL');
+                $error = curl_error($ch);
+                curl_close($ch);
+                show_error('Gagal download file: ' . $error);
+            }
+
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($httpCode !== 200) {
+                show_error('Gagal download file. HTTP Code: ' . $httpCode);
             }
 
             // === FORCE DOWNLOAD ===
