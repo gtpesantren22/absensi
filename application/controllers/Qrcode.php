@@ -110,9 +110,9 @@ class Qrcode extends MY_Controller
                 'pulang' => date('H:i:s')
             ]);
         }
-        $updatetoken = $this->db->query("UPDATE qrcode SET used = 1 WHERE token = '$token' ");
-        
+
         if ($add) {
+            $this->db->query("UPDATE qrcode SET used = 1 WHERE token = '$token' ");
             echo json_encode(['valid' => true, 'message' => 'Absensi berhasil']);
             exit;
         } else {
