@@ -106,7 +106,7 @@ class Mengajar extends MY_Controller
 
 
         // $harini = 'Monday';
-        $dataJadwal = $this->db->query("SELECT id_guru FROM jadwal WHERE hari = '$harini' GROUP BY id_guru ")->result();
+        $dataJadwal = $this->db->query("SELECT id_guru FROM jadwal WHERE hari = '$harini' AND id_lembaga = '$this->id_lembaga' GROUP BY id_guru ")->result();
         $dataKirim = [];
         foreach ($dataJadwal as $key) {
             // $hadir = $this->db_active->query("SELECT * FROM kehadiran WHERE tanggal = '$tglni' AND guru = '$key->guru' ")->row();
