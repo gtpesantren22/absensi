@@ -276,13 +276,13 @@ class Absensiguru extends MY_Controller
     public function screenApelGuru($tgl)
     {
         $lembaga = $this->db->query("SELECT * FROM lembaga WHERE id_lembaga = '$this->id_lembaga' ")->row();
-
+        $nick = $lembaga->nickname;
         $curl2 = curl_init();
 
         curl_setopt_array(
             $curl2,
             array(
-                CURLOPT_URL => 'http://31.97.179.141:3100/capture?url=' . base_url() . 'screen/apel_guru/' . $tgl . '/' . $lembaga->id_lembaga . '&filename=APEL-GURU-' . $lembaga->nickname . '_' . $tgl,
+                CURLOPT_URL => 'http://31.97.179.141:3100/capture?url=' . base_url() . 'screen/apel_guru/' . $tgl . '/' . $lembaga->id_lembaga . '&filename=APEL-GURU-' . $nick . '_' . $tgl,
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_ENCODING => '',
                 CURLOPT_MAXREDIRS => 10,
@@ -295,5 +295,40 @@ class Absensiguru extends MY_Controller
 
         $response = curl_exec($curl2);
         curl_close($curl2);
+
+        $result = json_decode($response, true);
+
+        // === VALIDASI RESPONSE ===
+        if (!$result || !isset($result['status'])) {
+            show_error('Response API tidak valid');
+        }
+
+        // === JIKA STATUS TRUE ===
+        if ($result['status'] === true) {
+
+            // URL FILE SUDAH DITENTUKAN
+            $fileUrl = "http://31.97.179.141:3100/capture-result/APEL-GURU-$nick"  . "_$tgl.png";
+            $fileName = "rekap-absensi.png";
+
+            // === AMBIL FILE DARI URL ===
+            $fileData = file_get_contents($fileUrl);
+
+            if ($fileData === false) {
+                show_error('Gagal mengambil file dari URL');
+            }
+
+            // === FORCE DOWNLOAD ===
+            header('Content-Description: File Transfer');
+            header('Content-Type: image/png');
+            header('Content-Disposition: attachment; filename="' . $fileName . '"');
+            header('Content-Length: ' . strlen($fileData));
+            header('Cache-Control: must-revalidate');
+            header('Pragma: public');
+
+            echo $fileData;
+            exit;
+        } else {
+            show_error('Status false, download dibatalkan');
+        }
     }
 }

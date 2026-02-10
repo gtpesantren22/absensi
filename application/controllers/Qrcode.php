@@ -120,4 +120,65 @@ class Qrcode extends MY_Controller
             exit;
         }
     }
+
+    public function verifyLocation()
+    {
+        $input = json_decode(file_get_contents('php://input'), true);
+
+        if (!isset($input['lat'], $input['lon'])) {
+            $this->json(false, 'Data lokasi tidak lengkap');
+            return;
+        }
+
+        $userLat = floatval($input['lat']);
+        $userLon = floatval($input['lon']);
+
+        // === 3 TITIK LOKASI SAH ===
+        $locations = [
+            ['lat' => -7.762560182146305, 'lon' => 113.421642647389], // Sekolah A  
+            ['lat' => -7.762921929327378, 'lon' => 113.42061504208957], // Sekolah B , 
+            ['lat' => -6.199000, 'lon' => 106.818200], // Sekolah C
+        ];
+
+        $radius = 10; // meter
+
+        foreach ($locations as $loc) {
+            if ($this->distance($userLat, $userLon, $loc['lat'], $loc['lon']) <= $radius) {
+                $this->json(true, 'Lokasi valid');
+                return;
+            }
+        }
+
+        $this->json(false, 'Anda berada di luar area absensi');
+    }
+
+    private function distance($lat1, $lon1, $lat2, $lon2)
+    {
+        $earthRadius = 6371000; // meter
+
+        $latFrom = deg2rad($lat1);
+        $lonFrom = deg2rad($lon1);
+        $latTo   = deg2rad($lat2);
+        $lonTo   = deg2rad($lon2);
+
+        $latDelta = $latTo - $latFrom;
+        $lonDelta = $lonTo - $lonFrom;
+
+        $angle = 2 * asin(sqrt(
+            pow(sin($latDelta / 2), 2) +
+                cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)
+        ));
+
+        return $angle * $earthRadius;
+    }
+
+    private function json($allow, $msg)
+    {
+        header('Content-Type: application/json');
+        echo json_encode([
+            'allow' => $allow,
+            'message' => $msg
+        ]);
+        exit;
+    }
 }

@@ -37,4 +37,6 @@ class Screen extends MY_Controller
 
         $this->load->view('absensi/screen_apel_guru', $data);
     }
+
+    
 }
