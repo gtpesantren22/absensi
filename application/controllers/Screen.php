@@ -11,7 +11,7 @@ class Screen extends MY_Controller
         parent::__construct();
     }
 
-    protected function dbActive($db_name)
+    protected function dbActive($host, $user, $pass, $db_name)
     {
         if (!$db_name) {
             show_error('Database aktif belum ditentukan');
@@ -19,9 +19,9 @@ class Screen extends MY_Controller
 
         $config = [
             'dsn'      => '',
-            'hostname' => 'localhost',
-            'username' => 'u9048253_user',
-            'password' => 'password_db',
+            'hostname' => $host,
+            'username' => $user,
+            'password' => $pass,
             'database' => $db_name,   // ← DINAMIS
             'dbdriver' => 'mysqli',
             'dbprefix' => '',
@@ -54,8 +54,8 @@ class Screen extends MY_Controller
     {
         $data['lembaga'] = $this->db->query("SELECT * FROM lembaga WHERE id_lembaga = '$idl' ")->row();
         $iddb = $data['lembaga']->id_db;
-        $db = $this->db->query("SELECT db_name FROM list_db WHERE id = '$iddb' ")->row();
-        $this->dbActive($db->db_name);
+        $db = $this->db->query("SELECT * FROM list_db WHERE id = '$iddb' ")->row();
+        $this->dbActive($db->hostname, $db->username, $db->password, $db->db_name);
 
         $hari_ini = $tgl;
         // $hari_ini = date('2025-01-07');
@@ -84,8 +84,8 @@ class Screen extends MY_Controller
     {
         $data['lembaga'] = $this->db->query("SELECT * FROM lembaga WHERE id_lembaga = '$idl' ")->row();
         $iddb = $data['lembaga']->id_db;
-        $db = $this->db->query("SELECT db_name FROM list_db WHERE id = '$iddb' ")->row();
-        $this->dbActive($db->db_name);
+        $db = $this->db->query("SELECT * FROM list_db WHERE id = '$iddb' ")->row();
+        $this->dbActive($db->hostname, $db->username, $db->password, $db->db_name);
 
         $hari_ini = $tglCari;
         // $hari_ini = date('2025-01-07');
@@ -145,8 +145,8 @@ class Screen extends MY_Controller
     {
         $data['lembaga'] = $this->db->query("SELECT * FROM lembaga WHERE id_lembaga = '$idl' ")->row();
         $iddb = $data['lembaga']->id_db;
-        $db = $this->db->query("SELECT db_name FROM list_db WHERE id = '$iddb' ")->row();
-        $this->dbActive($db->db_name);
+        $db = $this->db->query("SELECT * FROM list_db WHERE id = '$iddb' ")->row();
+        $this->dbActive($db->hostname, $db->username, $db->password, $db->db_name);
 
         $hari_ini = $tgl;
         // $hari_ini = date('2025-01-07');
