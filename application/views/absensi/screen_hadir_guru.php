@@ -21,7 +21,7 @@
             <div class="flex justify-center">
                 <div id="chartKehadiran" class="max-auto"></div>
             </div>
-            <b><?= $this->session->userdata('db_selected'); ?></b>
+            <b><?= $this->session->userdata('db_selected') ? $this->session->userdata('db_selected') : 'Seesion tidak ketemu'; ?></b>
             <table class="min-w-full bg-white border border-gray-200">
                 <thead class="bg-gray-100">
                     <tr>
