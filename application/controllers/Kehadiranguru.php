@@ -200,4 +200,6 @@ class Kehadiranguru extends MY_Controller
         $this->model->hapus3('kehadiran_guru', 'tanggal', $id, 'id_guru !=', '0', 'ket !=', '');
         echo json_encode(['success' => true]);
     }
+
+    public function screenhadir($tgl) {}
 }
