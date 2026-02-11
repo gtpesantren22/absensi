@@ -144,6 +144,8 @@ class Mengajar extends MY_Controller
         $tanggal = $this->input->post('tanggal', true);
         $harini = date('l', strtotime($tanggal));
 
+        $jml_jp = $this->model->getBy('setting', 'key', 'jml_jp')->row('isi');
+
         $guru = $this->db->query("SELECT * FROM guru WHERE id_guru = '$kdguru' ")->row();
 
         // $mapel = $this->model->getBy('mapel', 'kode_mapel', $key->mapel)->row();
@@ -199,7 +201,7 @@ class Mengajar extends MY_Controller
                     <tbody>';
 
         $hariini = $tanggalIni;
-        for ($i = 1; $i <= 8; $i++):
+        for ($i = 1; $i <= $jml_jp; $i++):
             $cek = $this->db_active->query("SELECT * FROM mengajar WHERE id_guru='$guru->id_guru' AND tanggal='$hariini' AND jam=$i")->row();
             $ket = $cek ? $cek->ket : '';
 
@@ -255,7 +257,7 @@ class Mengajar extends MY_Controller
             if ($i === 1):
                 $cekalasan =  $cek ? $cek->alasan : '-';
                 echo '
-                    <td rowspan="8" class="px-3 py-2 align-top">
+                    <td rowspan="' . $jml_jp . '" class="px-3 py-2 align-top">
                         <textarea
                             name="alasan"
                             rows="10"
