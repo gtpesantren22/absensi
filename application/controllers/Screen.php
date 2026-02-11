@@ -3,20 +3,38 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class Screen extends MY_Controller
 {
+    protected $db_active;
+    protected $db_active_group;
+
     public function __construct()
     {
         parent::__construct();
-        $this->load->model('Modeldata', 'model');
-        $this->load->library('Dynamic_db'); // load dulu
-        $this->db_active = $this->dynamic_db->connect(); // baru panggil method connect()
-
     }
 
+    protected function dbActive($bd_name)
+    {
+        $group = $$bd_name ?? 'default';
+
+        if (
+            !$this->db_active ||
+            $this->db_active_group !== $group
+        ) {
+            $this->db_active = $this->load->database($group, TRUE);
+            $this->db_active_group = $group;
+        }
+
+        return $this->db_active;
+    }
     public function apel_guru($tgl, $idl)
     {
+        $data['lembaga'] = $this->db->query("SELECT * FROM lembaga WHERE id_lembaga = '$idl' ")->row();
+        $iddb = $data['lembaga']->id_db;
+        $db = $this->db->query("SELECT db_name FROM list_db WHERE id = '$iddb' ")->row();
+        $this->dbActive($db->db_name);
+
         $hari_ini = $tgl;
         // $hari_ini = date('2025-01-07');
-        $dataCari = $this->model->getBy('apel_guru', 'tanggal', $hari_ini)->row();
+        $dataCari = $this->db_active->query("SELECT * FROM apel_guru WHERE tanggal = '$hari_ini'")->row();
         if ($dataCari) {
             $harini = date('l', strtotime($dataCari->tanggal));
             $tglni = $dataCari->tanggal;
@@ -26,7 +44,6 @@ class Screen extends MY_Controller
         }
 
         $dataJadwal = $this->db_active->query("SELECT * FROM apel_guru WHERE tanggal = '$tglni' ");
-        $data['lembaga'] = $this->db->query("SELECT * FROM lembaga WHERE id_lembaga = '$idl' ")->row();
         $data['hadir'] = $this->db_active->query("SELECT COUNT(*) as ttl FROM apel_guru WHERE tanggal = '$tglni' AND ket = 'hadir' ")->row();
         $data['izin'] = $this->db_active->query("SELECT COUNT(*) as ttl FROM apel_guru WHERE tanggal = '$tglni' AND ket = 'izin' ")->row();
         $data['alpha'] = $this->db_active->query("SELECT COUNT(*) as ttl FROM apel_guru WHERE tanggal = '$tglni' AND ket = 'alpha' ")->row();
@@ -40,9 +57,14 @@ class Screen extends MY_Controller
 
     public function mengajar_guru($tglCari, $idl)
     {
+        $data['lembaga'] = $this->db->query("SELECT * FROM lembaga WHERE id_lembaga = '$idl' ")->row();
+        $iddb = $data['lembaga']->id_db;
+        $db = $this->db->query("SELECT db_name FROM list_db WHERE id = '$iddb' ")->row();
+        $this->dbActive($db->db_name);
+
         $hari_ini = $tglCari;
         // $hari_ini = date('2025-01-07');
-        $dataCari = $this->model->getBy('mengajar', 'tanggal', $hari_ini)->row();
+        $dataCari = $this->db_active->query("SELECT * FROM mengajar WHERE tanggal = '$hari_ini'")->row();
         if ($dataCari) {
             $harini = date('l', strtotime($dataCari->tanggal));
             $tglni = $dataCari->tanggal;
@@ -52,7 +74,6 @@ class Screen extends MY_Controller
         }
 
         // $harini = 'Monday';
-        $data['lembaga'] = $this->db->query("SELECT * FROM lembaga WHERE id_lembaga = '$idl' ")->row();
         $dataJadwal = $this->db_active->query("SELECT * FROM kehadiran_guru WHERE tanggal = '$tglni' ");
         $dataKirim = [];
         $totalkehadiran = 0;
@@ -97,9 +118,14 @@ class Screen extends MY_Controller
 
     public function kehadiran_guru($tgl, $idl = null)
     {
+        $data['lembaga'] = $this->db->query("SELECT * FROM lembaga WHERE id_lembaga = '$idl' ")->row();
+        $iddb = $data['lembaga']->id_db;
+        $db = $this->db->query("SELECT db_name FROM list_db WHERE id = '$iddb' ")->row();
+        $this->dbActive($db->db_name);
+
         $hari_ini = $tgl;
         // $hari_ini = date('2025-01-07');
-        $dataCari = $this->model->getBy('kehadiran_guru', 'tanggal', $hari_ini)->row();
+        $dataCari = $this->db_active->query("SELECT * FROM kehadiran_guru WHERE tanggal = '$hari_ini'")->row();
         if ($dataCari) {
             $harini = date('l', strtotime($dataCari->tanggal));
             $tglni = $dataCari->tanggal;
@@ -109,7 +135,6 @@ class Screen extends MY_Controller
         }
 
         $dataJadwal = $this->db_active->query("SELECT * FROM kehadiran_guru WHERE tanggal = '$tglni' ");
-        $data['lembaga'] = $this->db->query("SELECT * FROM lembaga WHERE id_lembaga = '$idl' ")->row();
         $data['hadir'] = $this->db_active->query("SELECT COUNT(*) as ttl FROM kehadiran_guru WHERE tanggal = '$tglni' AND ket = 'hadir' ")->row();
         $data['izin'] = $this->db_active->query("SELECT COUNT(*) as ttl FROM kehadiran_guru WHERE tanggal = '$tglni' AND ket = 'izin' ")->row();
         $data['alpha'] = $this->db_active->query("SELECT COUNT(*) as ttl FROM kehadiran_guru WHERE tanggal = '$tglni' AND ket = 'alpha' ")->row();
