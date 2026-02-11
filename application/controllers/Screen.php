@@ -116,7 +116,7 @@ class Screen extends MY_Controller
         $this->load->view('absensi/screen_mengajar_guru', $data);
     }
 
-    public function kehadiran_guru($tgl, $idl = null)
+    public function kehadiran_guru($tgl, $idl)
     {
         $data['lembaga'] = $this->db->query("SELECT * FROM lembaga WHERE id_lembaga = '$idl' ")->row();
         $iddb = $data['lembaga']->id_db;
