@@ -13,7 +13,7 @@ class Screen extends MY_Controller
 
     protected function dbActive($bd_name)
     {
-        $group = $$bd_name ?? 'default';
+        $group = $bd_name ?? 'default';
 
         if (
             !$this->db_active ||
