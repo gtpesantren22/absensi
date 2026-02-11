@@ -10,7 +10,7 @@
 
 <body class="bg-gray-50 p-6">
     <div id="capture" class="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
-        <h1 class="text-2xl font-bold text-gray-800 mb-1 text-center">Rekap Kehadiran Guru</h1>
+        <h1 class="text-2xl font-bold text-gray-800 mb-1 text-center">Rekap Kehadiran Mengajar Guru</h1>
         <h1 class="text-xl font-bold text-gray-800 mb-6 text-center"><?= $lembaga->nama ?></h1>
 
         <div class="flex justify-between items-center mb-6">
@@ -57,7 +57,6 @@
                                 <?php } else { ?>
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">cuti</span>
                                 <?php } ?>
-                                <?= date('H:i', strtotime($row['waktu'])) ?>
                             </td>
                             <td class="py-3 px-4 border-b text-sm text-center text-gray-700"><?= $row['jam'] ?></td>
                             <td class="py-3 px-4 border-b text-sm text-center text-gray-700"><?= $row['masuk'] ?></td>
