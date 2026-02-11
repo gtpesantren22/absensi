@@ -50,7 +50,7 @@
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-md font-medium bg-red-100 text-red-800">❌ Alpha</span>
                                 <?php } ?>
                             </td>
-                            <td class="py-3 px-4 border-b text-sm text-gray-700"><?= $row->waktu ? $row->waktu : '-' ?></td>
+                            <td class="py-3 px-4 border-b text-sm text-gray-700"><?= $row->ket != 'hadir' ?  '-' : $row->waktu ?></td>
                         </tr>
                     <?php endforeach ?>
                 </tbody>
