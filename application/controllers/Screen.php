@@ -95,7 +95,7 @@ class Screen extends MY_Controller
         $this->load->view('absensi/screen_mengajar_guru', $data);
     }
 
-    public function kehadiran_guru($tgl, $idl)
+    public function kehadiran_guru($tgl, $idl = null)
     {
         $hari_ini = $tgl;
         // $hari_ini = date('2025-01-07');
