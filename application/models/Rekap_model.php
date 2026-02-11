@@ -48,9 +48,9 @@ class Rekap_model extends CI_Model
                     continue;
                 }
 
-                if ($hari == 'Friday') {
-                    continue;
-                }
+                // if ($hari == 'Friday') {
+                //     continue;
+                // }
 
                 // 2️⃣ CEK APEL SETT
                 $apelWajib = $this->db_active->get_where('apel_sett', [
@@ -123,9 +123,9 @@ class Rekap_model extends CI_Model
                 if ($libur) {
                     continue;
                 }
-                if ($hari == 'Friday') {
-                    continue;
-                }
+                // if ($hari == 'Friday') {
+                //     continue;
+                // }
 
                 // 3️⃣ CEK ABSENSI
                 $absen = $this->db_active->get_where('kehadiran_guru', [
@@ -201,9 +201,9 @@ class Rekap_model extends CI_Model
                 if ($libur) {
                     continue;
                 }
-                if ($hari == 'Friday') {
-                    continue;
-                }
+                // if ($hari == 'Friday') {
+                //     continue;
+                // }
 
                 // 3️⃣ CEK ABSENSI
                 $absen = $this->db_active
