@@ -1,101 +1,101 @@
 <?php $this->load->view('admin/head'); ?>
 
 
-    <!-- Header Halaman -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between mb-4">
-        <div>
-            <h2 class="text-2xl font-bold">Absensi Mengajar Guru</h2>
-            <p class="text-gray-600 dark:text-gray-400">Halaman kelola data absensi mengajar guru</p>
-        </div>
+<!-- Header Halaman -->
+<div class="flex flex-col md:flex-row md:items-center justify-between mb-4">
+    <div>
+        <h2 class="text-2xl font-bold">Absensi Mengajar Guru</h2>
+        <p class="text-gray-600 dark:text-gray-400">Halaman kelola data absensi mengajar guru</p>
+    </div>
 
-        <div class="flex flex-wrap items-center gap-2 mt-4 md:mt-0">
+    <div class="flex flex-wrap items-center gap-2 mt-4 md:mt-0">
 
-            <!-- <button onclick="window.location.href='<?= base_url('absensiguru/pembiasaan') ?>'" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
+        <!-- <button onclick="window.location.href='<?= base_url('absensiguru/pembiasaan') ?>'" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
                 <i class="fas fa-arrow-left mr-2"></i>
                 Kembali
             </button> -->
-        </div>
+    </div>
+</div>
+
+
+<!-- Tabel Data -->
+<div class="bg-white dark:bg-gray-800 rounded-xl flux-shadow overflow-hidden mb-6">
+    <!-- Header Tabel dengan Aksi -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <h3 class="font-bold text-lg">Absensi Hari ini <?= tanggal_indo($tanggal, true) ?></h3>
+
+
     </div>
 
+    <!-- Tabel -->
 
-    <!-- Tabel Data -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl flux-shadow overflow-hidden mb-6">
-        <!-- Header Tabel dengan Aksi -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-            <h3 class="font-bold text-lg">Absensi Hari ini <?= tanggal_indo($tanggal, true) ?></h3>
+    <div class="overflow-x-auto ">
+        <input type="hidden" name="tanggal" value="<?= $tanggal ?>">
 
-
-        </div>
-
-        <!-- Tabel -->
-
-        <div class="overflow-x-auto ">
-            <input type="hidden" name="tanggal" value="<?= $tanggal ?>">
-
-            <table class="min-w-full text-sm border border-gray-300 dark:border-gray-600 border-collapse">
-                <thead class="bg-slate-100 dark:bg-gray-800 text-slate-700 dark:text-gray-200">
-                    <tr>
-                        <th class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-left">
-                            Guru/Jam
+        <table class="min-w-full text-sm border border-gray-300 dark:border-gray-600 border-collapse">
+            <thead class="bg-slate-100 dark:bg-gray-800 text-slate-700 dark:text-gray-200">
+                <tr>
+                    <th class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-left">
+                        Guru/Jam
+                    </th>
+                    <?php for ($i = 1; $i <= $jml_jp; $i++) : ?>
+                        <th class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-center">
+                            <?= $i ?>
                         </th>
-                        <?php for ($i = 1; $i <= 8; $i++) : ?>
-                            <th class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-center">
-                                <?= $i ?>
-                            </th>
-                        <?php endfor; ?>
-                    </tr>
-                </thead>
+                    <?php endfor; ?>
+                </tr>
+            </thead>
 
-                <tbody class="bg-white dark:bg-gray-900">
-                    <?php
-                    $hariini = $tanggal;
-                    foreach ($data as $row) :
-                        $guru = $row['id_guru'];
+            <tbody class="bg-white dark:bg-gray-900">
+                <?php
+                $hariini = $tanggal;
+                foreach ($data as $row) :
+                    $guru = $row['id_guru'];
 
-                        for ($i = 1; $i <= 8; $i++) {
-                            ${"cek$i"} = $this->db_active
-                                ->query("SELECT * FROM mengajar WHERE id_guru='$guru' AND tanggal='$hariini' AND jam=$i")
-                                ->row();
-                        }
-                    ?>
+                    for ($i = 1; $i <= $jml_jp; $i++) {
+                        ${"cek$i"} = $this->db_active
+                            ->query("SELECT * FROM mengajar WHERE id_guru='$guru' AND tanggal='$hariini' AND jam=$i")
+                            ->row();
+                    }
+                ?>
 
-                        <tr class="odd:bg-white even:bg-slate-50 dark:odd:bg-gray-900 dark:even:bg-gray-800 hover:bg-slate-100 dark:hover:bg-gray-700 transition">
+                    <tr class="odd:bg-white even:bg-slate-50 dark:odd:bg-gray-900 dark:even:bg-gray-800 hover:bg-slate-100 dark:hover:bg-gray-700 transition">
 
-                            <!-- Nama Guru -->
-                            <td class="px-3 py-2 border border-gray-300 dark:border-gray-600 font-medium">
-                                <a
-                                    data-guru="<?= $row['id_guru'] ?>"
-                                    class="hover:underline cursor-pointer show-rinci">
-                                    <?= $row['nama'] ?>
-                                </a>
-                            </td>
+                        <!-- Nama Guru -->
+                        <td class="px-3 py-2 border border-gray-300 dark:border-gray-600 font-medium">
+                            <a
+                                data-guru="<?= $row['id_guru'] ?>"
+                                class="hover:underline cursor-pointer show-rinci">
+                                <?= $row['nama'] ?>
+                            </a>
+                        </td>
 
-                            <!-- Jam 1 - 8 -->
-                            <?php for ($i = 1; $i <= 8; $i++) : ?>
-                                <td class="
+                        <!-- Jam 1 - 8 -->
+                        <?php for ($i = 1; $i <= $jml_jp; $i++) : ?>
+                            <td class="
                         px-3 py-2 border border-gray-300 dark:border-gray-600 text-center
                         <?= in_array($i, $row['jam'])
-                                    ? 'bg-orange-200 dark:bg-orange-600/30 text-orange-900 dark:text-orange-200 font-semibold'
-                                    : '' ?>
+                                ? 'bg-orange-200 dark:bg-orange-600/30 text-orange-900 dark:text-orange-200 font-semibold'
+                                : '' ?>
                     ">
-                                    <?= ${"cek$i"} ? ${"cek$i"}->ket : '-' ?>
-                                </td>
-                            <?php endfor; ?>
-                        </tr>
+                                <?= ${"cek$i"} ? ${"cek$i"}->ket : '-' ?>
+                            </td>
+                        <?php endfor; ?>
+                    </tr>
 
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-
-
-        </div>
-
-        <div class="flex flex-col md:flex-row md:items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700">
-
-        </div>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
 
 
     </div>
+
+    <div class="flex flex-col md:flex-row md:items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700">
+
+    </div>
+
+
+</div>
 
 
 

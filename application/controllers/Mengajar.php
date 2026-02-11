@@ -95,6 +95,8 @@ class Mengajar extends MY_Controller
         $data['menu'] = "absensiguru";
         $data['sub'] = "mengajar";
 
+        $data['jml_jp'] = $this->model->getBy('setting', 'key', 'jml_jp')->row('isi');
+
         if ($id == null) {
             $harini = date('l');
             $tglni = date('Y-m-d');
