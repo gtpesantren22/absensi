@@ -21,6 +21,7 @@
             <div class="flex justify-center">
                 <div id="chartKehadiran" class="max-auto"></div>
             </div>
+            <b><?= $this->session->userdata('db_selected'); ?></b>
             <table class="min-w-full bg-white border border-gray-200">
                 <thead class="bg-gray-100">
                     <tr>
