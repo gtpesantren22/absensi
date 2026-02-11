@@ -114,7 +114,7 @@
                 <td class="p-2">
                     <button onclick="window.location.href='<?php echo base_url() ?>kehadiranguru/kehadiran_add/${row.tanggal}'" class="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Edit</button>
                     <button data-id="${row.tanggal}" class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 tombol-hapus">Hapus</button>
-                    <button onclick="window.open('<?php echo base_url() ?>screen/kehadiran_guru/${row.tanggal}','_blank')" class="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600"><i class="fas fa-download"></i></button>
+                    <button onclick="window.open('<?php echo base_url() ?>kehadiranguru/screenhadir/${row.tanggal}','_blank')" class="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600"><i class="fas fa-download"></i></button>
             
                 </td>
             </tr>
