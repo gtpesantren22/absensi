@@ -69,16 +69,20 @@ class Kbm extends MY_Controller
 	{
 		$idJadwal = $this->input->post('id_jadwal', true);
 		$jadwal = $this->db->query("SELECT * FROM jadwal WHERE id_jadwal = '$idJadwal' ")->row();
-		$mapel = $this->model->getBy('mapel', 'id_mapel', $jadwal->id_mapel)->row();
+
+		$dbdata = $this->db->query("SELECT a.db_name FROM list_db a JOIN lembaga b ON a.id=b.id_db WHERE b.id_lembaga = '$jadwal->id_lembaga' ")->row();
+		$this->session->set_userdata('db_selected', $dbdata->db_name);
+		$this->load->library('Dynamic_db'); // load dulu
+		$this->db_active = $this->dynamic_db->connect(); // baru panggil method connect()
+
+		$mapel = $this->db_active->query("SELECT * FROM mapel WHERE id_mapel = '$jadwal->id_mapel' ")->row();
 
 		$dyas = date('l');
 
-		$listdata = $this->model->query("SELECT * FROM rombel WHERE id_kelas = $jadwal->id_kelas ");
-		$mapel = $this->model->getBy('mapel', 'id_mapel', $jadwal->id_mapel)->row();
+		$listdata = $this->db_active->query("SELECT * FROM rombel WHERE id_kelas = $jadwal->id_kelas ");
 
 		echo '
 		<div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm bg-white dark:bg-slate-800">
-
 			<!-- Hidden data -->
 			<input type="hidden" name="guru" value="' . $jadwal->id_guru . '">
 			<input type="hidden" name="mapel" value="' . $jadwal->id_mapel . '">
@@ -191,11 +195,11 @@ class Kbm extends MY_Controller
 
 		$jmlAbs = ($sampai - $dari) + 1;
 
-		$cek = $this->model->getBy5('harian', 'id_guru', $guru, 'id_mapel', $mapel, 'id_kelas', $kelas, 'tanggal', $tanggal, 'dari', $dari)->row();
+		$cek = $this->db_active->query("SELECT * FROM harian WHERE id_guru = '$guru' AND id_mapel = '$mapel' AND id_kelas = '$kelas' AND tanggal = '$tanggal' AND dari = '$dari'")->row();
 
 		$nmGuru = $this->db->query("SELECT * FROM guru WHERE id_guru = '$guru' ")->row();
-		$nmMapel = $this->model->getBy('mapel', 'id_mapel', $mapel)->row();
-		$nmkelas = $this->model->getBy('kelas', 'id_kelas', $kelas)->row();
+		$nmMapel = $this->db_active->query("SELECT * FROM mapel WHERE id_mapel = '$mapel'")->row();
+		$nmkelas = $this->db_active->query("SELECT * FROM kelas WHERE id_kelas = '$kelas'")->row();
 
 		if ($cek) {
 			$this->session->set_flashdata('error', 'Absensi sudah ada. Jika ada kelasahan silahkan dihapus atau diupdate kembali');
@@ -243,16 +247,15 @@ class Kbm extends MY_Controller
 						'guru' => $nmGuru->nama,
 						'nama_siswa' => $nmsiswa->nama
 					];
-					$sql = $this->model->tambah('harian', $dtsm);
+					$sql = $this->db_active->insert('harian', $dtsm);
 				}
 
 				if ($sql) {
-
-					$this->model->tambah('jurnal_guru', [
+					$this->db_active->insert('jurnal_guru', [
 						'kode_absen' => $kode,
 						'isi' => $isi ? $isi : '-'
 					]);
-					$hadirHsl = $this->model->getBy2('harian', 'ket', 'hadir', 'kode', $kode);
+					$hadirHsl = $this->db_active->query("SELECT * FROM harian WHERE ket= 'hadir' AND kode = '$kode'");
 					$sakitHsl = $this->db_active->query("SELECT * FROM harian WHERE ket= 'sakit' AND kode = '$kode'");
 					$izinHsl = $this->db_active->query("SELECT * FROM harian WHERE ket= 'izin' AND kode = '$kode'");
 					$alphaHsl = $this->db_active->query("SELECT * FROM harian WHERE ket= 'alpha' AND kode = '$kode'");
@@ -293,6 +296,13 @@ Jam ke : ' . $dari . ' - ' . $sampai . '
 					// kirim_group('6285258800849-1471341787@g.us', $psn);
 
 					$this->session->set_flashdata('ok', 'Input Absen Berhasil');
+
+					$dbdata = $this->db->query("SELECT a.db_name FROM list_db a JOIN lembaga b ON a.id=b.id_db WHERE b.id_lembaga = '$this->id_lembaga' ")->row();
+					$this->session->set_userdata('db_selected', $dbdata->db_name);
+					$this->load->library('Dynamic_db'); // load dulu
+					$this->db_active = $this->dynamic_db->connect(); // baru panggil method connect()
+
+
 					redirect('kbm/absensi');
 				} else {
 					$this->session->set_flashdata('error', 'Input Absen Gagal');
