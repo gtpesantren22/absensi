@@ -99,7 +99,7 @@ class Screen extends MY_Controller
     {
         $hari_ini = $tgl;
         // $hari_ini = date('2025-01-07');
-        $dataCari = $this->model->getBy('apel_guru', 'tanggal', $hari_ini)->row();
+        $dataCari = $this->model->getBy('kehadiran_guru', 'tanggal', $hari_ini)->row();
         if ($dataCari) {
             $harini = date('l', strtotime($dataCari->tanggal));
             $tglni = $dataCari->tanggal;
