@@ -11,16 +11,41 @@ class Screen extends MY_Controller
         parent::__construct();
     }
 
-    protected function dbActive($bd_name)
+    protected function dbActive($db_name)
     {
-        $group = $bd_name ?? 'default';
+        if (!$db_name) {
+            show_error('Database aktif belum ditentukan');
+        }
 
+        $config = [
+            'dsn'      => '',
+            'hostname' => 'localhost',
+            'username' => 'u9048253_user',
+            'password' => 'password_db',
+            'database' => $db_name,   // ← DINAMIS
+            'dbdriver' => 'mysqli',
+            'dbprefix' => '',
+            'pconnect' => FALSE,
+            'db_debug' => (ENVIRONMENT !== 'production'),
+            'cache_on' => FALSE,
+            'cachedir' => '',
+            'char_set' => 'utf8',
+            'dbcollat' => 'utf8_general_ci',
+            'swap_pre' => '',
+            'encrypt'  => FALSE,
+            'compress' => FALSE,
+            'stricton' => FALSE,
+            'failover' => [],
+            'save_queries' => TRUE
+        ];
+
+        // selalu koneksi BARU jika DB berubah
         if (
             !$this->db_active ||
-            $this->db_active_group !== $group
+            $this->db_active_dbname !== $db_name
         ) {
-            $this->db_active = $this->load->database($group, TRUE);
-            $this->db_active_group = $group;
+            $this->db_active = $this->load->database($config, TRUE);
+            $this->db_active_dbname = $db_name;
         }
 
         return $this->db_active;
