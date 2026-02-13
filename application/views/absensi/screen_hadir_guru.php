@@ -11,24 +11,45 @@
 
 <body class="bg-gray-50 p-6">
     <div id="capture" class="max-w-xl mx-auto bg-white rounded-lg shadow-md p-6">
-        <h1 class="text-xl font-bold text-gray-800 mb-1 text-center">Rekap Kehadiran Guru</h1>
-        <h1 class="text-xl font-bold text-gray-800 mb-1 text-center"><?= $lembaga->nama ?></h1>
-        <h1 class="text-l font-bold text-gray-600 mb-6 text-center"><?= tanggal_indo($tanggal, true) ?></h1>
+        <!-- KOP -->
+        <div class="flex justify-center mb-6">
+            <div class="flex items-center gap-3">
+
+                <!-- LOGO -->
+                <img src="<?= base_url('assets/logo/' . $lembaga->logo) ?>"
+                    alt="Logo"
+                    class="w-16 h-16 object-contain">
+
+                <!-- TEKS -->
+                <div class="text-left leading-tight">
+                    <h1 class="text-lg font-bold text-gray-800">
+                        Rekap Kehadiran Guru
+                    </h1>
+                    <h1 class="text-lg font-bold text-gray-800">
+                        <?= $lembaga->nama ?>
+                    </h1>
+                    <h1 class="text-sm font-semibold text-gray-600">
+                        <?= tanggal_indo($tanggal, true) ?>
+                    </h1>
+                </div>
+
+            </div>
+        </div>
+        <!-- END KOP -->
 
 
         <!-- Wrapper flex agar chart rapi di tengah -->
         <div class="overflow-x-auto">
             <div class="flex justify-center">
-                <div id="chartKehadiran" class="max-auto"></div>
+                <div id="chartKehadiran" class="mx-auto"></div>
             </div>
             <table class="min-w-full bg-white border border-gray-200">
                 <thead class="bg-gray-100">
                     <tr>
-                        <th rowspan="2" class="py-3 px-4 border-b text-left text-sm font-semibold text-gray-700">No</th>
-                        <th rowspan="2" class="py-3 px-4 border-b text-left text-sm font-semibold text-gray-700">Nama</th>
-                        <th rowspan="2" class="py-3 px-4 border-b text-left text-sm font-semibold text-gray-700">Ket</th>
-                        <th rowspan="2" class="py-3 px-4 border-b text-left text-sm font-semibold text-gray-700">Waktu</th>
-                        </th>
+                        <th rowspan="2" class="py-3 px-1 border-b text-left text-sm font-semibold text-gray-700">No</th>
+                        <th rowspan="2" class="py-3 px-1 border-b text-left text-sm font-semibold text-gray-700">Nama</th>
+                        <th rowspan="2" class="py-3 px-1 border-b text-left text-sm font-semibold text-gray-700">Ket</th>
+                        <th rowspan="2" class="py-3 px-1 border-b text-left text-sm font-semibold text-gray-700">Waktu</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
@@ -39,9 +60,9 @@
                         $gurudt = $this->db->query("SELECT nama FROM guru WHERE id_guru = '$row->id_guru' ")->row();
                     ?>
                         <tr class="bg-white">
-                            <td class="py-3 px-4 border-b text-sm text-gray-700"><?= $no++ ?></td>
-                            <td class="py-3 px-4 border-b text-sm font-medium text-gray-800"><?= $gurudt->nama ?></td>
-                            <td class="py-3 px-4 border-b">
+                            <td class="py-3 px-1 border-b text-sm text-gray-700"><?= $no++ ?></td>
+                            <td class="py-3 px-1 border-b text-sm font-medium text-gray-800"><?= $gurudt->nama ?></td>
+                            <td class="py-3 px-1 border-b">
                                 <?php if ($row->ket == 'hadir') { ?>
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-md font-medium bg-green-100 text-green-800">✅ Hadir</span>
                                 <?php } elseif ($row->ket == 'izin') { ?>
@@ -50,7 +71,7 @@
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-md font-medium bg-red-100 text-red-800">❌ Alpha</span>
                                 <?php } ?>
                             </td>
-                            <td class="py-3 px-4 border-b text-sm text-gray-700"><?= $row->ket != 'hadir' ?  '-' : $row->waktu ?></td>
+                            <td class="py-3 px-1 border-b text-sm text-gray-700"><?= $row->ket != 'hadir' ?  '-' : $row->waktu ?></td>
                         </tr>
                     <?php endforeach ?>
                 </tbody>

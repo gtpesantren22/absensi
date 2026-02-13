@@ -10,9 +10,28 @@
 
 <body class="bg-gray-50 p-6">
     <div id="capture" class="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
-        <h1 class="text-2xl font-bold text-gray-800 mb-1 text-center">Rekap Kehadiran Mengajar Guru</h1>
-        <h1 class="text-xl font-bold text-gray-800 mb-6 text-center"><?= $lembaga->nama ?></h1>
+        <!-- KOP -->
+        <div class="flex justify-center mb-6">
+            <div class="flex items-center gap-3">
 
+                <!-- LOGO -->
+                <img src="<?= base_url('assets/logo/' . $lembaga->logo) ?>"
+                    alt="Logo"
+                    class="w-16 h-16 object-contain">
+
+                <!-- TEKS -->
+                <div class="text-left leading-tight">
+                    <h1 class="text-lg font-bold text-gray-800">
+                        Rekap Kehadiran Mengajar Guru
+                    </h1>
+                    <h1 class="text-lg font-bold text-gray-800">
+                        <?= $lembaga->nama ?>
+                    </h1>
+                </div>
+
+            </div>
+        </div>
+        <!-- END KOP -->
         <div class="flex justify-between items-center mb-6">
             <div>
                 <p class="text-gray-600">Hari: <span class="font-semibold"><?= $hari ?></span></p>

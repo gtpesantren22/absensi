@@ -33,7 +33,7 @@ class Piket extends MY_Controller
             ->result_array();
 
         $apelList = $this->db_active
-            ->select('id_guru, GROUP_CONCAT(hari ORDER BY hari SEPARATOR ",") AS daftar_hari')
+            ->select('id_guru, GROUP_CONCAT(TRIM(hari) ORDER BY hari SEPARATOR ",") AS daftar_hari')
             ->from('piket')
             ->group_by('id_guru')
             ->get()

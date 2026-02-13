@@ -11,11 +11,32 @@
 
 <body class="bg-gray-50 p-6">
     <div id="capture" class="max-w-xl mx-auto bg-white rounded-lg shadow-md p-6">
-        <h1 class="text-xl font-bold text-gray-800 mb-1 text-center">Rekap Kehadiran Apel Pembaisaan Guru</h1>
-        <h1 class="text-xl font-bold text-gray-800 mb-1 text-center"><?= $lembaga->nama ?></h1>
-        <h1 class="text-l font-bold text-gray-600 mb-6 text-center"><?= tanggal_indo($tanggal, true) ?></h1>
+        <!-- KOP -->
+        <div class="flex justify-center mb-6">
+            <div class="flex items-center gap-3">
 
+                <!-- LOGO -->
+                <img src="<?= base_url('assets/logo/' . $lembaga->logo) ?>"
+                    alt="Logo"
+                    class="w-16 h-16 object-contain">
 
+                <!-- TEKS -->
+                <div class="text-left leading-tight">
+                    <h1 class="text-lg font-bold text-gray-800">
+                        Rekap Kehadiran Apel Pembiasaan Guru
+                    </h1>
+                    <h1 class="text-lg font-bold text-gray-800">
+                        <?= $lembaga->nama ?>
+                    </h1>
+                    <h1 class="text-sm font-semibold text-gray-600">
+                        <?= tanggal_indo($tanggal, true) ?>
+                    </h1>
+                </div>
+
+            </div>
+        </div>
+        <!-- END KOP -->
+        
         <!-- Wrapper flex agar chart rapi di tengah -->
         <div class="overflow-x-auto">
             <div class="flex justify-center">
