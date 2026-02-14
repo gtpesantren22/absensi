@@ -82,7 +82,7 @@
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700" id="">
                 <!-- Baris Data 1 -->
                 <?php foreach ($guru as $index => $row):
-                    $hari_guru = explode(',', $row['daftar_hari']);
+                    $hari_guru = array_map('trim', explode(',', $row['daftar_hari']));
                 ?>
                     <tr class="border-b">
                         <td class="p-2"><?= $index + 1 ?></td>
