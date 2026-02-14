@@ -9,7 +9,9 @@ class Mengajar extends MY_Controller
         $this->load->model('Modeldata', 'model');
         $this->load->library('Dynamic_db'); // load dulu
         $this->db_active = $this->dynamic_db->connect(); // baru panggil method connect()
+
         $this->mustLogin();
+        $this->onlyPiket();
 
         $this->iduser = $this->session->userdata('id_user');
         $usrdtl = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser' ")->row();
