@@ -137,10 +137,10 @@ class Qrcode extends MY_Controller
         $locations = [
             ['lat' => -7.762560182146305, 'lon' => 113.421642647389], // Sekolah A  
             ['lat' => -7.762921929327378, 'lon' => 113.42061504208957], // Sekolah B , 
-            ['lat' => -6.199000, 'lon' => 106.818200], // Sekolah C
+            ['lat' => -7.756998490707694, 'lon' => 113.4230718505036], // Sekolah C, 
         ];
 
-        $radius = 10; // meter
+        $radius = 20; // meter
 
         foreach ($locations as $loc) {
             if ($this->distance($userLat, $userLon, $loc['lat'], $loc['lon']) <= $radius) {
