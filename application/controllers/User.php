@@ -16,7 +16,7 @@ class User extends MY_Controller
 		$this->mustLogin();
 		$this->AdminOrSuper();
 		$this->iduser = $this->session->userdata('id_user');
-		$this->id_lembaga = $this->db->query("SELECT id_lembaga FROM user WHERE id_user = '$this->iduser'")->row('id_lembaga');
+		$this->id_lembaga = $this->session->userdata('id_lembaga');
 	}
 
 	public function index()
@@ -40,7 +40,9 @@ class User extends MY_Controller
 
 		$offset = ($page - 1) * $perPage;
 
-		/* ================= FILTER ================= */
+		/* ================= BASE QUERY ================= */
+		$this->db->from('user');
+
 		if (!empty($search)) {
 			$this->db->group_start()
 				->like('nama', $search)
@@ -49,18 +51,18 @@ class User extends MY_Controller
 				->group_end();
 		}
 
-		$this->db->where('level !=', 'admin');
-		$this->db->where('level !=', 'super_admin');
+		$this->db->where_not_in('level', ['admin', 'super_admin']);
 		$this->db->where('id_lembaga', $this->id_lembaga);
 
 		/* ================= TOTAL ================= */
 		$db_total = clone $this->db;
-		$total = $db_total->count_all_results('user');
+		$total = $db_total->count_all_results();
 
 		/* ================= DATA ================= */
 		$this->db->order_by($sortBy, $sortDir);
 		$this->db->limit($perPage, $offset);
-		$data = $this->db->get('user')->result_array();
+
+		$data = $this->db->get()->result_array();
 
 		$result = [
 			'data'      => $data,

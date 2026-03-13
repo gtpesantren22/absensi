@@ -7,23 +7,22 @@ class Setting extends MY_Controller
 	{
 		parent::__construct();
 		$this->load->model('Modeldata', 'model');
-		$this->load->library('Dynamic_db'); // load dulu
-		$this->db_active = $this->dynamic_db->connect(); // baru panggil method connect()
+
 		$this->mustLogin();
 		$this->AdminOrSuper();
 
 		$this->level = $this->session->userdata('level');
 		$this->iduser = $this->session->userdata('id_user');
+		$this->id_lembaga = $this->session->userdata('id_lembaga');
 	}
 
 	public function index()
 	{
-		$usrdtl = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser'")->row();
 
 		$data['menu'] = 'setting';
 		$data['sub'] = 'setting';
 
-		$data['jml_rombel'] = $this->model->getBy('setting', 'key', 'jml_jp')->row();
+		$data['jml_rombel'] = $this->model->getBy2('setting', 'key', 'jml_jp', 'id_lembaga', $this->id_lembaga)->row();
 
 		$this->load->view('admin/setting', $data);
 	}
@@ -31,7 +30,13 @@ class Setting extends MY_Controller
 	public function jml_rombel()
 	{
 		$jml = $this->input->post('jml_rombel', TRUE);
-		$sql = $this->model->edit('setting', 'key', 'jml_jp', ['isi' => $jml]);
+		$cek = $this->model->getBy2('setting', 'key', 'jml_jp', 'id_lembaga', $this->id_lembaga)->row();
+		if ($cek) {
+			$sql = $this->model->edit2('setting', 'key', 'jml_jp', 'id_lembaga', $this->id_lembaga, ['isi' => $jml]);
+		} else {
+			$sql = $this->model->tambah('setting', ['key' => 'jml_jp', 'isi' => $jml, 'id_lembaga' => $this->id_lembaga]);
+		}
+
 		if ($sql) {
 			$this->session->set_flashdata('ok', 'Update JP berhasil');
 			redirect('setting');
@@ -43,9 +48,7 @@ class Setting extends MY_Controller
 
 	public function set_lembaga($id_lembaga)
 	{
-		$infolmb = $this->db->query("SELECT list_db.db_name FROM lembaga JOIN list_db ON lembaga.id_db=list_db.id WHERE id_lembaga = '$id_lembaga' ")->row();
-
-		$this->session->set_userdata('db_selected', $infolmb->db_name);
+		$this->session->set_userdata('id_lembaga', $id_lembaga);
 
 		$this->db->where('id_user', $this->iduser);
 		$this->db->update('user', ['id_lembaga' => $id_lembaga]);

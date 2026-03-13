@@ -30,16 +30,8 @@
 <script src="<?= base_url('assets/'); ?>sw/my-notif.js"></script>
 
 <script>
-    // Toggle Sidebar di Mobile
-    // const header = document.querySelector('header');
-    // const sidebar = document.getElementById('sidebar');
-    // const overlay = document.getElementById('sidebarOverlay');
+    document.addEventListener('DOMContentLoaded', function() {
 
-    // const h = header.offsetHeight;
-    // sidebar.style.top = h + 'px';
-    // overlay.style.top = h + 'px';
-
-    document.addEventListener('DOMContentLoaded', () => {
         const sidebar = document.getElementById('sidebar');
         const toggle = document.getElementById('sidebarToggle');
         const overlay = document.getElementById('sidebarOverlay');
@@ -47,28 +39,89 @@
 
         if (!sidebar || !toggle || !overlay) return;
 
-        const open = () => {
+        const isMobile = () => window.innerWidth < 768;
+
+        // =============================
+        // INITIAL STATE
+        // =============================
+        function setInitialState() {
+            if (isMobile()) {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+                if (main) main.classList.remove('md:ml-64');
+            } else {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+                if (main) main.classList.add('md:ml-64');
+            }
+        }
+
+        setInitialState();
+
+        // =============================
+        // OPEN MOBILE
+        // =============================
+        function openSidebar() {
             sidebar.classList.remove('-translate-x-full');
             overlay.classList.remove('hidden');
-            if (window.innerWidth >= 768) main.classList.add('md:ml-64');
-        };
+            document.body.classList.add('overflow-hidden');
+        }
 
-        const close = () => {
+        // =============================
+        // CLOSE MOBILE
+        // =============================
+        function closeSidebar() {
             sidebar.classList.add('-translate-x-full');
             overlay.classList.add('hidden');
-            main.classList.remove('md:ml-64');
-        };
+            document.body.classList.remove('overflow-hidden');
+        }
 
-        toggle.addEventListener('click', () =>
-            sidebar.classList.contains('-translate-x-full') ? open() : close()
-        );
+        // =============================
+        // TOGGLE BUTTON
+        // =============================
+        toggle.addEventListener('click', function() {
+            if (!isMobile()) return;
 
-        overlay.addEventListener('click', close);
+            if (sidebar.classList.contains('-translate-x-full')) {
+                openSidebar();
+            } else {
+                closeSidebar();
+            }
+        });
 
-        // Desktop resize safety
-        window.addEventListener('resize', () => {
-            if (window.innerWidth >= 768 && !sidebar.classList.contains('-translate-x-full')) {
-                main.classList.add('md:ml-64');
+        // =============================
+        // OVERLAY CLICK
+        // =============================
+        overlay.addEventListener('click', function() {
+            if (isMobile()) closeSidebar();
+        });
+
+        // =============================
+        // AUTO CLOSE WHEN CLICK MENU (MOBILE)
+        // =============================
+        document.querySelectorAll('#sidebar a').forEach(link => {
+            link.addEventListener('click', function() {
+                if (isMobile()) closeSidebar();
+            });
+        });
+
+        // =============================
+        // RESIZE FIX
+        // =============================
+        window.addEventListener('resize', function() {
+            setInitialState();
+        });
+
+    });
+
+    document.querySelectorAll('#sidebar a').forEach(link => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+                document.getElementById('sidebarOverlay').classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
             }
         });
     });

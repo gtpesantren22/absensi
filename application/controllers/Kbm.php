@@ -10,15 +10,12 @@ class Kbm extends MY_Controller
 	{
 		parent::__construct();
 		$this->load->model('Modeldata', 'model');
-		$this->load->library('Dynamic_db'); // load dulu
-		$this->db_active = $this->dynamic_db->connect(); // baru panggil method connect()
 
 		$this->mustLogin();
 
 		$this->id_user = $this->session->userdata('id_user');
 		$this->iduser = $this->session->userdata('id_user');
-		$usrdtl = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser' ")->row();
-		$this->id_lembaga = $usrdtl->id_lembaga;
+		$this->id_lembaga = $this->session->userdata('id_lembaga');
 	}
 
 	public function control()
@@ -65,30 +62,61 @@ class Kbm extends MY_Controller
 		$this->load->view('absensi/kbm_siswa', $data);
 	}
 
+	public function hasil()
+	{
+		$data['judul'] = 'Hasil Absensi KBM';
+		$data['menu'] = 'hasil';
+		$data['sub'] = 'kbm';
+
+		$data['days'] = date('l');
+		$idguru = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser' ")->row();
+		$data['idguru'] = $idguru->id_guru;
+		$data['guru'] = $this->db->query("SELECT * FROM guru WHERE id_guru = '$idguru->id_guru' ")->row();
+
+		$data['lmb'] =  $this->db
+			->select('
+					j.id_lembaga,
+					l.nama AS nama_lembaga,
+					MIN(j.jam_dari) AS jam_pertama
+				')
+			->from('jadwal j')
+			->join('lembaga l', 'l.id_lembaga = j.id_lembaga')
+			->where('j.hari', $data['days'])
+			->where('j.id_guru', $idguru->id_guru)
+			->group_by('j.id_lembaga, l.nama')
+			->order_by('jam_pertama', 'ASC')
+			->get()
+			->result();
+		$data['user'] = $idguru;
+
+		$this->load->view('absensi/hasil_kbm_siswa', $data);
+	}
+
+
 	public function cariKelas()
 	{
 		$idJadwal = $this->input->post('id_jadwal', true);
 		$jadwal = $this->db->query("SELECT * FROM jadwal WHERE id_jadwal = '$idJadwal' ")->row();
 
-		$dbdata = $this->db->query("SELECT a.db_name FROM list_db a JOIN lembaga b ON a.id=b.id_db WHERE b.id_lembaga = '$jadwal->id_lembaga' ")->row();
-		$this->session->set_userdata('db_selected', $dbdata->db_name);
-		$this->load->library('Dynamic_db'); // load dulu
-		$this->db_active = $this->dynamic_db->connect(); // baru panggil method connect()
+		$mapel = $this->db->query("SELECT * FROM mapel WHERE id_mapel = '$jadwal->id_mapel' ")->row();
 
-		$mapel = $this->db_active->query("SELECT * FROM mapel WHERE id_mapel = '$jadwal->id_mapel' ")->row();
+		$dyas = date('Y-m-d');
 
-		$dyas = date('l');
+		$listdata = $this->db->query("SELECT * FROM rombel WHERE id_kelas = $jadwal->id_kelas ");
 
-		$listdata = $this->db_active->query("SELECT * FROM rombel WHERE id_kelas = $jadwal->id_kelas ");
+		$cek = $this->db->query("SELECT * FROM harian WHERE id_guru = '$jadwal->id_guru' AND id_mapel = '$jadwal->id_mapel' AND id_kelas = '$jadwal->id_kelas' AND tanggal = '$dyas' AND dari = '$jadwal->jam_dari' AND id_lembaga = '$jadwal->id_lembaga' ")->row();
 
-		echo '
-		<div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm bg-white dark:bg-slate-800">
-			<!-- Hidden data -->
+
+		if (!$cek) {
+			echo '	
+			<div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm bg-white dark:bg-slate-800">
+
 			<input type="hidden" name="guru" value="' . $jadwal->id_guru . '">
 			<input type="hidden" name="mapel" value="' . $jadwal->id_mapel . '">
 			<input type="hidden" name="kelas" value="' . $jadwal->id_kelas . '">
 			<input type="hidden" name="dari" value="' . $jadwal->jam_dari . '">
 			<input type="hidden" name="sampai" value="' . $jadwal->jam_sampai . '">
+			<input type="hidden" name="id_lembaga" value="' . $jadwal->id_lembaga . '">
 
 			<table class="min-w-full border-collapse text-sm text-slate-700 dark:text-slate-200">
 				<tbody>
@@ -106,10 +134,10 @@ class Kbm extends MY_Controller
 							Jam ke : ' . $jadwal->jam_dari . ' - ' . $jadwal->jam_sampai . '
 						</td>
 					</tr>';
-		$no = 1;
-		foreach ($listdata->result() as $row) :
-			$siswadt = $this->db->query("SELECT * FROM siswa WHERE id_siswa = '$row->id_siswa' ")->row();
-			echo '
+			$no = 1;
+			foreach ($listdata->result() as $row) :
+				$siswadt = $this->db->query("SELECT * FROM siswa WHERE id_siswa = '$row->id_siswa' ")->row();
+				echo '
 					<tr class="border-b border-gray-200 dark:border-slate-700 
 							hover:bg-gray-50 dark:hover:bg-slate-700/50">
 
@@ -167,18 +195,45 @@ class Kbm extends MY_Controller
 										A
 									</span>
 								</label>
+								
+								<!-- Telat -->
+								<label class="cursor-pointer">
+									<input type="radio" name="data[' . $no . '][ket]" value="telat" class="peer hidden">
+									<span class="inline-flex h-6 w-6 items-center justify-center rounded-full border
+												border-gray-300 dark:border-slate-500
+												text-xs font-bold text-gray-700 dark:text-slate-200
+												peer-checked:bg-purple-500 peer-checked:text-white">
+										T
+									</span>
+								</label>
 
 							</div>
 						</td>
 
 					</tr>';
 
-			$no++;
-		endforeach;
-		echo '
+				$no++;
+			endforeach;
+			echo '
 					</tbody>
 				</table>
+				</div>';
+		} else {
+			echo '
+			<div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm bg-white dark:bg-slate-800 p-6 text-center">
+
+				<p class="text-lg font-semibold text-gray-800 dark:text-slate-100">
+					Absensi Sudah Selesai
+				</p>
+
+				<button type="button"
+					onclick="window.location.href=\'' . base_url('kbm/edit/' . $cek->kode) . '\'"
+					class="mt-5 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition">
+					Edit Hasil Absensi
+				</button>
+
 			</div>';
+		}
 	}
 
 	public function save_multiple_data()
@@ -190,16 +245,17 @@ class Kbm extends MY_Controller
 		$data = $this->input->post('data', true);
 		$kelas = $this->input->post('kelas', true);
 		$isi = $this->input->post('isi', true);
+		$id_lembaga = $this->input->post('id_lembaga', true);
 		$kode = $this->uuid->v4();
 		$tanggal = date('Y-m-d');
 
 		$jmlAbs = ($sampai - $dari) + 1;
 
-		$cek = $this->db_active->query("SELECT * FROM harian WHERE id_guru = '$guru' AND id_mapel = '$mapel' AND id_kelas = '$kelas' AND tanggal = '$tanggal' AND dari = '$dari'")->row();
+		$cek = $this->db->query("SELECT * FROM harian WHERE id_guru = '$guru' AND id_mapel = '$mapel' AND id_kelas = '$kelas' AND tanggal = '$tanggal' AND dari = '$dari' AND id_lembaga = '$id_lembaga' ")->row();
 
 		$nmGuru = $this->db->query("SELECT * FROM guru WHERE id_guru = '$guru' ")->row();
-		$nmMapel = $this->db_active->query("SELECT * FROM mapel WHERE id_mapel = '$mapel'")->row();
-		$nmkelas = $this->db_active->query("SELECT * FROM kelas WHERE id_kelas = '$kelas'")->row();
+		$nmMapel = $this->db->query("SELECT * FROM mapel WHERE id_mapel = '$mapel'")->row();
+		$nmkelas = $this->db->query("SELECT * FROM kelas WHERE id_kelas = '$kelas'")->row();
 
 		if ($cek) {
 			$this->session->set_flashdata('error', 'Absensi sudah ada. Jika ada kelasahan silahkan dihapus atau diupdate kembali');
@@ -214,18 +270,27 @@ class Kbm extends MY_Controller
 						$sakit = 0;
 						$izin = 0;
 						$alpha = $jmlAbs;
+						$telat = 0;
 					} elseif ($item['ket'] == 'sakit') {
 						$sakit = $jmlAbs;
 						$izin = 0;
 						$alpha = 0;
+						$telat = 0;
 					} elseif ($item['ket'] == 'izin') {
 						$sakit = 0;
 						$izin = $jmlAbs;
 						$alpha = 0;
+						$telat = 0;
+					} elseif ($item['ket'] == 'telat') {
+						$sakit = 0;
+						$izin = 0;
+						$alpha = 0;
+						$telat = $jmlAbs;
 					} else {
 						$sakit = 0;
 						$izin = 0;
 						$alpha = 0;
+						$telat = 0;
 					}
 
 					$dtsm = [
@@ -241,24 +306,26 @@ class Kbm extends MY_Controller
 						'sakit' => $sakit,
 						'izin' => $izin,
 						'alpha' => $alpha,
-
+						'telat' => $telat,
 						'kelas' => $nmkelas->nama,
 						'mapel' => $nmMapel->nama,
 						'guru' => $nmGuru->nama,
-						'nama_siswa' => $nmsiswa->nama
+						'nama_siswa' => $nmsiswa->nama,
+						'id_lembaga' => $id_lembaga,
 					];
-					$sql = $this->db_active->insert('harian', $dtsm);
+					$sql = $this->db->insert('harian', $dtsm);
 				}
 
 				if ($sql) {
-					$this->db_active->insert('jurnal_guru', [
+					$this->db->insert('jurnal_guru', [
 						'kode_absen' => $kode,
 						'isi' => $isi ? $isi : '-'
 					]);
-					$hadirHsl = $this->db_active->query("SELECT * FROM harian WHERE ket= 'hadir' AND kode = '$kode'");
-					$sakitHsl = $this->db_active->query("SELECT * FROM harian WHERE ket= 'sakit' AND kode = '$kode'");
-					$izinHsl = $this->db_active->query("SELECT * FROM harian WHERE ket= 'izin' AND kode = '$kode'");
-					$alphaHsl = $this->db_active->query("SELECT * FROM harian WHERE ket= 'alpha' AND kode = '$kode'");
+					$hadirHsl = $this->db->query("SELECT * FROM harian WHERE ket= 'hadir' AND kode = '$kode' AND id_lembaga = '$id_lembaga'");
+					$sakitHsl = $this->db->query("SELECT * FROM harian WHERE ket= 'sakit' AND kode = '$kode' AND id_lembaga = '$id_lembaga'");
+					$izinHsl = $this->db->query("SELECT * FROM harian WHERE ket= 'izin' AND kode = '$kode' AND id_lembaga = '$id_lembaga'");
+					$alphaHsl = $this->db->query("SELECT * FROM harian WHERE ket= 'alpha' AND kode = '$kode' AND id_lembaga = '$id_lembaga'");
+					$telatHsl = $this->db->query("SELECT * FROM harian WHERE ket= 'telat' AND kode = '$kode' AND id_lembaga = '$id_lembaga'");
 
 					$psn = '*LAPORAN KEHADIRAN SISWA*
 *' . tanggal_indo(date('d-m-Y'), true) . '*
@@ -284,31 +351,176 @@ Jam ke : ' . $dari . ' - ' . $sampai . '
 						$nmsiswa = $this->db->query("SELECT * FROM siswa WHERE id_siswa = '$alp->id_siswa' ")->row();
 						$psn .= '- ' . ucwords(strtolower($nmsiswa->nama)) . "\n";
 					}
+					$psn .= "\n" . '*Telat*' . "\n";
+					foreach ($telatHsl->result() as $tl) {
+						$nmsiswa = $this->db->query("SELECT * FROM siswa WHERE id_siswa = '$tl->id_siswa' ")->row();
+						$psn .= '- ' . ucwords(strtolower($nmsiswa->nama)) . "\n";
+					}
 
-					$psn .= "\n" . '*Hadir :*' . "\n" . $hadirHsl->num_rows() . ' siswa';
+					$psn .= "\n" . '*Hadir :* '  . $hadirHsl->num_rows() . ' siswa';
+
+					$psn .= "\n" . "\n" . '*Materi yang disampaikan :*' . "\n" . $isi;
+
 					$psn .= "\n" . "\n" . '_Demikian Laporan ini kami sampaikan terimakasih_';
 
 					// echo $psn;
 					// kirim_person('085236924510', $psn);
-					kirim_group('120363418007064631@g.us', $psn);
+					kirim_group('120363418007064631@g.us', $psn, 'cQLhx5rw8xw00pfMxq1JpcwaQvvjfGpgGWbE02zvhFUjMDyXZfN2JpTK6AuWHTWh');
 
 					// Real
 					// kirim_group('6285258800849-1471341787@g.us', $psn);
 
 					$this->session->set_flashdata('ok', 'Input Absen Berhasil');
-
-					$dbdata = $this->db->query("SELECT a.db_name FROM list_db a JOIN lembaga b ON a.id=b.id_db WHERE b.id_lembaga = '$this->id_lembaga' ")->row();
-					$this->session->set_userdata('db_selected', $dbdata->db_name);
-					$this->load->library('Dynamic_db'); // load dulu
-					$this->db_active = $this->dynamic_db->connect(); // baru panggil method connect()
-
-
-					redirect('kbm/absensi');
+					redirect('kbm/hasil');
 				} else {
 					$this->session->set_flashdata('error', 'Input Absen Gagal');
 					redirect('kbm/absensi');
 				}
 			}
 		}
+	}
+
+	public function edit($kode)
+	{
+		$data['judul'] = 'Data KBM';
+		$data['menu'] = 'hasil';
+		$data['sub'] = 'kbm';
+
+		$userData = $this->db->query("SELECT * FROM user WHERE id_user = '$this->id_user' ")->row();
+		$data['guru'] = $this->db->query("SELECT * FROM guru WHERE id_guru = '$userData->id_guru' ")->row();
+
+
+		$data['listdata'] = $this->db->query("SELECT * FROM harian WHERE kode = '$kode' ");
+		$data['materi'] = $this->db->query("SELECT * FROM jurnal_guru WHERE kode_absen = '$kode' ")->row();
+
+		$this->load->view('absensi/edit_kbm_siswa', $data);
+	}
+
+	public function edit_multiple_data()
+	{
+		$dari = $this->input->post('dari', true);
+		$sampai = $this->input->post('sampai', true);
+		$kode = $this->input->post('kode', true);
+
+		$guru = $this->input->post('guru', true);
+		$mapel = $this->input->post('mapel', true);
+		$kelas = $this->input->post('kelas', true);
+
+		$data = $this->input->post('data', true);
+		$isi = $this->input->post('isi', true);
+
+		$jmlAbs = ($sampai - $dari) + 1;
+
+		if (!empty($data)) {
+			foreach ($data as $item) {
+				$id = $item['id'];
+
+				if ($item['ket'] == 'alpha') {
+					$sakit = 0;
+					$izin = 0;
+					$alpha = $jmlAbs;
+					$telat = 0;
+				} elseif ($item['ket'] == 'sakit') {
+					$sakit = $jmlAbs;
+					$izin = 0;
+					$alpha = 0;
+					$telat = 0;
+				} elseif ($item['ket'] == 'izin') {
+					$sakit = 0;
+					$izin = $jmlAbs;
+					$alpha = 0;
+					$telat = 0;
+				} elseif ($item['ket'] == 'telat') {
+					$sakit = 0;
+					$izin = 0;
+					$alpha = 0;
+					$telat = $jmlAbs;
+				} else {
+					$sakit = 0;
+					$izin = 0;
+					$alpha = 0;
+					$telat = 0;
+				}
+
+				$dtsm = [
+					'ket' => $item['ket'],
+					'sakit' => $sakit,
+					'izin' => $izin,
+					'alpha' => $alpha,
+					'telat' => $telat,
+				];
+				$sql = $this->db->update('harian', $dtsm, ['id_harian' => $id]);
+			}
+
+			if ($sql) {
+				$this->db->update('jurnal_guru', [
+					'isi' => $isi ? $isi : '-'
+				], ['kode_absen' => $kode]);
+
+				$hadirHsl = $this->db->query("SELECT * FROM harian WHERE ket= 'hadir' AND kode = '$kode'");
+				$sakitHsl = $this->db->query("SELECT * FROM harian WHERE ket= 'sakit' AND kode = '$kode'");
+				$izinHsl = $this->db->query("SELECT * FROM harian WHERE ket= 'izin' AND kode = '$kode'");
+				$alphaHsl = $this->db->query("SELECT * FROM harian WHERE ket= 'alpha' AND kode = '$kode'");
+				$telatHsl = $this->db->query("SELECT * FROM harian WHERE ket= 'telat' AND kode = '$kode'");
+
+				$psn = '*LAPORAN KEHADIRAN SISWA*
+*' . tanggal_indo(date('d-m-Y'), true) . '*
+
+Guru : ' . $guru . '
+Mapel : ' . $mapel . '
+Kelas : ' . $kelas . '
+Jam ke : ' . $dari . ' - ' . $sampai . '
+
+*Sakit*
+';
+				foreach ($sakitHsl->result() as $skt) {
+					$nmsiswa = $this->db->query("SELECT * FROM siswa WHERE id_siswa = '$skt->id_siswa' ")->row();
+					$psn .= '- ' . ucwords(strtolower($nmsiswa->nama)) . "\n";
+				}
+				$psn .= "\n" . '*Izin*' . "\n";
+				foreach ($izinHsl->result() as $izn) {
+					$nmsiswa = $this->db->query("SELECT * FROM siswa WHERE id_siswa = '$izn->id_siswa' ")->row();
+					$psn .= '- ' . ucwords(strtolower($nmsiswa->nama)) . "\n";
+				}
+				$psn .= "\n" . '*Alpha*' . "\n";
+				foreach ($alphaHsl->result() as $alp) {
+					$nmsiswa = $this->db->query("SELECT * FROM siswa WHERE id_siswa = '$alp->id_siswa' ")->row();
+					$psn .= '- ' . ucwords(strtolower($nmsiswa->nama)) . "\n";
+				}
+				$psn .= "\n" . '*Telat*' . "\n";
+				foreach ($telatHsl->result() as $tl) {
+					$nmsiswa = $this->db->query("SELECT * FROM siswa WHERE id_siswa = '$tl->id_siswa' ")->row();
+					$psn .= '- ' . ucwords(strtolower($nmsiswa->nama)) . "\n";
+				}
+
+				$psn .= "\n" . '*Hadir :* '  . $hadirHsl->num_rows() . ' siswa';
+
+				$psn .= "\n" . "\n" . '*Materi yang disampaikan :*' . "\n" . $isi;
+
+				$psn .= "\n" . "\n" . '_Demikian Laporan ini kami sampaikan terimakasih_';
+
+				// echo $psn;
+				// kirim_person('085236924510', $psn);
+				kirim_group('120363418007064631@g.us', $psn, 'cQLhx5rw8xw00pfMxq1JpcwaQvvjfGpgGWbE02zvhFUjMDyXZfN2JpTK6AuWHTWh');
+
+				// Real
+				// kirim_group('6285258800849-1471341787@g.us', $psn);
+
+				$this->session->set_flashdata('ok', 'Input Absen Berhasil');
+
+				redirect('kbm/hasil');
+			} else {
+				$this->session->set_flashdata('error', 'Input Absen Gagal');
+				redirect('kbm/absensi');
+			}
+		}
+	}
+
+	public function hapus_hasil($kode_absensi)
+	{
+		$this->db->query("DELETE FROM harian WHERE kode = '$kode_absensi'");
+		$this->db->query("DELETE FROM jurnal_guru WHERE kode_absen = '$kode_absensi'");
+		$this->session->set_flashdata('ok', 'Hapus Absen Berhasil');
+		redirect('kbm/hasil');
 	}
 }

@@ -7,15 +7,12 @@ class Mengajar extends MY_Controller
     {
         parent::__construct();
         $this->load->model('Modeldata', 'model');
-        $this->load->library('Dynamic_db'); // load dulu
-        $this->db_active = $this->dynamic_db->connect(); // baru panggil method connect()
 
         $this->mustLogin();
         $this->onlyPiket();
 
         $this->iduser = $this->session->userdata('id_user');
-        $usrdtl = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser' ")->row();
-        $this->id_lembaga = $usrdtl->id_lembaga;
+        $this->id_lembaga = $this->session->userdata('id_lembaga');
     }
 
     public function index()
@@ -39,43 +36,45 @@ class Mengajar extends MY_Controller
 
         $offset = ($page - 1) * $perPage;
 
-        $jmlKelas = $this->db_active->query("SELECT COUNT(DISTINCT tanggal) AS jml FROM mengajar")->row()->jml;
+        /* ================= TOTAL ================= */
+        $this->db->from('mengajar');
 
-
-        // ================= TOTAL =================
-        $this->db_active->from('mengajar');
+        $this->db->where('mengajar.id_lembaga', $this->id_lembaga);
 
         if (!empty($search)) {
-            $this->db_active->group_start()
-                ->like('tanggal', $search)
+            $this->db->group_start()
+                ->like('mengajar.tanggal', $search)
                 ->group_end();
         }
 
         // count DISTINCT tanggal
-        $this->db_active->select('COUNT(DISTINCT tanggal) AS total');
-        $total = $this->db_active->get()->row()->total;
+        $this->db->select('COUNT(DISTINCT mengajar.tanggal) AS total');
+
+        $total = $this->db->get()->row()->total;
 
 
-        // ================= DATA =================
-        $this->db_active->select('
+        /* ================= DATA ================= */
+        $this->db->select('
             mengajar.tanggal,
             MIN(mengajar.id) AS id,
             COUNT(mengajar.id_guru) AS jumlah
         ');
 
-        $this->db_active->from('mengajar');
+        $this->db->from('mengajar');
+
+        $this->db->where('mengajar.id_lembaga', $this->id_lembaga);
 
         if (!empty($search)) {
-            $this->db_active->group_start()
+            $this->db->group_start()
                 ->like('mengajar.tanggal', $search)
                 ->group_end();
         }
 
-        $this->db_active->group_by('mengajar.tanggal');
-        $this->db_active->order_by($sortBy, $sortDir);
-        $this->db_active->limit($perPage, $offset);
+        $this->db->group_by('mengajar.tanggal');
+        $this->db->order_by($sortBy, $sortDir);
+        $this->db->limit($perPage, $offset);
 
-        $data = $this->db_active->get()->result_array();
+        $data = $this->db->get()->result_array();
 
         $result = [
             'data'      => $data,
@@ -96,6 +95,7 @@ class Mengajar extends MY_Controller
         $data['judul'] = "Absensi Mengajar Guru";
         $data['menu'] = "absensiguru";
         $data['sub'] = "mengajar";
+        $data['id_lembaga'] = $this->id_lembaga;
 
         $data['jml_jp'] = $this->model->getBy('setting', 'key', 'jml_jp')->row('isi');
 
@@ -113,8 +113,8 @@ class Mengajar extends MY_Controller
         $dataJadwal = $this->db->query("SELECT id_guru FROM jadwal WHERE hari = '$harini' AND id_lembaga = '$this->id_lembaga' GROUP BY id_guru ")->result();
         $dataKirim = [];
         foreach ($dataJadwal as $key) {
-            // $hadir = $this->db_active->query("SELECT * FROM kehadiran WHERE tanggal = '$tglni' AND guru = '$key->guru' ")->row();
-            $jam = $this->db->query("SELECT * FROM jadwal WHERE hari = '$harini' AND id_guru = '$key->id_guru' ")->result();
+            // $hadir = $this->db->query("SELECT * FROM kehadiran WHERE tanggal = '$tglni' AND guru = '$key->guru' ")->row();
+            $jam = $this->db->query("SELECT * FROM jadwal WHERE hari = '$harini' AND id_guru = '$key->id_guru' AND id_lembaga = '$this->id_lembaga' ")->result();
             $guru = $this->db->query("SELECT * FROM guru WHERE id_guru = '$key->id_guru' ")->row();
             $array_hasil = [];
             foreach ($jam as $datas) {
@@ -123,7 +123,6 @@ class Mengajar extends MY_Controller
             }
             $dataKirim[] = [
                 'id_guru' => $key->id_guru,
-                // 'hadir' => $hadir ? $hadir->ket : '',
                 'nama' => $guru->nama,
                 'jam' => $array_hasil,
             ];
@@ -132,9 +131,6 @@ class Mengajar extends MY_Controller
         $data['tanggal'] = $tglni;
         $data['hari'] = $harini;
 
-        // echo '<pre>';
-        // var_dump($dataKirim);
-        // echo '</pre>';
 
         $this->load->view('absensi/mengajar_add', $data);
     }
@@ -168,8 +164,8 @@ class Mengajar extends MY_Controller
             <div class="bg-white dark:bg-slate-900 rounded-xl shadow mb-5 p-4">
                 <table class="w-full text-sm border-separate border-spacing-y-2">';
         foreach ($jadwal as $jadwal):
-            $mapel = $this->db_active->query("SELECT * FROM mapel WHERE id_mapel = '$jadwal->id_mapel'")->row();
-            $kelas = $this->db_active->query("SELECT * FROM kelas WHERE id_kelas = '$jadwal->id_kelas'")->row();
+            $mapel = $this->db->query("SELECT * FROM mapel WHERE id_mapel = '$jadwal->id_mapel'")->row();
+            $kelas = $this->db->query("SELECT * FROM kelas WHERE id_kelas = '$jadwal->id_kelas'")->row();
 
             echo '<tr class="
                         bg-slate-50 dark:bg-slate-800
@@ -204,7 +200,7 @@ class Mengajar extends MY_Controller
 
         $hariini = $tanggalIni;
         for ($i = 1; $i <= $jml_jp; $i++):
-            $cek = $this->db_active->query("SELECT * FROM mengajar WHERE id_guru='$guru->id_guru' AND tanggal='$hariini' AND jam=$i")->row();
+            $cek = $this->db->query("SELECT * FROM mengajar WHERE id_guru='$guru->id_guru' AND tanggal='$hariini' AND jam=$i AND id_lembaga = '$this->id_lembaga' ")->row();
             $ket = $cek ? $cek->ket : '';
 
             echo '<tr class="
@@ -305,12 +301,13 @@ class Mengajar extends MY_Controller
             $ket = $data['value'];
             $alasan = !empty($data['alasan']) ? $data['alasan'] : '-';
 
-            $cek = $this->model->getBy3('mengajar', 'id_guru', $guru, 'jam', $jam, 'tanggal', $tanggal)->row();
+            $cek = $this->model->getBy4('mengajar', 'id_guru', $guru, 'jam', $jam, 'tanggal', $tanggal, 'id_lembaga', $this->id_lembaga)->row();
             if ($cek) {
-                $this->db_active->where('id_guru', $guru);
-                $this->db_active->where('jam', $jam);
-                $this->db_active->where('tanggal', $tanggal);
-                $this->db_active->update('mengajar', ['ket' => $ket, 'alasan' => $alasan]);
+                $this->db->where('id_guru', $guru);
+                $this->db->where('jam', $jam);
+                $this->db->where('tanggal', $tanggal);
+                $this->db->where('id_lembaga', $this->id_lembaga);
+                $this->db->update('mengajar', ['ket' => $ket, 'alasan' => $alasan]);
             } else {
                 $simpan = [
                     'id_guru' => $guru,
@@ -318,6 +315,7 @@ class Mengajar extends MY_Controller
                     'ket' =>  $ket,
                     'tanggal' =>  $tanggal,
                     'alasan' =>  $alasan,
+                    'id_lembaga' => $this->id_lembaga,
                 ];
                 $this->model->tambah('mengajar', $simpan);
             }

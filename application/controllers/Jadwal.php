@@ -7,15 +7,12 @@ class Jadwal extends MY_Controller
     {
         parent::__construct();
         $this->load->model('Modeldata', 'model');
-        $this->load->library('Dynamic_db'); // load dulu
-        $this->db_active = $this->dynamic_db->connect(); // baru panggil method connect()
 
         $this->iduser = $this->session->userdata('id_user');
 
         $this->mustLogin();
         $this->AdminOrSuper();
-        $usrdtl = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser'")->row();
-        $this->id_lembaga = $usrdtl->id_lembaga;
+        $this->id_lembaga = $this->session->userdata('id_lembaga');
     }
 
     public function index()
@@ -25,18 +22,24 @@ class Jadwal extends MY_Controller
         $data['menu'] = 'jadwal';
         $data['sub'] = 'jadwal';
 
-        $data['kelas'] = $this->db_active
+        $data['kelas'] = $this->db
+            ->select('id_kelas, nama')
+            ->where('id_lembaga', $this->id_lembaga)
             ->order_by('nama', 'ASC')
             ->get('kelas')
             ->result();
-        $data['mapel'] = $this->db_active
+
+        $data['mapel'] = $this->db
+            ->select('id_mapel, nama')
+            ->where('id_lembaga', $this->id_lembaga)
             ->order_by('nama', 'ASC')
             ->get('mapel')
             ->result();
+
         $data['guru'] = $this->db
-            ->select('guru.*')
+            ->select('guru.id_guru, guru.nama')
             ->from('registrasi')
-            ->join('guru', 'registrasi.id_guru=guru.id_guru')
+            ->join('guru', 'registrasi.id_guru = guru.id_guru')
             ->where('registrasi.id_lembaga', $this->id_lembaga)
             ->order_by('guru.nama', 'ASC')
             ->get()
@@ -49,10 +52,9 @@ class Jadwal extends MY_Controller
 
     public function fetch_jadwal($day)
     {
-        $usrdtl = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser'")->row();
 
-        $kelasList = $this->db_active
-            // ->where('jenis', 'Utama')
+        $kelasList = $this->db
+            ->where('id_lembaga', $this->id_lembaga)
             ->order_by('nama', 'ASC')
             ->get('kelas')
             ->result();
@@ -69,21 +71,19 @@ class Jadwal extends MY_Controller
                 g.warna
             FROM jadwal j
             LEFT JOIN guru g ON j.id_guru = g.id_guru
-            WHERE j.hari = ? AND id_lembaga = ?
+            WHERE j.hari = ? AND j.id_lembaga = ?
         ", [$day, $this->id_lembaga])->result_array();
 
 
         $mapelIds = array_unique(array_filter(array_column($jadwalList, 'id_mapel')));
         $mapelMap = [];
         if (!empty($mapelIds)) {
-            $mapelList = $this->db_active
+            $mapelList = $this->db
                 ->where_in('id_mapel', $mapelIds)
                 ->get('mapel')
                 ->result_array();
 
-            foreach ($mapelList as $m) {
-                $mapelMap[$m['id_mapel']] = $m['kode_mapel'];
-            }
+            $mapelMap = array_column($mapelList, 'kode_mapel', 'id_mapel');
         }
 
 
@@ -104,7 +104,7 @@ class Jadwal extends MY_Controller
         }
 
         // $jadwalMap[jam][id_kelas][] = jadwal;
-        $totalJam = $this->model->getBy('setting', 'key', 'jml_jp')->row('isi');
+        $totalJam = $this->model->getBy2('setting', 'key', 'jml_jp', 'id_lembaga', $this->id_lembaga)->row('isi');
 
         echo '<div class="relative overflow-x-auto">
             <table class="w-full min-w-[640px] border border-gray-300 dark:border-gray-700 text-sm">';
@@ -171,12 +171,11 @@ class Jadwal extends MY_Controller
 
     public function add()
     {
-        $usrdtl = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser'")->row();
 
         $jam_dari = $this->input->post('jam_dari');
         $jam_sampai = $this->input->post('jam_sampai');
 
-        $cekjam = $this->model->getBy('setting', 'key', 'jml_jp')->row();
+        $cekjam = $this->model->getBy2('setting', 'key', 'jml_jp', 'id_lembaga', $this->id_lembaga)->row();
         if ($jam_dari > $cekjam->isi || $jam_sampai > $cekjam->isi) {
             echo json_encode(['status' => 'error', 'message' => 'jam input melebihi. Max jam ke-' . $cekjam->isi]);
             exit;
@@ -187,8 +186,8 @@ class Jadwal extends MY_Controller
 
         $dtkelas = $this->model->getBy('kelas', 'id_kelas', $id_kelas)->row();
         $dtmapel = $this->model->getBy('mapel', 'id_mapel', $id_mapel)->row();
-        $dtguru = $this->db->query("SELECT * FROM guru WHERE id_guru = '$id_guru' ")->row();
-        $dtlembaga = $this->db->query("SELECT * FROM lembaga WHERE id_lembaga = '$this->id_lembaga' ")->row();
+        $dtguru = $this->model->getBy('guru', 'id_guru', $id_guru)->row();
+        $dtlembaga = $this->model->getBy('lembaga', 'id_lembaga', $this->id_lembaga)->row();
         $idnew = $this->uuid->v4();
         $data = [
             'id_jadwal' => $idnew,
@@ -240,7 +239,7 @@ class Jadwal extends MY_Controller
 
         $dtkelas = $this->model->getBy('kelas', 'id_kelas', $id_kelas)->row();
         $dtmapel = $this->model->getBy('mapel', 'id_mapel', $id_mapel)->row();
-        $dtguru = $this->db->query("SELECT * FROM guru WHERE id_guru = '$id_guru' ")->row();
+        $dtguru = $this->model->getBy('guru', 'id_guru', $id_guru)->row();
 
         $data = [
             'hari' => $this->input->post('hari', TRUE),

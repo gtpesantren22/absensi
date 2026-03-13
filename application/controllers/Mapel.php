@@ -10,12 +10,11 @@ class Mapel extends MY_Controller
 	{
 		parent::__construct();
 		$this->load->model('Modeldata', 'model');
-		$this->load->library('Dynamic_db'); // load dulu
-		$this->db_active = $this->dynamic_db->connect(); // baru panggil method connect()
 
 		$this->mustLogin();
 		$this->AdminOrSuper();
 		$this->iduser = $this->session->userdata('id_user');
+		$this->id_lembaga = $this->session->userdata('id_lembaga');
 	}
 
 	public function index()
@@ -39,21 +38,25 @@ class Mapel extends MY_Controller
 
 		$offset = ($page - 1) * $perPage;
 
-		/* ================= FILTER ================= */
+		/* ================= FILTER SEARCH ================= */
+		$this->db->from('mapel');
+
 		if (!empty($search)) {
-			$this->db_active->group_start()
+			$this->db->group_start()
 				->like('nama', $search)
 				->or_like('kode_mapel', $search)
 				->group_end();
 		}
 
 		/* ================= TOTAL ================= */
-		$total = $this->db_active->count_all_results('mapel', false);
+		$total = $this->db->count_all_results('', false);
 
 		/* ================= DATA ================= */
-		$this->db_active->order_by($sortBy, $sortDir);
-		$this->db_active->limit($perPage, $offset);
-		$data = $this->db_active->get()->result_array();
+		$this->db->order_by($sortBy, $sortDir);
+		$this->db->limit($perPage, $offset);
+		$this->db->where('id_lembaga', $this->id_lembaga);
+
+		$data = $this->db->get()->result_array();
 
 		$result = [
 			'data'      => $data,
@@ -76,6 +79,7 @@ class Mapel extends MY_Controller
 		$data = [
 			'kode_mapel'    => $kode_mapel,
 			'nama'         => $nama,
+			'id_lembaga'   => $this->id_lembaga
 		];
 
 		$sql = $this->model->tambah('mapel', $data);
@@ -181,6 +185,7 @@ class Mapel extends MY_Controller
 			$dataInsert[] = [
 				'kode_mapel' => $row[0],
 				'nama'      => trim($row[1]),
+				'id_lembaga' => $this->id_lembaga
 			];
 		}
 

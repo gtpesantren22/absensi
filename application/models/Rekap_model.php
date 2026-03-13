@@ -3,17 +3,13 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class Rekap_model extends CI_Model
 {
-    protected $db_active;
 
     public function __construct()
     {
         parent::__construct();
-        $this->load->library('Dynamic_db'); // load dulu
-        $this->db_active = $this->dynamic_db->connect(); // baru panggil method connect()
 
         $this->iduser = $this->session->userdata('id_user');
-        $usrdtl = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser' ")->row();
-        $this->id_lembaga = $usrdtl->id_lembaga;
+        $this->id_lembaga = $this->session->userdata('id_lembaga');
     }
     public function getRekapApelGuru($dari, $sampai)
     {
@@ -40,8 +36,9 @@ class Rekap_model extends CI_Model
                 $hari    = $tgl->format('l'); // Monday, Tuesday
 
                 // 1️⃣ CEK HARI LIBUR
-                $libur = $this->db_active->get_where('hari_libur', [
-                    'tanggal' => $tanggal
+                $libur = $this->db->get_where('hari_libur', [
+                    'tanggal' => $tanggal,
+                    'id_lembaga' => $this->id_lembaga
                 ])->row();
 
                 if ($libur) {
@@ -53,9 +50,10 @@ class Rekap_model extends CI_Model
                 // }
 
                 // 2️⃣ CEK APEL SETT
-                $apelWajib = $this->db_active->get_where('apel_sett', [
+                $apelWajib = $this->db->get_where('apel_sett', [
                     'id_guru' => $guru->id_guru,
-                    'hari'    => $hari
+                    'hari'    => $hari,
+                    'id_lembaga' => $this->id_lembaga
                 ])->row();
 
                 if (!$apelWajib) {
@@ -66,9 +64,10 @@ class Rekap_model extends CI_Model
                 $wajib++;
 
                 // 3️⃣ CEK ABSENSI
-                $absen = $this->db_active->get_where('apel_guru', [
+                $absen = $this->db->get_where('apel_guru', [
                     'id_guru' => $guru->id_guru,
-                    'tanggal' => $tanggal
+                    'tanggal' => $tanggal,
+                    'id_lembaga' => $this->id_lembaga
                 ])->row();
 
                 if ($absen) {
@@ -116,8 +115,9 @@ class Rekap_model extends CI_Model
                 $hari    = $tgl->format('l'); // Monday, Tuesday
 
                 // 1️⃣ CEK HARI LIBUR
-                $libur = $this->db_active->get_where('hari_libur', [
-                    'tanggal' => $tanggal
+                $libur = $this->db->get_where('hari_libur', [
+                    'tanggal' => $tanggal,
+                    'id_lembaga' => $this->id_lembaga
                 ])->row();
 
                 if ($libur) {
@@ -128,9 +128,10 @@ class Rekap_model extends CI_Model
                 // }
 
                 // 3️⃣ CEK ABSENSI
-                $absen = $this->db_active->get_where('kehadiran_guru', [
+                $absen = $this->db->get_where('kehadiran_guru', [
                     'id_guru' => $guru->id_guru,
-                    'tanggal' => $tanggal
+                    'tanggal' => $tanggal,
+                    'id_lembaga' => $this->id_lembaga
                 ])->row();
 
                 if ($absen) {
@@ -141,9 +142,10 @@ class Rekap_model extends CI_Model
                 }
 
                 // 2️⃣ CEK APEL SETT
-                $apelWajib = $this->db_active->get_where('apel_sett', [
+                $apelWajib = $this->db->get_where('apel_sett', [
                     'id_guru' => $guru->id_guru,
-                    'hari'    => $hari
+                    'hari'    => $hari,
+                    'id_lembaga' => $this->id_lembaga
                 ])->row();
 
                 if (!$apelWajib) {
@@ -194,8 +196,9 @@ class Rekap_model extends CI_Model
                 $hari    = $tgl->format('l'); // Monday, Tuesday
 
                 // 1️⃣ CEK HARI LIBUR
-                $libur = $this->db_active->get_where('hari_libur', [
-                    'tanggal' => $tanggal
+                $libur = $this->db->get_where('hari_libur', [
+                    'tanggal' => $tanggal,
+                    'id_lembaga' => $this->id_lembaga
                 ])->row();
 
                 if ($libur) {
@@ -206,7 +209,7 @@ class Rekap_model extends CI_Model
                 // }
 
                 // 3️⃣ CEK ABSENSI
-                $absen = $this->db_active
+                $absen = $this->db
                     ->select('ket, COUNT(*) AS jml')
                     ->from('mengajar')
                     ->where('id_guru', $guru->id_guru)

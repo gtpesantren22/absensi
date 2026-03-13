@@ -61,13 +61,12 @@ class Auth extends CI_Controller
             $this->session->sess_regenerate(true);
 
             if ($user->level != 'super_admin') {
-                $dbdata = $this->db->query("SELECT a.db_name FROM list_db a JOIN lembaga b ON a.id=b.id_db WHERE b.id_lembaga = '$user->id_lembaga' ")->row();
                 $this->session->set_userdata([
                     'login' => true,
                     'id_user' => $user->id_user,
                     'nama_user' => $user->nama,
                     'level' => $user->level,
-                    'db_selected' => $dbdata ? $dbdata->db_name : ''
+                    'id_lembaga' => $user->id_lembaga
                 ]);
             } else {
                 $this->session->set_userdata([
@@ -75,6 +74,7 @@ class Auth extends CI_Controller
                     'id_user' => $user->id_user,
                     'nama_user' => $user->nama,
                     'level' => $user->level,
+                    'id_lembaga' => $user->id_lembaga
                 ]);
             }
 
@@ -101,8 +101,6 @@ class Auth extends CI_Controller
         ]);
         exit;
     }
-
-
 
     public function logout()
     {

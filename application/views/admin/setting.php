@@ -27,7 +27,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-7 gap-4 mb-3">
                         <div>
                             <div class="time-input-container">
-                                <input type="number" name="jml_rombel" value="<?= $jml_rombel->isi ?>" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" required>
+                                <input type="number" name="jml_rombel" value="<?= $jml_rombel->isi ?? 0 ?>" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" required>
                             </div>
                         </div>
                         <div>
@@ -59,7 +59,7 @@
 
             <!-- KIRI : FORM -->
             <div>
-                
+
 
                 <div class="space-y-4">
                     <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200">

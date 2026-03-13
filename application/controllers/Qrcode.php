@@ -7,6 +7,7 @@ class Qrcode extends MY_Controller
     {
         parent::__construct();
         $this->iduser = $this->session->userdata('id_user');
+        $this->id_lembaga = $this->session->userdata('id_lembaga');
         $this->load->model('Modeldata', 'model');
     }
 
@@ -103,11 +104,13 @@ class Qrcode extends MY_Controller
                 'id_guru' => $dtlUser->id_guru,
                 'tanggal' => date('Y-m-d'),
                 'ket' => 'hadir',
-                'waktu' => date('H:i:s')
+                'waktu' => date('H:i:s'),
+                'id_lembaga' => $this->id_lembaga
             ]);
         } else {
             $add = $this->model->edit('kehadiran_guru', 'id_guru', $dtlUser->id_guru, [
-                'pulang' => date('H:i:s')
+                'pulang' => date('H:i:s'),
+                'id_lembaga' => $this->id_lembaga
             ]);
         }
 
@@ -133,11 +136,12 @@ class Qrcode extends MY_Controller
         $userLat = floatval($input['lat']);
         $userLon = floatval($input['lon']);
 
-        // === 3 TITIK LOKASI SAH ===
+        // === 4 TITIK LOKASI SAH ===
         $locations = [
-            ['lat' => -7.762560182146305, 'lon' => 113.421642647389], // Sekolah A  
-            ['lat' => -7.762921929327378, 'lon' => 113.42061504208957], // Sekolah B , 
-            ['lat' => -7.756998490707694, 'lon' => 113.4230718505036], // Sekolah C, 
+            ['lat' => -7.762560182146305, 'lon' => 113.421642647389], // Kantor,  
+            ['lat' => -7.762921929327378, 'lon' => 113.42061504208957], // Pos belakang, 
+            ['lat' => -7.756998490707694, 'lon' => 113.4230718505036], // DWK 2, 
+            ['lat' => -7.762236379980296, 'lon' => 113.42135752295482], // Madin Putri, 
         ];
 
         $radius = 20; // meter

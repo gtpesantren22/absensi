@@ -7,11 +7,11 @@ class Home extends MY_Controller
 	{
 		parent::__construct();
 		$this->load->model('Modeldata', 'model');
-		$this->load->library('Dynamic_db'); // load dulu
-		$this->db_active = $this->dynamic_db->connect(); // baru panggil method connect()
+
 		$this->mustLogin();
 		$this->level = $this->session->userdata('level');
 		$this->iduser = $this->session->userdata('id_user');
+		$this->id_lembaga = $this->session->userdata('id_lembaga');
 	}
 
 	public function index()
@@ -22,12 +22,14 @@ class Home extends MY_Controller
 			$data['menu'] = 'home';
 			$data['sub'] = 'dashboard';
 
-			$data['jumlah_guru'] = $this->db->query("SELECT registrasi.id_guru FROM registrasi JOIN guru ON registrasi.id_guru=guru.id_guru WHERE registrasi.id_lembaga = '$usrdtl->id_lembaga'")->num_rows();
-			$data['jumlah_siswa'] = $this->db->query("SELECT registrasi_siswa.id_siswa FROM registrasi_siswa JOIN siswa ON registrasi_siswa.id_siswa=siswa.id_siswa WHERE registrasi_siswa.id_lembaga = '$usrdtl->id_lembaga'")->num_rows();
-			$data['jumlah_kelas'] = $this->db_active->count_all('kelas');
-			$data['jumlah_jadwal'] = $this->db->query("SELECT hari FROM jadwal WHERE id_lembaga = '$usrdtl->id_lembaga'")->num_rows();
-
+			$data['jumlah'] = $this->db->query("SELECT
+				(SELECT COUNT(*) FROM registrasi WHERE id_lembaga='$this->id_lembaga' ) as jumlah_guru,
+				(SELECT COUNT(*) FROM registrasi_siswa WHERE id_lembaga='$this->id_lembaga' ) as jumlah_siswa,
+				(SELECT COUNT(*) FROM kelas WHERE id_lembaga='$this->id_lembaga' ) as jumlah_kelas,
+				(SELECT COUNT(*) FROM jadwal WHERE id_lembaga='$this->id_lembaga' ) as jumlah_jadwal")->row();
+			
 			$data['sekolah'] = $this->db->query("SELECT s.nama, s.alamat, s.nickname FROM user u JOIN lembaga s ON u.id_lembaga=s.id_lembaga WHERE id_user = '$this->iduser' ")->row();
+
 			$idguru = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser' ")->row();
 
 			$data['idguru'] = $idguru->id_guru;
@@ -61,7 +63,7 @@ class Home extends MY_Controller
 			$data['guru'] = $this->db->query("SELECT * FROM guru WHERE id_guru = '$idguru->id_guru' ")->row();
 			$data['idguru'] = $idguru->id_guru;
 
-			$data['hadir'] = $this->model->getBy2('kehadiran_guru', 'id_guru', $idguru->id_guru, 'tanggal', date('Y-m-d'))->row();
+			$data['hadir'] = $this->model->getBy2('kehadiran_guru', 'id_guru', $idguru->id_guru, 'tanggal  ', date('Y-m-d'))->row();
 
 			$data['lmb'] =  $this->db
 				->select('

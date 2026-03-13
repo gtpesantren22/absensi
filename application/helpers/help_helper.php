@@ -42,7 +42,7 @@ function translateDay($englishDay, $language)
     return $translations[$englishDay][$language] ?? $englishDay;
 }
 
-function kirim_person($no_hp, $pesan)
+function kirim_person($no_hp, $pesan, $apiKey)
 {
     $curl2 = curl_init();
     curl_setopt_array(
@@ -56,14 +56,14 @@ function kirim_person($no_hp, $pesan)
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_POSTFIELDS => 'number=' . $no_hp . '&message=' . $pesan,
+            CURLOPT_POSTFIELDS => 'number=' . $no_hp . '&message=' . $pesan . '&apiKey=' . $apiKey,
         )
     );
     $response = curl_exec($curl2);
     curl_close($curl2);
 }
 
-function kirim_group($id_group, $pesan)
+function kirim_group($id_group, $pesan, $apiKey)
 {
     $curl2 = curl_init();
     curl_setopt_array(
@@ -77,7 +77,7 @@ function kirim_group($id_group, $pesan)
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_POSTFIELDS => 'groupId=' . $id_group . '&message=' . $pesan,
+            CURLOPT_POSTFIELDS => 'groupId=' . $id_group . '&message=' . $pesan . '&apiKey=' . $apiKey,
         )
     );
     $response = curl_exec($curl2);
@@ -287,4 +287,15 @@ function generatePassword6()
     }
 
     return $password;
+}
+
+function inisial($nama){
+    $nama = trim($nama);
+    $words = explode(" ", $nama);
+
+    if(count($words) > 1){
+        return strtoupper($words[0][0] . $words[1][0]);
+    }else{
+        return strtoupper(substr($nama,0,2));
+    }
 }

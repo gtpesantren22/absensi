@@ -11,12 +11,11 @@ class Kelas extends MY_Controller
 	{
 		parent::__construct();
 		$this->load->model('Modeldata', 'model');
-		$this->load->library('Dynamic_db'); // load dulu
-		$this->db_active = $this->dynamic_db->connect(); // baru panggil method connect()
 
 		$this->mustLogin();
 		$this->AdminOrSuper();
 		$this->iduser = $this->session->userdata('id_user');
+		$this->id_lembaga = $this->session->userdata('id_lembaga');
 	}
 
 	public function index()
@@ -40,33 +39,34 @@ class Kelas extends MY_Controller
 		$offset = ($page - 1) * $perPage;
 
 
-		/* ================= TOTAL ================= */
+		/* ================= BASE QUERY ================= */
+		$this->db->from('kelas');
+
 		if (!empty($search)) {
-			$this->db_active->group_start()
+			$this->db->group_start()
 				->like('nama', $search)
 				->or_like('jenis', $search)
 				->group_end();
 		}
-		$total = $this->db_active->count_all_results('kelas');
+
+		/* ================= TOTAL ================= */
+		$this->db->where('kelas.id_lembaga', $this->id_lembaga);
+		$total = $this->db->count_all_results('', false);
 
 		/* ================= DATA ================= */
-		if (!empty($search)) {
-			$this->db_active->group_start()
-				->like('nama', $search)
-				->or_like('jenis', $search)
-				->group_end();
-		}
-		$this->db_active->select('
+		$this->db->select('
 			kelas.*,
 			COUNT(rombel.id_siswa) AS jumlah_anggota
 		');
-		$this->db_active->from('kelas');
-		$this->db_active->join('rombel', 'rombel.id_kelas = kelas.id_kelas', 'left');
-		$this->db_active->group_by('kelas.id_kelas');
-		$this->db_active->order_by($sortBy, $sortDir);
-		$this->db_active->limit($perPage, $offset);
 
-		$data = $this->db_active->get()->result_array();
+		$this->db->join('rombel', 'rombel.id_kelas = kelas.id_kelas', 'left');
+		$this->db->where('kelas.id_lembaga', $this->id_lembaga);
+
+		$this->db->group_by('kelas.id_kelas');
+		$this->db->order_by($sortBy, $sortDir);
+		$this->db->limit($perPage, $offset);
+
+		$data = $this->db->get()->result_array();
 
 
 		$result = [
@@ -90,6 +90,7 @@ class Kelas extends MY_Controller
 		$data = [
 			'nama'         => $nama,
 			'jenis'        => $jenis,
+			'id_lembaga'   => $this->id_lembaga
 		];
 
 		$sql = $this->model->tambah('kelas', $data);
@@ -224,6 +225,7 @@ class Kelas extends MY_Controller
 			$dataInsert[] = [
 				'nama' => $row[0],
 				'jenis'      => trim($row[1]),
+				'id_lembaga' => $this->id_lembaga
 			];
 		}
 
@@ -246,7 +248,6 @@ class Kelas extends MY_Controller
 
 	public function dataSiswa()
 	{
-		$usrdtl = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser'")->row();
 		// $result = $this->Model_guru->getData($params);
 		$search   = $this->input->get('search') ?? '';
 		$page     = max(1, (int) ($this->input->get('page') ?? 1));
@@ -259,9 +260,10 @@ class Kelas extends MY_Controller
 
 		$offset = ($page - 1) * $perPage;
 
-		/* ================= TOTAL ================= */
+		/* ================= BASE QUERY ================= */
 		$this->db->from('registrasi_siswa');
-		$this->db->join('siswa', 'registrasi_siswa.id_siswa = siswa.id_siswa', 'left');
+		$this->db->join('siswa', 'registrasi_siswa.id_siswa = siswa.id_siswa');
+
 		if (!empty($search)) {
 			$this->db->group_start()
 				->like('siswa.nisn', $search)
@@ -270,19 +272,20 @@ class Kelas extends MY_Controller
 				->or_like('siswa.alamat', $search)
 				->group_end();
 		}
-		// hitung siswa unik
-		if ($cekKelas->jenis == 'Utama') {
-			$this->db->where('registrasi_siswa.id_lembaga', $usrdtl->id_lembaga);
-		}
-		$this->db->select('COUNT(DISTINCT registrasi_siswa.id_siswa) AS total');
-		$result = $this->db->get()->row();
 
-		$total = (int) $result->total;
+		if ($cekKelas->jenis == 'Utama') {
+			$this->db->where('registrasi_siswa.id_lembaga', $this->id_lembaga);
+		}
+
+		/* ================= TOTAL ================= */
+		$this->db->select('COUNT(*) AS total');
+		$total = $this->db->get()->row()->total;
 
 		/* ================= DATA ================= */
 		$this->db->select('siswa.*');
 		$this->db->from('registrasi_siswa');
-		$this->db->join('siswa', 'registrasi_siswa.id_siswa = siswa.id_siswa', 'left');
+		$this->db->join('siswa', 'registrasi_siswa.id_siswa = siswa.id_siswa');
+
 		if (!empty($search)) {
 			$this->db->group_start()
 				->like('siswa.nisn', $search)
@@ -291,24 +294,14 @@ class Kelas extends MY_Controller
 				->or_like('siswa.alamat', $search)
 				->group_end();
 		}
-		// hitung siswa unik
-		// if ($cekKelas->jenis == 'Utama') {
-		// 	$this->db_active->where(
-		// 		"id_siswa NOT IN (
-		// 			SELECT id_siswa 
-		// 			FROM rombel 
-		// 		)",
-		// 		NULL,
-		// 		FALSE
-		// 	);
-		// }
 
 		if ($cekKelas->jenis == 'Utama') {
-			$this->db->where('registrasi_siswa.id_lembaga', $usrdtl->id_lembaga);
+			$this->db->where('registrasi_siswa.id_lembaga', $this->id_lembaga);
 		}
-		$this->db->group_by('registrasi_siswa.id_siswa');
+
 		$this->db->order_by($sortBy, $sortDir);
 		$this->db->limit($perPage, $offset);
+
 		$data = $this->db->get()->result_array();
 
 		$result = [
@@ -326,43 +319,16 @@ class Kelas extends MY_Controller
 
 	public function dataRombel($id_kelas)
 	{
-		$rombels = $this->db_active
-			->select('id_rombel, id_siswa')
-			->where('id_kelas', $id_kelas)
-			->get('rombel')
+		$data = $this->db
+			->select('rombel.id_rombel, siswa.nama, siswa.nisn')
+			->from('rombel')
+			->join('siswa', 'siswa.id_siswa = rombel.id_siswa')
+			->where('rombel.id_kelas', $id_kelas)
+			->order_by('siswa.nama', 'ASC')
+			->get()
 			->result_array();
 
-		if (empty($rombels)) {
-			return $this->output
-				->set_content_type('application/json')
-				->set_output(json_encode([
-					'data'  => [],
-					'total' => 0
-				]));
-		}
-
-		$ids = array_column($rombels, 'id_siswa');
-		$siswas = $this->db
-			->select('id_siswa, nama, nisn')
-			->where_in('id_siswa', $ids)
-			->order_by('nama', 'ASC')
-			->get('siswa')
-			->result_array();
-
-		$siswaMap = array_column($siswas, null, 'id_siswa');
-		$data = [];
-
-		foreach ($rombels as $r) {
-			if (isset($siswaMap[$r['id_siswa']])) {
-				$data[] = [
-					'id_rombel' => $r['id_rombel'],
-					'nama'      => $siswaMap[$r['id_siswa']]['nama'],
-					'nisn'      => $siswaMap[$r['id_siswa']]['nisn'],
-				];
-			}
-		}
-
-		$this->output
+		return $this->output
 			->set_content_type('application/json')
 			->set_output(json_encode([
 				'data'  => $data,
@@ -387,6 +353,7 @@ class Kelas extends MY_Controller
 		$data = [
 			'id_kelas' => $id_kelas,
 			'id_siswa' => $id_siswa,
+			'id_lembaga' => $this->id_lembaga
 		];
 
 		$sql = $this->model->tambah('rombel', $data);
@@ -422,7 +389,7 @@ class Kelas extends MY_Controller
 	public function kosongiAnggota()
 	{
 		$id_kelas = $this->input->post('id', true);
-		$sql = $this->db_active->where('id_kelas', $id_kelas)->delete('rombel');
+		$sql = $this->db->where('id_kelas', $id_kelas)->delete('rombel');
 
 		if (!$sql) {
 			$this->session->set_flashdata('error', 'Data kelas gagal diupdate.');
@@ -463,6 +430,7 @@ class Kelas extends MY_Controller
 				$dataInsert[] = [
 					'id_kelas' => $id_kelas,
 					'id_siswa' => $siswa->id_siswa,
+					'id_lembaga' => $this->id_lembaga
 				];
 			}
 		}

@@ -175,7 +175,7 @@
                     <div class="relative">
                         <button id="profileBtn" class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
                             <div class="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
-                                <span class="font-semibold text-primary-800 dark:text-primary-200">AD</span>
+                                <span class="font-semibold text-primary-800 dark:text-primary-200"><?= inisial($this->session->userdata('nama_user')) ?></span>
                             </div>
                             <div class="hidden md:block text-left">
                                 <p class="text-sm font-medium"><?= $this->session->userdata('nama_user') ?></p>
@@ -186,7 +186,7 @@
 
                         <!-- Dropdown Profil -->
                         <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
-                            <a href="#" class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <a href="<?= base_url('profile') ?>" class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">
                                 <i class="fas fa-user mr-2"></i> Profil Saya
                             </a>
                             <a href="<?= base_url('setting') ?>" class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">
@@ -223,6 +223,10 @@
                                 <a href="<?= base_url('kbm/absensi') ?>" class="sidebar-item <?= $menu == 'kbm' ? 'active' : '' ?> flex items-center px-4 py-3 text-sm font-medium border-l-4 border-transparent hover:border-primary-300 hover:bg-gray-50 dark:hover:bg-gray-700">
                                     <i class="fas fa-book-open mr-3"></i>
                                     Absensi KBM
+                                </a>
+                                <a href="<?= base_url('kbm/hasil') ?>" class="sidebar-item <?= $menu == 'hasil' ? 'active' : '' ?> flex items-center px-4 py-3 text-sm font-medium border-l-4 border-transparent hover:border-primary-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    <i class="fas fa-list mr-3"></i>
+                                    Hasil Absensi
                                 </a>
                             <?php endif ?>
 

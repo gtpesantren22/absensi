@@ -7,15 +7,12 @@ class Kehadiranguru extends MY_Controller
     {
         parent::__construct();
         $this->load->model('Modeldata', 'model');
-        $this->load->library('Dynamic_db'); // load dulu
-        $this->db_active = $this->dynamic_db->connect(); // baru panggil method connect()
 
         $this->mustLogin();
         $this->onlyPiket();
 
         $this->iduser = $this->session->userdata('id_user');
-        $usrdtl = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser' ")->row();
-        $this->id_lembaga = $usrdtl->id_lembaga;
+        $this->id_lembaga = $this->session->userdata('id_lembaga');
     }
 
     public function index()
@@ -40,39 +37,44 @@ class Kehadiranguru extends MY_Controller
         $offset = ($page - 1) * $perPage;
 
 
-        // ================= TOTAL =================
-        $this->db_active->from('kehadiran_guru');
+        /* ================= TOTAL ================= */
+        $this->db->from('kehadiran_guru');
+
+        $this->db->where('kehadiran_guru.id_lembaga', $this->id_lembaga);
 
         if (!empty($search)) {
-            $this->db_active->group_start()
-                ->like('tanggal', $search)
-                ->group_end();
-        }
-
-        // count DISTINCT tanggal
-        $this->db_active->select('COUNT(DISTINCT tanggal) AS total');
-        $total = $this->db_active->get()->row()->total;
-
-
-        // ================= DATA =================
-        $this->db_active->select('
-            kehadiran_guru.tanggal,
-            COUNT(kehadiran_guru.id_guru) AS jumlah_guru
-        ');
-
-        $this->db_active->from('kehadiran_guru');
-
-        if (!empty($search)) {
-            $this->db_active->group_start()
+            $this->db->group_start()
                 ->like('kehadiran_guru.tanggal', $search)
                 ->group_end();
         }
 
-        $this->db_active->group_by('kehadiran_guru.tanggal');
-        $this->db_active->order_by($sortBy, $sortDir);
-        $this->db_active->limit($perPage, $offset);
+        // count DISTINCT tanggal
+        $this->db->select('COUNT(DISTINCT kehadiran_guru.tanggal) AS total');
 
-        $data = $this->db_active->get()->result_array();
+        $total = $this->db->get()->row()->total;
+
+
+        /* ================= DATA ================= */
+        $this->db->select('
+            kehadiran_guru.tanggal,
+            COUNT(kehadiran_guru.id_guru) AS jumlah_guru
+        ');
+
+        $this->db->from('kehadiran_guru');
+
+        $this->db->where('kehadiran_guru.id_lembaga', $this->id_lembaga);
+
+        if (!empty($search)) {
+            $this->db->group_start()
+                ->like('kehadiran_guru.tanggal', $search)
+                ->group_end();
+        }
+
+        $this->db->group_by('kehadiran_guru.tanggal');
+        $this->db->order_by($sortBy, $sortDir);
+        $this->db->limit($perPage, $offset);
+
+        $data = $this->db->get()->result_array();
 
         $result = [
             'data'      => $data,
@@ -106,23 +108,25 @@ class Kehadiranguru extends MY_Controller
         $guruList = $this->db
             ->select('guru.id_guru, guru.nama')
             ->from('registrasi')
-            ->join('guru', 'registrasi.id_guru=guru.id_guru')
+            ->join('guru', 'registrasi.id_guru = guru.id_guru')
             ->where('registrasi.id_lembaga', $this->id_lembaga)
             ->where('registrasi.satminkal', 1)
             ->order_by('guru.nama', 'ASC')
             ->get()
             ->result_array();
 
-        $hadirList = $this->db_active
+        $hadirList = $this->db
             ->select('id_guru, ket')
             ->from('kehadiran_guru')
             ->where('tanggal', $tanggal)
+            ->where('id_lembaga', $this->id_lembaga)
             ->get()
             ->result_array();
-        $hadirMap = [];
-        foreach ($hadirList as $h) {
-            $hadirMap[$h['id_guru']] = $h['ket'];
-        }
+
+        /* ===== Mapping kehadiran ===== */
+        $hadirMap = array_column($hadirList, 'ket', 'id_guru');
+
+        /* ===== Gabungkan data ===== */
         $datakirim = [];
 
         foreach ($guruList as $g) {
@@ -150,7 +154,8 @@ class Kehadiranguru extends MY_Controller
                     'tanggal' => $tanggal,
                     'id_guru' => $item['id_guru'],
                     'ket' => isset($item['ket']) ? $item['ket'] : '',
-                    'waktu' => date('H:i:s')
+                    'waktu' => date('H:i:s'),
+                    'id_lembaga' => $this->id_lembaga
                 ];
                 if (!$cek) {
                     $sql = $this->model->tambah('kehadiran_guru', $dtsm);
@@ -179,7 +184,8 @@ class Kehadiranguru extends MY_Controller
             'tanggal' => $tanggal,
             'id_guru' => $id_guru,
             'ket' => isset($ket) ? $ket : '',
-            'waktu' => date('H:i:s')
+            'waktu' => date('H:i:s'),
+            'id_lembaga' => $this->id_lembaga
         ];
         if (!$cek) {
             $sql = $this->model->tambah('kehadiran_guru', $dtsm);

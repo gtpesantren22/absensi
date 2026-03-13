@@ -11,13 +11,13 @@ class MY_Controller extends CI_Controller
     protected function onlyAdmin()
     {
         if ($this->session->userdata('level') !== 'admin') {
-            show_error('Akses ditolak', 403);
+            redirect('welcome/no_akes');
         }
     }
     protected function onlyAdminSuper()
     {
         if ($this->session->userdata('level') !== 'super_admin') {
-            show_error('Akses ditolak', 403);
+            redirect('welcome/no_akes');
         }
     }
     protected function AdminOrSuper()
@@ -26,7 +26,7 @@ class MY_Controller extends CI_Controller
 
         if (!in_array($this->session->userdata('level'), $allowed)) {
             // tidak punya akses
-            show_error('Akses ditolak', 403);
+            redirect('welcome/no_akes');
         }
     }
 
@@ -40,7 +40,8 @@ class MY_Controller extends CI_Controller
         $cek = $this->model->getBy2('piket', 'id_guru', $cekGuru->id_guru, 'hari', $hari)->row();
 
         if ($this->session->userdata('level') !== 'admin' && $this->session->userdata('level') !== 'super_admin' && !$cek) {
-            show_error('Anda bukan guru piket', 403);
+            // show_error('Anda bukan guru piket', 403);
+            redirect('welcome/no_akes');
         }
     }
 }

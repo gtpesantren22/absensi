@@ -15,12 +15,11 @@ class Rekap extends MY_Controller
 		parent::__construct();
 		$this->load->model('Modeldata', 'model');
 		$this->load->model('Rekap_model');
-		$this->load->library('Dynamic_db'); // load dulu
-		$this->db_active = $this->dynamic_db->connect(); // baru panggil method connect()
 
 		$this->mustLogin();
 		$this->AdminOrSuper();
 		$this->iduser = $this->session->userdata('id_user');
+		$this->id_lembaga = $this->session->userdata('id_lembaga');
 	}
 
 	// Pembiasaan
@@ -517,7 +516,7 @@ class Rekap extends MY_Controller
 			]
 		];
 
-		$dataKelas = $this->db_active->query("SELECT * FROM kelas ORDER BY nama ASC")->result();
+		$dataKelas = $this->db->query("SELECT * FROM kelas WHERE id_lembaga = '$this->id_lembaga' ORDER BY nama ASC")->result();
 		foreach ($dataKelas as $dtsk) {
 
 			$sheet = $spreadsheet->createSheet();
@@ -563,17 +562,28 @@ class Rekap extends MY_Controller
 			$sheet->getStyle('G8')->applyFromArray($style_col);
 
 
-			$absn = $this->db_active->query("SELECT 
-							h.id_siswa,
-							
-							SUM(sakit) AS sakitAll,
-							SUM(izin) AS izinAll,
-							SUM(alpha) AS alphaAll
-						FROM harian h
-						
-						WHERE h.id_kelas = $dtsk->id_kelas AND h.tanggal >= '$dari' AND h.tanggal <= '$sampai'
-						GROUP BY h.id_siswa;
-					")->result();
+			$absn = $this->db->query(
+				"
+					SELECT 
+						h.id_siswa,
+						SUM(h.sakit) AS sakitAll,
+						SUM(h.izin)  AS izinAll,
+						SUM(h.alpha) AS alphaAll
+					FROM harian h
+					WHERE 
+						h.id_kelas = ?
+						AND h.id_lembaga = ?
+						AND h.tanggal >= ?
+						AND h.tanggal <= ?
+					GROUP BY h.id_siswa
+				",
+				[
+					$dtsk->id_kelas,
+					$this->id_lembaga,
+					$dari,
+					$sampai
+				]
+			)->result();
 
 			$no = 1; // Untuk penomoran tabel, di awal set dengan 1
 			$numrow = 9; // Set baris pertama untuk isi tabel adalah baris ke 4

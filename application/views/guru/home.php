@@ -12,7 +12,7 @@
         <!-- Avatar -->
         <div class="relative">
             <div class="w-14 h-14 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xl font-bold">
-                <?= strtoupper(substr($guru->nama ?? 'Nama saya', 0, 1)) ?>
+                <?= inisial($guru->nama ?? 'Nama saya') ?>
             </div>
             <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 border-2 border-white dark:border-slate-900 rounded-full"></span>
         </div>
@@ -176,16 +176,18 @@
                             foreach ($jadwalKelas->result() as $hasil) :
                                 $dtl = $this->db->query("SELECT * FROM jadwal_dtl WHERE id_jadwal = '$hasil->id_jadwal' ")->row();
 
-                                $queryCek = $this->db_active->query("
+                                $queryCek = $this->db->query("
                                     SELECT *
                                     FROM harian
                                     WHERE tanggal = '$dateDays'
                                       AND id_kelas = '$hasil->id_kelas'
                                       AND id_guru = '$guru->id_guru'
                                       AND dari = '$hasil->jam_dari'
+                                      AND id_lembaga = '$lmb->id_lembaga'
                                 ");
                             ?>
-                                <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                                <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                                    onclick="window.location.href='<?= site_url('kbm/absensi') ?>'">
                                     <!-- Jam -->
                                     <td class="px-3 py-2 text-slate-600 dark:text-slate-300 whitespace-nowrap">
                                         <?= $hasil->jam_dari . ' - ' . $hasil->jam_sampai ?>

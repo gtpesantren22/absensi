@@ -326,7 +326,7 @@
 
         const current = meta.page;
         const last = meta.lastPage;
-        const delta = 2; // jumlah halaman kiri-kanan
+        const delta = 1; // jumlah halaman kiri-kanan
 
         function addButton(label, page = null, active = false, disabled = false) {
             pag.innerHTML += `

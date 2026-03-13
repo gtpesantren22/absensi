@@ -182,8 +182,13 @@
 
         <!-- Main Content -->
         <div class="flex flex-1">
-            <!-- Sidebar (Mobile) -->
-            <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-gray-800 flux-shadow transform -translate-x-full md:translate-x-0 transition-transform duration-300 md:static">
+
+            <aside id="sidebar"
+                class="fixed inset-y-0 left-0 z-40 w-64
+                bg-white dark:bg-gray-800
+                transform transition-transform duration-300
+                -translate-x-full md:translate-x-0
+                md:static">
                 <div class="h-full overflow-y-auto">
                     <div class="px-4 py-6">
                         <!-- Menu Navigasi -->
@@ -350,7 +355,8 @@
             </aside>
 
             <!-- Overlay untuk mobile sidebar -->
-            <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden" style="display: none;"></div>
-
+            <div id="sidebarOverlay"
+                class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden md:hidden">
+            </div>
             <div class="flash-data" data-flashdata="<?= $this->session->flashdata('ok') ?>"></div>
             <div class="flash-data-error" data-flashdata="<?= $this->session->flashdata('error') ?>"></div>

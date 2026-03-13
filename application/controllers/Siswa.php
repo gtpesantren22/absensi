@@ -16,6 +16,7 @@ class Siswa extends MY_Controller
 		$this->mustLogin();
 		$this->AdminOrSuper();
 		$this->iduser = $this->session->userdata('id_user');
+		$this->id_lembaga = $this->session->userdata('id_lembaga');
 	}
 
 	public function index()
@@ -29,8 +30,6 @@ class Siswa extends MY_Controller
 
 	public function datatable()
 	{
-		$usrdtl = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser'")->row();
-		// $result = $this->Model_guru->getData($params);
 		$search   = $this->input->get('search') ?? '';
 		$page     = max(1, (int) ($this->input->get('page') ?? 1));
 		$perPage  = max(1, (int) ($this->input->get('perPage') ?? 10));
@@ -41,7 +40,10 @@ class Siswa extends MY_Controller
 
 		/* ================= TOTAL ================= */
 		$this->db->from('registrasi_siswa');
-		$this->db->join('siswa', 'registrasi_siswa.id_siswa = siswa.id_siswa', 'left');
+		$this->db->join('siswa', 'registrasi_siswa.id_siswa = siswa.id_siswa');
+
+		$this->db->where('registrasi_siswa.id_lembaga', $this->id_lembaga);
+
 		if (!empty($search)) {
 			$this->db->group_start()
 				->like('siswa.nama', $search)
@@ -49,17 +51,14 @@ class Siswa extends MY_Controller
 				->or_like('siswa.alamat', $search)
 				->group_end();
 		}
-		// hitung siswa unik
-		$this->db->where('registrasi_siswa.id_lembaga', $usrdtl->id_lembaga);
-		$this->db->select('COUNT(DISTINCT registrasi_siswa.id_siswa) AS total');
-		$result = $this->db->get()->row();
-
-		$total = (int) $result->total;
+		$this->db->select('COUNT(*) as total');
+		$total = $this->db->get()->row()->total;
 
 		/* ================= DATA ================= */
 		$this->db->select('siswa.*');
 		$this->db->from('registrasi_siswa');
-		$this->db->join('siswa', 'registrasi_siswa.id_siswa = siswa.id_siswa', 'left');
+		$this->db->join('siswa', 'registrasi_siswa.id_siswa = siswa.id_siswa');
+		$this->db->where('registrasi_siswa.id_lembaga', $this->id_lembaga);
 		if (!empty($search)) {
 			$this->db->group_start()
 				->like('siswa.nama', $search)
@@ -67,12 +66,10 @@ class Siswa extends MY_Controller
 				->or_like('siswa.alamat', $search)
 				->group_end();
 		}
-		// hitung siswa unik
-		$this->db->where('registrasi_siswa.id_lembaga', $usrdtl->id_lembaga);
-		$this->db->group_by('registrasi_siswa.id_siswa');
 		$this->db->order_by($sortBy, $sortDir);
 		$this->db->limit($perPage, $offset);
 		$data = $this->db->get()->result_array();
+
 		$result = [
 			'data'      => $data,
 			'total'     => $total,
@@ -112,12 +109,10 @@ class Siswa extends MY_Controller
 
 	public function hapus()
 	{
-		$usrdtl = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser'")->row();
-
 		$id = $this->input->post('id', true);
 		$sql = $this->db
 			->where('id_siswa', $id)
-			->where('id_lembaga', $usrdtl->id_lembaga)
+			->where('id_lembaga', $this->id_lembaga)
 			->delete('registrasi_siswa');
 		if (!$sql) {
 			$this->session->set_flashdata('error', 'Data siswa gagal dihapus.');

@@ -17,6 +17,7 @@ class Guru extends MY_Controller
 		$this->AdminOrSuper();
 
 		$this->iduser = $this->session->userdata('id_user');
+		$this->id_lembaga = $this->session->userdata('id_lembaga');
 	}
 
 	public function index()
@@ -30,8 +31,6 @@ class Guru extends MY_Controller
 
 	public function datatable()
 	{
-		$usrdtl = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser'")->row();
-		// $result = $this->Model_guru->getData($params);
 		$search   = $this->input->get('search') ?? '';
 		$page     = max(1, (int) ($this->input->get('page') ?? 1));
 		$perPage  = max(1, (int) ($this->input->get('perPage') ?? 10));
@@ -42,7 +41,9 @@ class Guru extends MY_Controller
 
 		/* ================= TOTAL ================= */
 		$this->db->from('registrasi');
-		$this->db->join('guru', 'registrasi.id_guru = guru.id_guru', 'left');
+		$this->db->join('guru', 'registrasi.id_guru = guru.id_guru');
+		$this->db->where('registrasi.id_lembaga', $this->id_lembaga);
+
 		if (!empty($search)) {
 			$this->db->group_start()
 				->like('guru.kode_guru', $search)
@@ -51,17 +52,18 @@ class Guru extends MY_Controller
 				->or_like('guru.no_hp', $search)
 				->group_end();
 		}
-		// hitung guru unik
-		$this->db->where('registrasi.id_lembaga', $usrdtl->id_lembaga);
-		$this->db->select('COUNT(DISTINCT registrasi.id_guru) AS total');
-		$result = $this->db->get()->row();
 
-		$total = (int) $result->total;
+		$this->db->select('COUNT(*) as total');
+
+		$total = $this->db->get()->row()->total;
 
 		/* ================= DATA ================= */
 		$this->db->select('guru.*');
 		$this->db->from('registrasi');
-		$this->db->join('guru', 'registrasi.id_guru = guru.id_guru', 'left');
+		$this->db->join('guru', 'registrasi.id_guru = guru.id_guru');
+
+		$this->db->where('registrasi.id_lembaga', $this->id_lembaga);
+
 		if (!empty($search)) {
 			$this->db->group_start()
 				->like('guru.kode_guru', $search)
@@ -70,11 +72,10 @@ class Guru extends MY_Controller
 				->or_like('guru.no_hp', $search)
 				->group_end();
 		}
-		// hitung guru unik
-		$this->db->where('registrasi.id_lembaga', $usrdtl->id_lembaga);
-		$this->db->group_by('registrasi.id_guru');
+
 		$this->db->order_by($sortBy, $sortDir);
 		$this->db->limit($perPage, $offset);
+
 		$data = $this->db->get()->result_array();
 
 		$result = [
@@ -120,10 +121,9 @@ class Guru extends MY_Controller
 	public function hapus()
 	{
 		$id = $this->input->post('id', true);
-		$usrdtl = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser'")->row();
 		$sql = $this->db
 			->where('id_guru', $id)
-			->where('id_lembaga', $usrdtl->id_lembaga)
+			->where('id_lembaga', $this->id_lembaga)
 			->delete('registrasi');
 
 		if (!$sql) {

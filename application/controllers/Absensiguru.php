@@ -7,15 +7,11 @@ class Absensiguru extends MY_Controller
     {
         parent::__construct();
         $this->load->model('Modeldata', 'model');
-        $this->load->library('Dynamic_db'); // load dulu
-        $this->db_active = $this->dynamic_db->connect(); // baru panggil method connect()
-
         $this->mustLogin();
         $this->onlyPiket();
 
         $this->iduser = $this->session->userdata('id_user');
-        $usrdtl = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser' ")->row();
-        $this->id_lembaga = $usrdtl->id_lembaga;
+        $this->id_lembaga = $this->session->userdata('id_lembaga');
     }
 
     public function pembiasaan()
@@ -24,7 +20,7 @@ class Absensiguru extends MY_Controller
         $data['menu'] = "absensiguru";
         $data['sub'] = "absensiguru_pembiasaan";
 
-        // $data['absensiguru'] = $this->model->getAbsensiGuru($this->db_active)->result();
+        // $data['absensiguru'] = $this->model->getAbsensiGuru($this->db)->result();
 
         $this->load->view('absensi/pembiasaan_guru', $data);
     }
@@ -41,39 +37,44 @@ class Absensiguru extends MY_Controller
         $offset = ($page - 1) * $perPage;
 
 
-        // ================= TOTAL =================
-        $this->db_active->from('apel_guru');
+        /* ================= TOTAL ================= */
+        $this->db->from('apel_guru');
+
+        $this->db->where('apel_guru.id_lembaga', $this->id_lembaga);
 
         if (!empty($search)) {
-            $this->db_active->group_start()
-                ->like('tanggal', $search)
-                ->group_end();
-        }
-
-        // count DISTINCT tanggal
-        $this->db_active->select('COUNT(DISTINCT tanggal) AS total');
-        $total = $this->db_active->get()->row()->total;
-
-
-        // ================= DATA =================
-        $this->db_active->select('
-            apel_guru.tanggal,
-            COUNT(apel_guru.id_guru) AS jumlah_guru
-        ');
-
-        $this->db_active->from('apel_guru');
-
-        if (!empty($search)) {
-            $this->db_active->group_start()
+            $this->db->group_start()
                 ->like('apel_guru.tanggal', $search)
                 ->group_end();
         }
 
-        $this->db_active->group_by('apel_guru.tanggal');
-        $this->db_active->order_by($sortBy, $sortDir);
-        $this->db_active->limit($perPage, $offset);
+        // count DISTINCT tanggal
+        $this->db->select('COUNT(DISTINCT apel_guru.tanggal) AS total');
 
-        $data = $this->db_active->get()->result_array();
+        $total = $this->db->get()->row()->total;
+
+
+        /* ================= DATA ================= */
+        $this->db->select('
+            apel_guru.tanggal,
+            COUNT(apel_guru.id_guru) AS jumlah_guru
+        ');
+
+        $this->db->from('apel_guru');
+
+        $this->db->where('apel_guru.id_lembaga', $this->id_lembaga);
+
+        if (!empty($search)) {
+            $this->db->group_start()
+                ->like('apel_guru.tanggal', $search)
+                ->group_end();
+        }
+
+        $this->db->group_by('apel_guru.tanggal');
+        $this->db->order_by($sortBy, $sortDir);
+        $this->db->limit($perPage, $offset);
+
+        $data = $this->db->get()->result_array();
 
         $result = [
             'data'      => $data,
@@ -102,9 +103,10 @@ class Absensiguru extends MY_Controller
             ->get()
             ->result_array();
 
-        $apelList = $this->db_active
+        $apelList = $this->db
             ->select('id_guru, GROUP_CONCAT(TRIM(hari) ORDER BY hari SEPARATOR ",") AS daftar_hari')
             ->from('apel_sett')
+            ->where('id_lembaga', $this->id_lembaga)
             ->group_by('id_guru')
             ->get()
             ->result_array();
@@ -142,24 +144,25 @@ class Absensiguru extends MY_Controller
 
         if ($status == 1) {
             // Cek apakah data sudah ada
-            $this->db_active->where('id_guru', $id_guru);
-            $this->db_active->where('hari', $hari);
-            $query = $this->db_active->get('apel_sett');
+            $this->db->where('id_guru', $id_guru);
+            $this->db->where('hari', $hari);
+            $query = $this->db->get('apel_sett');
 
             if ($query->num_rows() < 1) {
                 // Insert new record
-                $this->db_active->insert('apel_sett', [
+                $this->db->insert('apel_sett', [
                     'id_guru' => $id_guru,
-                    'hari' => $hari
+                    'hari' => $hari,
+                    'id_lembaga' => $this->id_lembaga
                 ]);
             }
 
             echo json_encode(['success' => true]);
         } else {
             // Hapus record jika ada
-            $this->db_active->where('id_guru', $id_guru);
-            $this->db_active->where('hari', $hari);
-            $this->db_active->delete('apel_sett');
+            $this->db->where('id_guru', $id_guru);
+            $this->db->where('hari', $hari);
+            $this->db->delete('apel_sett');
 
             echo json_encode(['success' => true]);
         }
@@ -180,10 +183,11 @@ class Absensiguru extends MY_Controller
         }
         $data['tanggal'] = $tanggal;
 
-        $apelSett = $this->db_active
+        $apelSett = $this->db
             ->select('id_guru')
             ->from('apel_sett')
             ->where('hari', $harini)
+            ->where('id_lembaga', $this->id_lembaga)
             ->get()
             ->result_array();
 
@@ -203,11 +207,12 @@ class Absensiguru extends MY_Controller
         foreach ($guruList as $g) {
             $guruMap[$g['id_guru']] = $g['nama'];
         }
-        $apelGuru = $this->db_active
+        $apelGuru = $this->db
             ->select('id_guru, ket')
             ->from('apel_guru')
             ->where('tanggal', $tanggal)
             ->where_in('id_guru', $guruIds)
+            ->where('id_lembaga', $this->id_lembaga)
             ->get()
             ->result_array();
 
@@ -234,34 +239,53 @@ class Absensiguru extends MY_Controller
         $data = $this->input->post('data', true);
         $tanggal = $this->input->post('tanggal', true);
         if (!empty($data)) {
+            // ================= AMBIL DATA YANG SUDAH ADA =================
+            $exist = $this->db
+                ->where('tanggal', $tanggal)
+                ->where('id_lembaga', $this->id_lembaga)
+                ->get('apel_guru')
+                ->result_array();
+
+            $existMap = array_column($exist, null, 'id_guru');
+
+            $insertBatch = [];
+            $updateBatch = [];
+
+            // ================= LOOP DATA =================
             foreach ($data as $item) {
-                $cek = $this->model->getBy2('apel_guru', 'tanggal', $tanggal, 'id_guru', $item['id_guru'])->row();
+
                 $dtsm = [
-                    'tanggal' => $tanggal,
-                    'id_guru' => $item['id_guru'],
-                    'ket' => isset($item['ket']) ? $item['ket'] : '',
+                    'tanggal'     => $tanggal,
+                    'id_guru'     => $item['id_guru'],
+                    'ket'         => $item['ket'] ?? '',
+                    'id_lembaga'  => $this->id_lembaga
                 ];
-                if (!$cek) {
-                    $sql = $this->model->tambah('apel_guru', $dtsm);
-                    if ($item['ket'] == 'hadir') {
-                        // juga simpan ke tabel kehadiran_guru
-                        $this->model->tambah('kehadiran_guru', [
-                            'tanggal' => $tanggal,
-                            'id_guru' => $item['id_guru'],
-                            'ket' => 'hadir',
-                        ]);
-                    }
+
+                if (!isset($existMap[$item['id_guru']])) {
+
+                    // belum ada → INSERT
+                    $insertBatch[] = $dtsm;
                 } else {
-                    $sql = $this->model->edit2('apel_guru',  'tanggal', $tanggal, 'id_guru', $item['id_guru'], $dtsm);
+
+                    // sudah ada → UPDATE
+                    $dtsm['id'] = $existMap[$item['id_guru']]['id'];
+                    $updateBatch[] = $dtsm;
                 }
             }
-            if ($sql) {
-                $this->session->set_flashdata('ok', 'Input Absen Berhasil');
-                redirect('absensiguru/pembiasaan');
-            } else {
-                $this->session->set_flashdata('error', 'Input Absen Gagal');
-                redirect('absensiguru/pembiasaan');
+
+            // ================= INSERT BATCH =================
+            if (!empty($insertBatch)) {
+                $this->db->insert_batch('apel_guru', $insertBatch);
             }
+
+            // ================= UPDATE BATCH =================
+            if (!empty($updateBatch)) {
+                $this->db->update_batch('apel_guru', $updateBatch, 'id');
+            }
+
+            // ================= RESPONSE =================
+            $this->session->set_flashdata('ok', 'Simpan Absen Berhasil');
+            redirect('absensiguru/pembiasaan');
         }
     }
 

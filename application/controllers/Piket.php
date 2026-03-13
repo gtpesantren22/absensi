@@ -7,15 +7,12 @@ class Piket extends MY_Controller
     {
         parent::__construct();
         $this->load->model('Modeldata', 'model');
-        $this->load->library('Dynamic_db'); // load dulu
-        $this->db_active = $this->dynamic_db->connect(); // baru panggil method connect()
 
         $this->mustLogin();
         $this->AdminOrSuper();
 
         $this->iduser = $this->session->userdata('id_user');
-        $usrdtl = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser' ")->row();
-        $this->id_lembaga = $usrdtl->id_lembaga;
+        $this->id_lembaga = $this->session->userdata('id_lembaga');
     }
 
     public function index()
@@ -25,26 +22,26 @@ class Piket extends MY_Controller
         $data['sub'] = "piket";
 
         $guruList = $this->db
+            ->select('guru.id_guru, guru.nama')
             ->from('registrasi')
-            ->join('guru', 'registrasi.id_guru=guru.id_guru')
+            ->join('guru', 'registrasi.id_guru = guru.id_guru')
             ->where('registrasi.id_lembaga', $this->id_lembaga)
             ->order_by('guru.nama', 'ASC')
             ->get()
             ->result_array();
 
-        $apelList = $this->db_active
+        $apelList = $this->db
             ->select('id_guru, GROUP_CONCAT(TRIM(hari) ORDER BY hari SEPARATOR ",") AS daftar_hari')
             ->from('piket')
+            ->where('id_lembaga', $this->id_lembaga)
             ->group_by('id_guru')
             ->get()
             ->result_array();
 
-        $apelMap = [];
+        /* ===== Mapping piket ===== */
+        $apelMap = array_column($apelList, 'daftar_hari', 'id_guru');
 
-        foreach ($apelList as $a) {
-            $apelMap[$a['id_guru']] = $a['daftar_hari'];
-        }
-
+        /* ===== Gabungkan data ===== */
         $datakirim = [];
 
         foreach ($guruList as $g) {
@@ -54,10 +51,7 @@ class Piket extends MY_Controller
                 'daftar_hari' => $apelMap[$g['id_guru']] ?? '0,0,0',
             ];
         }
-
         $data['guru'] = $datakirim;
-
-
 
         $this->load->view('admin/set_piket', $data);
     }
@@ -72,24 +66,25 @@ class Piket extends MY_Controller
 
         if ($status == 1) {
             // Cek apakah data sudah ada
-            $this->db_active->where('id_guru', $id_guru);
-            $this->db_active->where('hari', $hari);
-            $query = $this->db_active->get('piket');
+            $this->db->where('id_guru', $id_guru);
+            $this->db->where('hari', $hari);
+            $query = $this->db->get('piket');
 
             if ($query->num_rows() < 1) {
                 // Insert new record
-                $this->db_active->insert('piket', [
+                $this->db->insert('piket', [
                     'id_guru' => $id_guru,
-                    'hari' => $hari
+                    'hari' => $hari,
+                    'id_lembaga' => $this->id_lembaga
                 ]);
             }
 
             echo json_encode(['success' => true]);
         } else {
             // Hapus record jika ada
-            $this->db_active->where('id_guru', $id_guru);
-            $this->db_active->where('hari', $hari);
-            $this->db_active->delete('piket');
+            $this->db->where('id_guru', $id_guru);
+            $this->db->where('hari', $hari);
+            $this->db->delete('piket');
 
             echo json_encode(['success' => true]);
         }

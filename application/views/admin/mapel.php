@@ -13,198 +13,198 @@
     }
 </style>
 
-    <!-- Header Halaman -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between mb-6">
-        <div>
-            <h2 class="text-2xl font-bold">Data Mapel</h2>
-            <p class="text-gray-600 dark:text-gray-400">Halaman kelola data mapel</p>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2 mt-4 md:mt-0">
-
-
-            <!-- Tombol Tambah Siswa -->
-            <button onclick="openModal('uploadMapelModal')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
-                <i class="fas fa-upload mr-2"></i>
-                Upload Mapel
-            </button>
-            <button onclick="openModal('tambahMapelModal')" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
-                <i class="fas fa-plus mr-2"></i>
-                Tambah Mapel
-            </button>
-        </div>
+<!-- Header Halaman -->
+<div class="flex flex-col md:flex-row md:items-center justify-between mb-6">
+    <div>
+        <h2 class="text-2xl font-bold">Data Mapel</h2>
+        <p class="text-gray-600 dark:text-gray-400">Halaman kelola data mapel</p>
     </div>
 
+    <div class="flex flex-wrap items-center gap-2 mt-4 md:mt-0">
 
-    <!-- Tabel Data -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl flux-shadow overflow-hidden mb-6">
-        <!-- Header Tabel dengan Aksi -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-            <h3 class="font-bold text-lg">Daftar Mapel</h3>
 
-            <div class="flex items-center space-x-2 mt-2 md:mt-0">
-                <div class="relative">
-                    <select id="perPage" class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
-                        <option value="5">5</option>
-                        <option value="10" selected>10</option>
-                        <option value="25">25</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                    </select>
+        <!-- Tombol Tambah Siswa -->
+        <button onclick="openModal('uploadMapelModal')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
+            <i class="fas fa-upload mr-2"></i>
+            Upload Mapel
+        </button>
+        <button onclick="openModal('tambahMapelModal')" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
+            <i class="fas fa-plus mr-2"></i>
+            Tambah Mapel
+        </button>
+    </div>
+</div>
+
+
+<!-- Tabel Data -->
+<div class="bg-white dark:bg-gray-800 rounded-xl flux-shadow overflow-hidden mb-6">
+    <!-- Header Tabel dengan Aksi -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <h3 class="font-bold text-lg">Daftar Mapel</h3>
+
+        <div class="flex items-center space-x-2 mt-2 md:mt-0">
+            <div class="relative">
+                <select id="perPage" class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-gray-400"></i>
                 </div>
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i class="fas fa-search text-gray-400"></i>
+                <input type="search" id="search" class="pl-10 pr-4 py-2 w-full md:w-64 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Cari mapel...">
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabel -->
+    <div class="overflow-x-auto px-4">
+        <table class="w-full" id="datatable">
+            <thead>
+                <tr class="bg-gray-50 dark:bg-gray-700/50 text-left text-sm text-gray-500 dark:text-gray-400">
+                    <th onclick="sort('kode_mapel')" class="py-3 px-4 font-medium cursor-pointer">Kode Mapel</th>
+                    <th onclick="sort('nama')" class="py-3 px-4 font-medium cursor-pointer">Nama Mapel</th>
+                    <th class="py-3 px-4 font-medium">Aksi</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700" id="tableBody">
+                <!-- Baris Data 1 -->
+
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700">
+        <div class="text-sm text-gray-500 dark:text-gray-400 mb-2 md:mb-0">
+            Menampilkan <span id="startRecord">1</span> sampai <span id="endRecord">10</span> dari <span id="totalRecords">100</span> entri
+        </div>
+        <div class="flex items-center space-x-2" id="pagination">
+        </div>
+    </div>
+</div>
+
+<!-- Modal Tambah Mapel -->
+<div id="tambahMapelModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <!-- Header Modal -->
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-xl font-bold">Tambah Data Mapel</h3>
+            <button onclick="closeModal('tambahMapelModal')" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Form Tambah Mapel -->
+        <div class="p-6">
+            <form id="formTambahMapel" action="<?= base_url('mapel/add') ?>" method="POST">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">Kode Mapel</label>
+                        <input type="text" name="kode_mapel" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Masukkan kode mapel" required>
                     </div>
-                    <input type="search" id="search" class="pl-10 pr-4 py-2 w-full md:w-64 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Cari mapel...">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">Nama Mapel</label>
+                        <input type="text" name="nama" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Masukkan nama mapel" required>
+                    </div>
+
                 </div>
-            </div>
-        </div>
 
-        <!-- Tabel -->
-        <div class="overflow-x-auto px-4">
-            <table class="w-full" id="datatable">
-                <thead>
-                    <tr class="bg-gray-50 dark:bg-gray-700/50 text-left text-sm text-gray-500 dark:text-gray-400">
-                        <th onclick="sort('kode_mapel')" class="py-3 px-4 font-medium cursor-pointer">Kode Mapel</th>
-                        <th onclick="sort('nama')" class="py-3 px-4 font-medium cursor-pointer">Nama Mapel</th>
-                        <th class="py-3 px-4 font-medium">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700" id="tableBody">
-                    <!-- Baris Data 1 -->
-
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pagination -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700">
-            <div class="text-sm text-gray-500 dark:text-gray-400 mb-2 md:mb-0">
-                Menampilkan <span id="startRecord">1</span> sampai <span id="endRecord">10</span> dari <span id="totalRecords">100</span> entri
-            </div>
-            <div class="flex items-center space-x-2" id="pagination">
-            </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('tambahMapelModal')" class="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium">
+                        Simpan Data
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 
-    <!-- Modal Tambah Mapel -->
-    <div id="tambahMapelModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <!-- Header Modal -->
-            <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-                <h3 class="text-xl font-bold">Tambah Data Mapel</h3>
-                <button onclick="closeModal('tambahMapelModal')" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
+<!-- Modal Edit  -->
+<div id="editMapelModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <!-- Header Modal -->
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-xl font-bold">Edit Data Guru</h3>
+            <button onclick="closeModal('editMapelModal')" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
 
-            <!-- Form Tambah Mapel -->
-            <div class="p-6">
-                <form id="formTambahMapel" action="<?= base_url('mapel/add') ?>" method="POST">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium mb-2">Kode Mapel</label>
-                            <input type="text" name="kode_mapel" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Masukkan kode mapel" required>
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium mb-2">Nama Mapel</label>
-                            <input type="text" name="nama" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Masukkan nama mapel" required>
-                        </div>
-
+        <!-- Form Tambah Siswa -->
+        <div class="p-6">
+            <form id="formEditMapel" action="<?= base_url('mapel/udpdate') ?>" method="POST">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">Kode Mapel</label>
+                        <input type="text" name="kode_mapel" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Masukkan kode mapel" required>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">Nama Mapel</label>
+                        <input type="text" name="nama" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Masukkan nama mapel" required>
                     </div>
 
-                    <div class="flex justify-end space-x-3">
-                        <button type="button" onclick="closeModal('tambahMapelModal')" class="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
-                            Batal
-                        </button>
-                        <button type="submit" class="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium">
-                            Simpan Data
-                        </button>
-                    </div>
-                </form>
-            </div>
+                </div>
+
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('editMapelModal')" class="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium">
+                        Simpan Data
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 
-    <!-- Modal Edit  -->
-    <div id="editMapelModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <!-- Header Modal -->
-            <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-                <h3 class="text-xl font-bold">Edit Data Guru</h3>
-                <button onclick="closeModal('editMapelModal')" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
+<!-- Modal Upload -->
+<div id="uploadMapelModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <!-- Header Modal -->
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-xl font-bold">Upload Data Guru</h3>
+            <button onclick="closeModal('uploadMapelModal')" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
 
-            <!-- Form Tambah Siswa -->
-            <div class="p-6">
-                <form id="formEditMapel" action="<?= base_url('mapel/udpdate') ?>" method="POST">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium mb-2">Kode Mapel</label>
-                            <input type="text" name="kode_mapel" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Masukkan kode mapel" required>
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium mb-2">Nama Mapel</label>
-                            <input type="text" name="nama" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Masukkan nama mapel" required>
-                        </div>
-
+        <!-- Form Upload Siswa -->
+        <div class="p-6">
+            <form id="" action="<?= base_url('mapel/upload_excel') ?>" method="POST" enctype="multipart/form-data">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">Pilih file</label>
+                        <input type="file" name="file" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Masukkan kode guru" required>
+                        <small class="text-red-500">upload file yang didownload dari aplikasi ini</small>
                     </div>
-
-                    <div class="flex justify-end space-x-3">
-                        <button type="button" onclick="closeModal('editMapelModal')" class="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
-                            Batal
-                        </button>
-                        <button type="submit" class="px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium">
-                            Simpan Data
+                    <div class="md:col-span-2">
+                        <button type="button" onclick="window.location.href='<?= base_url() ?>mapel/downloadTemplate'" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                            Download Template
                         </button>
                     </div>
-                </form>
-            </div>
+                </div>
+
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('uploadMapelModal')" class="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium">
+                        Upload
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
-
-    <!-- Modal Upload -->
-    <div id="uploadMapelModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
-        <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <!-- Header Modal -->
-            <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-                <h3 class="text-xl font-bold">Upload Data Guru</h3>
-                <button onclick="closeModal('uploadMapelModal')" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-
-            <!-- Form Upload Siswa -->
-            <div class="p-6">
-                <form id="" action="<?= base_url('mapel/upload_excel') ?>" method="POST" enctype="multipart/form-data">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium mb-2">Pilih file</label>
-                            <input type="file" name="file" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Masukkan kode guru" required>
-                            <small class="text-red-500">upload file yang didownload dari aplikasi ini</small>
-                        </div>
-                        <div class="md:col-span-2">
-                            <button type="button" onclick="window.location.href='<?= base_url() ?>mapel/downloadTemplate'" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
-                                Download Template
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="flex justify-end space-x-3">
-                        <button type="button" onclick="closeModal('uploadMapelModal')" class="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
-                            Batal
-                        </button>
-                        <button type="submit" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium">
-                            Upload
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+</div>
 
 <?php $this->load->view('admin/foot'); ?>
 <script>

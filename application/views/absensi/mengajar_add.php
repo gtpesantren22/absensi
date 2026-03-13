@@ -53,8 +53,8 @@
                     $guru = $row['id_guru'];
 
                     for ($i = 1; $i <= $jml_jp; $i++) {
-                        ${"cek$i"} = $this->db_active
-                            ->query("SELECT * FROM mengajar WHERE id_guru='$guru' AND tanggal='$hariini' AND jam=$i")
+                        ${"cek$i"} = $this->db
+                            ->query("SELECT * FROM mengajar WHERE id_guru='$guru' AND tanggal='$hariini' AND jam=$i AND id_lembaga = '$id_lembaga'")
                             ->row();
                     }
                 ?>
