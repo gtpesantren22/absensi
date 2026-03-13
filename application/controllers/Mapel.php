@@ -49,6 +49,7 @@ class Mapel extends MY_Controller
 		}
 
 		/* ================= TOTAL ================= */
+		$this->db->where('id_lembaga', $this->id_lembaga);
 		$total = $this->db->count_all_results('', false);
 
 		/* ================= DATA ================= */
