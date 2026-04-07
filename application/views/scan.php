@@ -121,7 +121,7 @@
                     // console.log(res.hasil);
                     setTimeout(() => {
                         location.href = '<?= base_url() ?>';
-                    }, 2000);
+                    }, 1000);
                 } else {
                     setStatus(res.message, "error");
                     startScanner()

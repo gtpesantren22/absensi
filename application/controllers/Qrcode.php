@@ -107,15 +107,16 @@ class Qrcode extends MY_Controller
                 'waktu' => date('H:i:s'),
                 'id_lembaga' => $this->id_lembaga
             ]);
+            $this->db->query("UPDATE qrcode SET used = 1 WHERE token = '$token' ");
         } else {
             $add = $this->model->edit('kehadiran_guru', 'id_guru', $dtlUser->id_guru, [
                 'pulang' => date('H:i:s'),
                 'id_lembaga' => $this->id_lembaga
             ]);
+            $this->db->query("UPDATE qrcode SET used = 1 WHERE token = '$token' ");
         }
 
         if ($add) {
-            $this->db->query("UPDATE qrcode SET used = 1 WHERE token = '$token' ");
             echo json_encode(['valid' => true, 'message' => 'Absensi berhasil']);
             exit;
         } else {
@@ -143,7 +144,7 @@ class Qrcode extends MY_Controller
             ['lat' => -7.756998490707694, 'lon' => 113.4230718505036], // DWK 2, 
             ['lat' => -7.762236379980296, 'lon' => 113.42135752295482], // Madin Putri, 
 
-            // ['lat' => -7.7632911410830685, 'lon' => 113.42090758533828], // Uji Coba, 
+            ['lat' => -7.769032046442462, 'lon' => 113.46365920898806], // Uji Coba, 
         ];
 
         $radius = 20; // meter

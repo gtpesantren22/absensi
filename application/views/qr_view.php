@@ -32,10 +32,6 @@
                 Mohon izinkan akses lokasi untuk melanjutkan absensi
             </p>
             <p id="locError" class="mt-4 text-red-400 text-sm hidden"></p>
-            
-            <button id="btnStart" onclick="startApp()" class="hidden mt-6 px-8 py-3 bg-blue-600 shadow-xl hover:bg-blue-700 rounded-full font-medium transition-all transform hover:scale-105 mx-auto">
-                Mulai & Fullscreen
-            </button>
         </div>
     </div>
 
@@ -106,11 +102,7 @@
                         .then(res => res.json())
                         .then(res => {
                             if (res.allow === true) {
-                                document.getElementById('locLoading').textContent = '✅';
-                                document.getElementById('locLoading').classList.remove('animate-pulse');
-                                document.getElementById('locTitle').textContent = 'Lokasi Valid';
-                                document.getElementById('locDesc').textContent = 'Anda berada di area absensi. Silakan mulai.';
-                                document.getElementById('btnStart').classList.remove('hidden');
+                                startApp();
                             } else {
                                 showError(res.message ?? 'Lokasi tidak valid');
                             }
@@ -152,8 +144,13 @@
                 }
             }
 
-            // Karena ini dipicu oleh onClick tombol, fullscreen akan 100% diizinkan browser
+            // Coba langsung fullscreen (Browser kemungkinan memblokir ini jika auto-load)
             enterFS();
+
+            // Fallback: Jika diblokir oleh browser karena autoplay policy, 
+            // sentuhan pertama user di mana saja akan memastikan halaman jadi fullscreen.
+            document.addEventListener('click', enterFS, { once: true });
+            document.addEventListener('touchstart', enterFS, { once: true });
         }
 
         document.addEventListener('DOMContentLoaded', verifyLocation);
