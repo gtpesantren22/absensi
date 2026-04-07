@@ -109,7 +109,7 @@ class Qrcode extends MY_Controller
             ]);
             $this->db->query("UPDATE qrcode SET used = 1 WHERE token = '$token' ");
         } else {
-            $add = $this->model->edit('kehadiran_guru', 'id_guru', $dtlUser->id_guru, [
+            $add = $this->model->edit2('kehadiran_guru', 'id_guru', $dtlUser->id_guru, 'tanggal', date('Y-m-d'), [
                 'pulang' => date('H:i:s'),
                 'id_lembaga' => $this->id_lembaga
             ]);
