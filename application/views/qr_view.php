@@ -26,12 +26,16 @@
             bg-gray-900/90 text-white">
 
         <div class="text-center max-w-md px-6">
-            <div class="animate-pulse text-2xl mb-4">📍</div>
-            <h2 class="text-xl font-semibold mb-2">Memverifikasi Lokasi</h2>
-            <p class="text-sm opacity-80">
+            <div id="locLoading" class="animate-pulse text-2xl mb-4">📍</div>
+            <h2 id="locTitle" class="text-xl font-semibold mb-2">Memverifikasi Lokasi</h2>
+            <p id="locDesc" class="text-sm opacity-80">
                 Mohon izinkan akses lokasi untuk melanjutkan absensi
             </p>
             <p id="locError" class="mt-4 text-red-400 text-sm hidden"></p>
+            
+            <button id="btnStart" onclick="startApp()" class="hidden mt-6 px-8 py-3 bg-blue-600 shadow-xl hover:bg-blue-700 rounded-full font-medium transition-all transform hover:scale-105 mx-auto">
+                Mulai & Fullscreen
+            </button>
         </div>
     </div>
 
@@ -59,7 +63,7 @@
                 <div class="flex justify-center mb-6">
                     <div id="qrcode"
                         class="p-6 bg-white rounded-2xl shadow-lg dark:bg-gray-700
-                           w-[320px] h-[320px] flex items-center justify-center">
+                           w-[320px] h-[320px] flex items-center justify-center transition-opacity duration-300">
                     </div>
                 </div>
 
@@ -102,8 +106,11 @@
                         .then(res => res.json())
                         .then(res => {
                             if (res.allow === true) {
-                                document.getElementById('locationCheck').remove();
-                                document.getElementById('fullscreenWrap').classList.remove('hidden');
+                                document.getElementById('locLoading').textContent = '✅';
+                                document.getElementById('locLoading').classList.remove('animate-pulse');
+                                document.getElementById('locTitle').textContent = 'Lokasi Valid';
+                                document.getElementById('locDesc').textContent = 'Anda berada di area absensi. Silakan mulai.';
+                                document.getElementById('btnStart').classList.remove('hidden');
                             } else {
                                 showError(res.message ?? 'Lokasi tidak valid');
                             }
@@ -126,28 +133,47 @@
             el.classList.remove('hidden');
         }
 
+        function startApp() {
+            if (document.getElementById('locationCheck')) {
+                document.getElementById('locationCheck').remove();
+            }
+            document.getElementById('fullscreenWrap').classList.remove('hidden');
+            
+            function enterFS() {
+                let el = document.documentElement;
+                if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                    if (el.requestFullscreen) {
+                        el.requestFullscreen().catch(() => {});
+                    } else if (el.webkitRequestFullscreen) { /* Safari */
+                        el.webkitRequestFullscreen();
+                    } else if (el.msRequestFullscreen) { /* IE11 */
+                        el.msRequestFullscreen();
+                    }
+                }
+            }
+
+            // Karena ini dipicu oleh onClick tombol, fullscreen akan 100% diizinkan browser
+            enterFS();
+        }
+
         document.addEventListener('DOMContentLoaded', verifyLocation);
     </script>
 
 
     <script>
-        // AUTO FULLSCREEN SAAT PAGE LOAD (OPSIONAL)
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen().catch(() => {});
-                }
-            }, 500);
-        });
-
         let qr;
+        let isLoadingQR = false;
 
         function loadQR() {
-            fetch("<?= base_url('qrcode/getToken/10') ?>")
+            if (isLoadingQR) return;
+            isLoadingQR = true;
+
+            let t = new Date().getTime();
+            fetch("<?= base_url('qrcode/getToken/10') ?>?_t=" + t)
                 .then(res => res.json())
                 .then(data => {
-
                     document.getElementById('qrcode').innerHTML = '';
+                    document.getElementById('qrcode').classList.remove('opacity-10');
 
                     qr = new QRCode(document.getElementById("qrcode"), {
                         text: data.token,
@@ -158,19 +184,34 @@
                         correctLevel: QRCode.CorrectLevel.H
                     });
 
-                    // document.getElementById('tokenText').innerText = data.token;
                     setStatus('active');
+                    isLoadingQR = false;
+                })
+                .catch(err => {
+                    console.error('Fetch QR error:', err);
+                    setStatus('error');
+                    isLoadingQR = false;
                 });
         }
 
         function checkStatus() {
-            fetch("<?= base_url('qrcode/checkStatus') ?>")
+            let t = new Date().getTime();
+            fetch("<?= base_url('qrcode/checkStatus') ?>?_t=" + t)
                 .then(res => res.json())
                 .then(data => {
                     if (data.used) {
+                        document.getElementById('qrcode').classList.add('opacity-10');
                         setStatus('used');
                         loadQR();
+                    } else if (!isLoadingQR) {
+                        // Jika koneksi sempat terputus namun kembali normal dan token belum dipakai
+                        document.getElementById('qrcode').classList.remove('opacity-10');
+                        setStatus('active');
                     }
+                })
+                .catch(err => {
+                    console.error('Check status online error:', err);
+                    setStatus('error');
                 });
         }
 
@@ -181,12 +222,15 @@
                 el.className = 'inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ' +
                     'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300';
                 el.innerText = 'QR Aktif';
-            }
-
-            if (status === 'used') {
+            } else if (status === 'used') {
                 el.className = 'inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ' +
                     'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300';
                 el.innerText = 'QR Terpakai – Memperbarui...';
+            } else if (status === 'error') {
+                el.className = 'inline-flex items-center px-4 py-2 rounded-full text-sm font-medium ' +
+                    'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300';
+                el.innerText = 'Menunggu Jaringan...';
+                document.getElementById('qrcode').classList.add('opacity-10');
             }
         }
 
@@ -207,12 +251,22 @@
         function toggleFullscreen() {
             const el = document.documentElement;
 
-            if (!document.fullscreenElement) {
-                el.requestFullscreen().catch(err => {
-                    alert('Fullscreen gagal: ' + err.message);
-                });
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                if (el.requestFullscreen) {
+                    el.requestFullscreen().catch(() => {});
+                } else if (el.webkitRequestFullscreen) {
+                    el.webkitRequestFullscreen();
+                } else if (el.msRequestFullscreen) {
+                    el.msRequestFullscreen();
+                }
             } else {
-                document.exitFullscreen();
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
             }
         }
     </script>
