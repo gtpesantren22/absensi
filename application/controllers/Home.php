@@ -27,7 +27,7 @@ class Home extends MY_Controller
 				(SELECT COUNT(*) FROM registrasi_siswa WHERE id_lembaga='$this->id_lembaga' ) as jumlah_siswa,
 				(SELECT COUNT(*) FROM kelas WHERE id_lembaga='$this->id_lembaga' ) as jumlah_kelas,
 				(SELECT COUNT(*) FROM jadwal WHERE id_lembaga='$this->id_lembaga' ) as jumlah_jadwal")->row();
-			
+
 			$data['sekolah'] = $this->db->query("SELECT s.nama, s.alamat, s.nickname FROM user u JOIN lembaga s ON u.id_lembaga=s.id_lembaga WHERE id_user = '$this->iduser' ")->row();
 
 			$idguru = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser' ")->row();
@@ -40,10 +40,10 @@ class Home extends MY_Controller
 			$data['menu'] = 'home';
 			$data['sub'] = 'dashboard';
 
-			$data['jumlah_guru'] = $this->db->count_all('guru');
-			$data['jumlah_siswa'] = $this->db->count_all('siswa');
-			$data['jumlah_kelas'] = $this->db_active->count_all('kelas');
-			$data['jumlah_jadwal'] = $this->db->count_all('jadwal');
+			$data['jumlah_guru'] = $this->db->query("SELECT COUNT(*) as jumlah FROM guru")->row();
+			$data['jumlah_siswa'] = $this->db->query("SELECT COUNT(*) as jumlah FROM siswa")->row();
+			$data['jumlah_kelas'] = $this->db->query("SELECT COUNT(*) as jumlah FROM kelas")->row();
+			$data['jumlah_jadwal'] = $this->db->query("SELECT COUNT(*) as jumlah FROM jadwal")->row();
 
 			$idguru = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser' ")->row();
 			$data['hadir'] = $this->model->getBy2('kehadiran_guru', 'id_guru', $idguru->id_guru, 'tanggal', date('Y-m-d'))->row();

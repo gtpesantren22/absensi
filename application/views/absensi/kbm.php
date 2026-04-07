@@ -30,13 +30,9 @@
             <div class="overflow-x-auto">
                 <table class="min-w-full text-sm border border-slate-200 dark:border-slate-700">
                     <?php
-                    // echo '<pre>';
-                    // var_dump($kelas);
-                    // echo '</pre>';
-                    // exit;
                     foreach ($kelas->result() as $kelas) :
                         $days = $harini;
-                        $dtlkelas = $this->db_active->query("SELECT * FROM kelas WHERE id_kelas = '$kelas->id_kelas'")->row();
+                        $dtlkelas = $this->db->query("SELECT * FROM kelas WHERE id_kelas = '$kelas->id_kelas'")->row();
                         $jadwalKelas = $this->db->query("SELECT jadwal.*, guru.nama as nama_guru FROM jadwal LEFT JOIN guru ON jadwal.id_guru=guru.id_guru WHERE jadwal.hari = '$days' AND jadwal.id_kelas = '$kelas->id_kelas' AND jadwal.id_lembaga = '$id_lembaga' ORDER BY jadwal.jam_dari ASC ");
                     ?>
 
@@ -52,14 +48,15 @@
 
                         <tbody>
                             <?php foreach ($jadwalKelas->result() as $hasil) :
-                                $nmmapel = $this->db_active->query("SELECT * FROM mapel WHERE id_mapel = $hasil->id_mapel")->row();
-                                $queryCek = $this->db_active->query("
+                                $nmmapel = $this->db->query("SELECT * FROM mapel WHERE id_mapel = $hasil->id_mapel")->row();
+                                $queryCek = $this->db->query("
                                     SELECT *
                                     FROM harian
                                     WHERE tanggal = '$dateDays'
                                       AND id_kelas = '$hasil->id_kelas'
                                       AND id_guru = '$hasil->id_guru'
                                       AND dari = '$hasil->jam_dari'
+                                      AND id_lembaga = '$hasil->id_lembaga'
                                 ");
                             ?>
                                 <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
