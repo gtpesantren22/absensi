@@ -206,6 +206,7 @@
                     } else {
                         setStatus('error');
                         isLoadingQR = false;
+                        loadQR();
                     }
                 })
                 .catch(err => {
@@ -257,6 +258,7 @@
 
         // Refresh status tiap detik
         setInterval(checkStatus, 1000);
+        setInterval(tampilQR, 2000);
 
 
         setTimeout(() => {
