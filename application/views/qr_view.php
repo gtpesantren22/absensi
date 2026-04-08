@@ -130,15 +130,17 @@
                 document.getElementById('locationCheck').remove();
             }
             document.getElementById('fullscreenWrap').classList.remove('hidden');
-            
+
             function enterFS() {
                 let el = document.documentElement;
                 if (!document.fullscreenElement && !document.webkitFullscreenElement) {
                     if (el.requestFullscreen) {
                         el.requestFullscreen().catch(() => {});
-                    } else if (el.webkitRequestFullscreen) { /* Safari */
+                    } else if (el.webkitRequestFullscreen) {
+                        /* Safari */
                         el.webkitRequestFullscreen();
-                    } else if (el.msRequestFullscreen) { /* IE11 */
+                    } else if (el.msRequestFullscreen) {
+                        /* IE11 */
                         el.msRequestFullscreen();
                     }
                 }
@@ -149,8 +151,12 @@
 
             // Fallback: Jika diblokir oleh browser karena autoplay policy, 
             // sentuhan pertama user di mana saja akan memastikan halaman jadi fullscreen.
-            document.addEventListener('click', enterFS, { once: true });
-            document.addEventListener('touchstart', enterFS, { once: true });
+            document.addEventListener('click', enterFS, {
+                once: true
+            });
+            document.addEventListener('touchstart', enterFS, {
+                once: true
+            });
         }
 
         document.addEventListener('DOMContentLoaded', verifyLocation);
@@ -169,23 +175,42 @@
             fetch("<?= base_url('qrcode/getToken/10') ?>?_t=" + t)
                 .then(res => res.json())
                 .then(data => {
-                    document.getElementById('qrcode').innerHTML = '';
-                    document.getElementById('qrcode').classList.remove('opacity-10');
-
-                    qr = new QRCode(document.getElementById("qrcode"), {
-                        text: data.token,
-                        width: 280,
-                        height: 280,
-                        colorDark: "#000000",
-                        colorLight: "#ffffff",
-                        correctLevel: QRCode.CorrectLevel.H
-                    });
-
-                    setStatus('active');
-                    isLoadingQR = false;
+                    tampilQR()
                 })
                 .catch(err => {
                     console.error('Fetch QR error:', err);
+                    setStatus('error');
+                    isLoadingQR = false;
+                });
+        }
+
+        function tampilQR() {
+            let t = new Date().getTime();
+            fetch("<?= base_url('qrcode/getActiveToken') ?>?_t=" + t)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.token) {
+                        document.getElementById('qrcode').innerHTML = '';
+                        document.getElementById('qrcode').classList.remove('opacity-10');
+
+                        qr = new QRCode(document.getElementById("qrcode"), {
+                            text: data.token,
+                            width: 280,
+                            height: 280,
+                            colorDark: "#000000",
+                            colorLight: "#ffffff",
+                            correctLevel: QRCode.CorrectLevel.H
+                        });
+
+                        setStatus('active');
+                        isLoadingQR = false;
+                    } else {
+                        setStatus('error');
+                        isLoadingQR = false;
+                    }
+                })
+                .catch(err => {
+                    console.error('Fetch active token error:', err);
                     setStatus('error');
                     isLoadingQR = false;
                 });
@@ -196,7 +221,7 @@
             fetch("<?= base_url('qrcode/checkStatus') ?>?_t=" + t)
                 .then(res => res.json())
                 .then(data => {
-                    if (data.used) {
+                    if (!data.ready) {
                         document.getElementById('qrcode').classList.add('opacity-10');
                         setStatus('used');
                         loadQR();

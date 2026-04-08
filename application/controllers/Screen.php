@@ -3,53 +3,12 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class Screen extends MY_Controller
 {
-    protected $db_active;
-    protected $db_active_group;
 
     public function __construct()
     {
         parent::__construct();
     }
 
-    protected function dbActive($host, $user, $pass, $db_name)
-    {
-        if (!$db_name) {
-            show_error('Database aktif belum ditentukan');
-        }
-
-        $config = [
-            'dsn'      => '',
-            'hostname' => $host,
-            'username' => $user,
-            'password' => $pass,
-            'database' => $db_name,   // ← DINAMIS
-            'dbdriver' => 'mysqli',
-            'dbprefix' => '',
-            'pconnect' => FALSE,
-            'db_debug' => (ENVIRONMENT !== 'production'),
-            'cache_on' => FALSE,
-            'cachedir' => '',
-            'char_set' => 'utf8',
-            'dbcollat' => 'utf8_general_ci',
-            'swap_pre' => '',
-            'encrypt'  => FALSE,
-            'compress' => FALSE,
-            'stricton' => FALSE,
-            'failover' => [],
-            'save_queries' => TRUE
-        ];
-
-        // selalu koneksi BARU jika DB berubah
-        if (
-            !$this->db_active ||
-            $this->db_active_dbname !== $db_name
-        ) {
-            $this->db_active = $this->load->database($config, TRUE);
-            $this->db_active_dbname = $db_name;
-        }
-
-        return $this->db_active;
-    }
     public function apel_guru($tgl, $idl)
     {
         $data['lembaga'] = $this->db->query("SELECT * FROM lembaga WHERE id_lembaga = '$idl' ")->row();

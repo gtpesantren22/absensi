@@ -40,15 +40,26 @@ class Qrcode extends MY_Controller
     public function checkStatus()
     {
         $cek = $this->db
-            ->order_by('id', 'DESC')
-            ->limit(1)
+            ->where('used', 0)
+            ->get('qrcode')
+            ->num_rows();
+        if ($cek > 0) {
+            echo json_encode(['ready' => true]);
+        } else {
+            echo json_encode(['ready' => false]);
+        }
+    }
+
+    public function getActiveToken()
+    {
+        $cek = $this->db
+            ->where('used', 0)
             ->get('qrcode')
             ->row();
-
-        if ($cek->used == 1) {
-            echo json_encode(['used' => true]);
+        if ($cek) {
+            echo json_encode(['token' => $cek->token]);
         } else {
-            echo json_encode(['used' => false]);
+            echo json_encode(['token' => '']);
         }
     }
 
