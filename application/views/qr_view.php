@@ -253,7 +253,7 @@
         }
 
         // INIT
-        checkStatus();
+        loadQR();
 
         // Refresh status tiap detik
         setInterval(checkStatus, 1000);
