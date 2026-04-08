@@ -170,9 +170,9 @@
         function loadQR() {
             if (isLoadingQR) return;
             isLoadingQR = true;
-
-            let t = new Date().getTime();
-            fetch("<?= base_url('qrcode/getToken/10') ?>?_t=" + t)
+            document.getElementById('qrcode').classList.add('opacity-10');
+            setStatus('used');
+            fetch("<?= base_url('qrcode/getToken/10') ?>")
                 .then(res => res.json())
                 .then(data => {
                     tampilQR()
@@ -185,8 +185,7 @@
         }
 
         function tampilQR() {
-            let t = new Date().getTime();
-            fetch("<?= base_url('qrcode/getActiveToken') ?>?_t=" + t)
+            fetch("<?= base_url('qrcode/getActiveToken') ?>")
                 .then(res => res.json())
                 .then(data => {
                     if (data.token) {
@@ -217,13 +216,10 @@
         }
 
         function checkStatus() {
-            let t = new Date().getTime();
-            fetch("<?= base_url('qrcode/checkStatus') ?>?_t=" + t)
+            fetch("<?= base_url('qrcode/checkStatus') ?>")
                 .then(res => res.json())
                 .then(data => {
                     if (!data.ready) {
-                        document.getElementById('qrcode').classList.add('opacity-10');
-                        setStatus('used');
                         loadQR();
                     } else if (!isLoadingQR) {
                         // Jika koneksi sempat terputus namun kembali normal dan token belum dipakai
