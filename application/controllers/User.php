@@ -96,14 +96,14 @@ class User extends MY_Controller
 					'id_lembaga' => $this->id_lembaga
 				];
 				$sql = $this->db->insert('user', $userdata);
+				if ($sql) {
+					echo json_encode(['status' => true]);
+				} else {
+					echo json_encode(['status' => false]);
+				}
 			} else {
 				continue;
 			}
-		}
-		if ($sql) {
-			echo json_encode(['status' => true]);
-		} else {
-			echo json_encode(['status' => false]);
 		}
 	}
 

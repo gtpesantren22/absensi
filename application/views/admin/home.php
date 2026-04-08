@@ -154,7 +154,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Data Guru</p>
-                    <h3 class="text-2xl font-bold mt-1"><?= $jumlah->jumlah_guru ?></h3>
+                    <h3 class="text-2xl font-bold mt-1"><?= $jumlah_guru->jumlah ?></h3>
                     <p class="text-xs text-green-600 dark:text-green-400 mt-1">
                         <i class="fas fa-users mr-1"></i> Total jumlah guru
                     </p>
@@ -170,7 +170,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Data Siswa</p>
-                    <h3 class="text-2xl font-bold mt-1"><?= $jumlah->jumlah_siswa ?></h3>
+                    <h3 class="text-2xl font-bold mt-1"><?= $jumlah_siswa->jumlah ?></h3>
                     <p class="text-xs text-green-600 dark:text-green-400 mt-1">
                         <i class="fas fa-users mr-1"></i> Total jumlah siswa
                     </p>
@@ -186,7 +186,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Data Kelas</p>
-                    <h3 class="text-2xl font-bold mt-1"><?= $jumlah->jumlah_kelas ?></h3>
+                    <h3 class="text-2xl font-bold mt-1"><?= $jumlah_kelas->jumlah ?></h3>
                     <p class="text-xs text-amber-600 dark:text-amber-400 mt-1">
                         <i class="fas fa-building mr-1"></i> jumlah kelas disekolah
                     </p>
@@ -202,7 +202,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Data Jadwal</p>
-                    <h3 class="text-2xl font-bold mt-1"><?= $jumlah->jumlah_jadwal ?></h3>
+                    <h3 class="text-2xl font-bold mt-1"><?= $jumlah_jadwal->jumlah ?></h3>
                     <p class="text-xs text-purple-600 dark:text-purple-400 mt-1">
                         <i class="fas fa-calendar-check mr-1"></i> jumlah jadwal terinput
                     </p>

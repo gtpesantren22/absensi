@@ -536,12 +536,14 @@ class Sinkron extends MY_Controller
 				'id_lembaga' => $reg->id_lembaga
 			];
 			$sql = $this->db->insert('user', $userdata);
-		}
 
-		if ($sql) {
-			echo json_encode(['status' => true]);
+			if ($sql) {
+				echo json_encode(['status' => true]);
+			} else {
+				echo json_encode(['status' => false]);
+			}
 		} else {
-			echo json_encode(['status' => false]);
+			echo json_encode(['status' => false, 'msg' => 'User sudah ada']);
 		}
 	}
 
