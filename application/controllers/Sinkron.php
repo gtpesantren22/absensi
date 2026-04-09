@@ -711,7 +711,7 @@ class Sinkron extends MY_Controller
 
 		echo json_encode([
 			'status' => true,
-			'msg' => 'Guru ' . $guru['nama'] . ' + registrasi tersinkron'
+			'msg' => 'Guru ' . $detail['nama'] . ' + registrasi tersinkron'
 		]);
 	}
 }
