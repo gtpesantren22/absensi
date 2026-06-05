@@ -24,26 +24,250 @@ class Setting extends MY_Controller
 
 		$data['jml_rombel'] = $this->model->getBy2('setting', 'key', 'jml_jp', 'id_lembaga', $this->id_lembaga)->row();
 
+		// Load WA API settings
+		$wa_api_url_db = $this->model->getBy('setting', 'key', 'wa_api_url')->row('isi');
+		$wa_api_key_db = $this->model->getBy('setting', 'key', 'wa_api_key')->row('isi');
+		$wa_group_id_db = $this->model->getBy2('setting', 'key', 'wa_group_id', 'id_lembaga', $this->id_lembaga)->row('isi');
+		$wa_group_name_db = $this->model->getBy2('setting', 'key', 'wa_group_name', 'id_lembaga', $this->id_lembaga)->row('isi');
+		$wa_selected_groups_db = $this->model->getBy2('setting', 'key', 'wa_selected_groups', 'id_lembaga', $this->id_lembaga)->row('isi');
+
+		// Retrieve new settings
+		$waktu_info_jadwal_db = $this->model->getBy2('setting', 'key', 'waktu_info_jadwal', 'id_lembaga', $this->id_lembaga)->row('isi');
+		$waktu_pembiasaan_db = $this->model->getBy2('setting', 'key', 'waktu_pembiasaan', 'id_lembaga', $this->id_lembaga)->row('isi');
+		$waktu_kehadiran_db = $this->model->getBy2('setting', 'key', 'waktu_kehadiran', 'id_lembaga', $this->id_lembaga)->row('isi');
+
+		// Retrieve session_id from lembaga table dynamically
+		$lembaga = $this->db->query("SELECT * FROM lembaga WHERE id_lembaga = '$this->id_lembaga'")->row();
+		$wa_api_session_id = ($lembaga && !empty($lembaga->session_id)) ? $lembaga->session_id : "default";
+
+		$data['wa_api_url'] = $wa_api_url_db ?: "http://203.145.34.118:3001";
+		$data['wa_api_session_id'] = $wa_api_session_id;
+		$data['wa_api_key'] = $wa_api_key_db ?: "----";
+		$data['wa_group_id'] = $wa_group_id_db ?: "";
+		$data['wa_group_name'] = $wa_group_name_db ?: "";
+		$data['wa_selected_groups'] = $wa_selected_groups_db ?: '[]';
+		$data['waktu_info_jadwal'] = $waktu_info_jadwal_db ?: "";
+		$data['waktu_pembiasaan'] = $waktu_pembiasaan_db ?: "";
+		$data['waktu_kehadiran'] = $waktu_kehadiran_db ?: "";
+
 		$this->load->view('admin/setting', $data);
 	}
+
+	public function save_wa_api()
+	{
+		$url = $this->input->post('wa_api_url', TRUE);
+		$session_id = $this->input->post('wa_api_session_id', TRUE);
+		$api_key = $this->input->post('wa_api_key', TRUE);
+
+		$settings = [
+			'wa_api_url' => $url,
+			'wa_api_session_id' => $session_id,
+			'wa_api_key' => $api_key
+		];
+
+		foreach ($settings as $key => $val) {
+			$cek = $this->model->getBy2('setting', 'key', $key, 'id_lembaga', $this->id_lembaga)->row();
+			if ($cek) {
+				$this->model->edit2('setting', 'key', $key, 'id_lembaga', $this->id_lembaga, ['isi' => $val]);
+			} else {
+				$this->model->tambah('setting', ['key' => $key, 'isi' => $val, 'id_lembaga' => $this->id_lembaga]);
+			}
+		}
+
+		$this->session->set_flashdata('ok', 'Update Konfigurasi API berhasil');
+		redirect('setting');
+	}
+
+	public function save_wa_group()
+	{
+		$id_group = $this->input->post('id_group', TRUE);
+		$nama_group = $this->input->post('nama_group', TRUE);
+
+		if (empty($id_group)) {
+			$this->output
+				->set_content_type('application/json')
+				->set_output(json_encode(['status' => false, 'message' => 'ID Group tidak boleh kosong']));
+			return;
+		}
+
+		$cek = $this->model->getBy2('setting', 'key', 'wa_selected_groups', 'id_lembaga', $this->id_lembaga)->row();
+		$groups = [];
+		if ($cek && !empty($cek->isi)) {
+			$groups = json_decode($cek->isi, true) ?: [];
+		}
+
+		// Check if already selected
+		$exists = false;
+		foreach ($groups as $g) {
+			if ($g['id'] === $id_group) {
+				$exists = true;
+				break;
+			}
+		}
+
+		if (!$exists) {
+			// Limit to maximum 2 groups
+			if (count($groups) >= 2) {
+				$this->output
+					->set_content_type('application/json')
+					->set_output(json_encode(['status' => false, 'message' => 'Maksimal pilihan adalah 2 grup']));
+				return;
+			}
+
+			$groups[] = [
+				'id' => $id_group,
+				'subject' => $nama_group
+			];
+			$json_val = json_encode($groups);
+
+			if ($cek) {
+				$this->model->edit2('setting', 'key', 'wa_selected_groups', 'id_lembaga', $this->id_lembaga, ['isi' => $json_val]);
+			} else {
+				$this->model->tambah('setting', ['key' => 'wa_selected_groups', 'isi' => $json_val, 'id_lembaga' => $this->id_lembaga]);
+			}
+		}
+
+		$this->output
+			->set_content_type('application/json')
+			->set_output(json_encode(['status' => true, 'message' => 'Grup berhasil ditambahkan']));
+	}
+
+	public function delete_wa_group()
+	{
+		$id_group = $this->input->post('id_group', TRUE);
+
+		if (empty($id_group)) {
+			$this->output
+				->set_content_type('application/json')
+				->set_output(json_encode(['status' => false, 'message' => 'ID Group tidak boleh kosong']));
+			return;
+		}
+
+		$cek = $this->model->getBy2('setting', 'key', 'wa_selected_groups', 'id_lembaga', $this->id_lembaga)->row();
+		if ($cek && !empty($cek->isi)) {
+			$groups = json_decode($cek->isi, true) ?: [];
+			$new_groups = [];
+			foreach ($groups as $g) {
+				if ($g['id'] !== $id_group) {
+					$new_groups[] = $g;
+				}
+			}
+			$json_val = json_encode($new_groups);
+			$this->model->edit2('setting', 'key', 'wa_selected_groups', 'id_lembaga', $this->id_lembaga, ['isi' => $json_val]);
+		}
+
+		$this->output
+			->set_content_type('application/json')
+			->set_output(json_encode(['status' => true, 'message' => 'Grup berhasil dihapus']));
+	}
+
+	private function _api_request($url, $method = 'GET', $post_data = null)
+	{
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+
+		if (strtoupper($method) === 'POST') {
+			curl_setopt($ch, CURLOPT_POST, true);
+			if (is_array($post_data)) {
+				curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($post_data));
+				curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+			} else if ($post_data) {
+				curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
+			}
+		}
+
+		$response = curl_exec($ch);
+		$http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		curl_close($ch);
+
+		return [
+			'code' => $http_code ?: 500,
+			'body' => $response ?: json_encode(['status' => false, 'message' => 'API connection timeout or empty response'])
+		];
+	}
+
+	public function wa_status()
+	{
+		$wa_api_url_db = $this->model->getBy2('setting', 'key', 'wa_api_url', 'id_lembaga', $this->id_lembaga)->row('isi');
+		$lembaga = $this->db->query("SELECT * FROM lembaga WHERE id_lembaga = '$this->id_lembaga'")->row();
+		$wa_api_session_id = ($lembaga && !empty($lembaga->session_id)) ? $lembaga->session_id : "default";
+
+		$url = ($wa_api_url_db ?: "http://203.145.34.118:3001") . '/sessions/' . $wa_api_session_id . '/status';
+		$res = $this->_api_request($url);
+
+		$this->output
+			->set_status_header($res['code'])
+			->set_content_type('application/json')
+			->set_output($res['body']);
+	}
+
+	public function wa_disconnect()
+	{
+		$wa_api_url_db = $this->model->getBy2('setting', 'key', 'wa_api_url', 'id_lembaga', $this->id_lembaga)->row('isi');
+		$lembaga = $this->db->query("SELECT * FROM lembaga WHERE id_lembaga = '$this->id_lembaga'")->row();
+		$wa_api_session_id = ($lembaga && !empty($lembaga->session_id)) ? $lembaga->session_id : "default";
+
+		$url = ($wa_api_url_db ?: "http://203.145.34.118:3001") . '/disconnect';
+		$res = $this->_api_request($url, 'POST', ['sessionId' => $wa_api_session_id]);
+
+		$this->output
+			->set_status_header($res['code'])
+			->set_content_type('application/json')
+			->set_output($res['body']);
+	}
+
+	public function wa_groups()
+	{
+		$wa_api_url_db = $this->model->getBy2('setting', 'key', 'wa_api_url', 'id_lembaga', $this->id_lembaga)->row('isi');
+		$lembaga = $this->db->query("SELECT * FROM lembaga WHERE id_lembaga = '$this->id_lembaga'")->row();
+		$wa_api_session_id = ($lembaga && !empty($lembaga->session_id)) ? $lembaga->session_id : "default";
+
+		$url = ($wa_api_url_db ?: "http://203.145.34.118:3001") . '/groups?sessionId=' . $wa_api_session_id;
+		$res = $this->_api_request($url);
+
+		$this->output
+			->set_status_header($res['code'])
+			->set_content_type('application/json')
+			->set_output($res['body']);
+	}
+
+
 
 	public function jml_rombel()
 	{
 		$jml = $this->input->post('jml_rombel', TRUE);
-		$cek = $this->model->getBy2('setting', 'key', 'jml_jp', 'id_lembaga', $this->id_lembaga)->row();
-		if ($cek) {
-			$sql = $this->model->edit2('setting', 'key', 'jml_jp', 'id_lembaga', $this->id_lembaga, ['isi' => $jml]);
-		} else {
-			$sql = $this->model->tambah('setting', ['key' => 'jml_jp', 'isi' => $jml, 'id_lembaga' => $this->id_lembaga]);
+		$waktu_info_jadwal = $this->input->post('waktu_info_jadwal', TRUE);
+		$waktu_pembiasaan = $this->input->post('waktu_pembiasaan', TRUE);
+		$waktu_kehadiran = $this->input->post('waktu_kehadiran', TRUE);
+
+		$settings = [
+			'jml_jp' => $jml,
+			'waktu_info_jadwal' => $waktu_info_jadwal,
+			'waktu_pembiasaan' => $waktu_pembiasaan,
+			'waktu_kehadiran' => $waktu_kehadiran
+		];
+
+		$success = true;
+		foreach ($settings as $key => $val) {
+			$cek = $this->model->getBy2('setting', 'key', $key, 'id_lembaga', $this->id_lembaga)->row();
+			if ($cek) {
+				$sql = $this->model->edit2('setting', 'key', $key, 'id_lembaga', $this->id_lembaga, ['isi' => $val]);
+			} else {
+				$sql = $this->model->tambah('setting', ['key' => $key, 'isi' => $val, 'id_lembaga' => $this->id_lembaga]);
+			}
+			if (!$sql) {
+				$success = false;
+			}
 		}
 
-		if ($sql) {
-			$this->session->set_flashdata('ok', 'Update JP berhasil');
-			redirect('setting');
+		if ($success) {
+			$this->session->set_flashdata('ok', 'Update pengaturan berhasil');
 		} else {
-			$this->session->set_flashdata('error', 'Update JP gagal');
-			redirect('setting');
+			$this->session->set_flashdata('error', 'Update pengaturan gagal');
 		}
+		redirect('setting');
 	}
 
 	public function set_lembaga($id_lembaga)

@@ -173,6 +173,31 @@ class Sinkron extends MY_Controller
 			->set_output(json_encode($result));
 	}
 
+	public function update_session_id()
+	{
+		$id_lembaga = $this->input->post('id_lembaga', TRUE);
+		$session_id = $this->input->post('session_id', TRUE);
+
+		if (empty($id_lembaga)) {
+			$this->output
+				->set_content_type('application/json')
+				->set_output(json_encode(['status' => false, 'msg' => 'ID Lembaga tidak boleh kosong']));
+			return;
+		}
+
+		$update = $this->db->where('id_lembaga', $id_lembaga)->update('lembaga', ['session_id' => $session_id]);
+
+		if ($update) {
+			$this->output
+				->set_content_type('application/json')
+				->set_output(json_encode(['status' => true, 'msg' => 'Session ID berhasil diperbarui']));
+		} else {
+			$this->output
+				->set_content_type('application/json')
+				->set_output(json_encode(['status' => false, 'msg' => 'Gagal memperbarui Session ID']));
+		}
+	}
+
 	public function fetch_page()
 	{
 		$page = $this->input->post('page') ?? 1;

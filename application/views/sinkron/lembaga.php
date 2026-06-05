@@ -52,6 +52,7 @@
                         <th onclick="sort('nama')" class="py-3 px-4 font-medium cursor-pointer">Nama Lembaga</th>
                         <th onclick="sort('npsn')" class="py-3 px-4 font-medium cursor-pointer">NPSN</th>
                         <th onclick="sort('jenjang')" class="py-3 px-4 font-medium cursor-pointer">Jenjang</th>
+                        <th onclick="sort('session_id')" class="py-3 px-4 font-medium cursor-pointer">Session ID</th>
                         <th class="py-3 px-4 font-medium">Aksi</th>
                     </tr>
                 </thead>
@@ -140,6 +141,11 @@
                 </td>
                 <td class="p-2">${row.jenjang}</td>
                 <td class="p-2">
+                    <input type="text" value="${row.session_id || ''}" 
+                           class="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-800 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 w-32 input-session-id" 
+                           data-id="${row.id_lembaga}">
+                </td>
+                <td class="p-2">
                     <button onclick="editData('${row.id_lembaga}')" class="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Edit</button>
                     <button data-id="${row.id_lembaga}" class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 tombol-hapus">Hapus</button>
                 </td>
@@ -217,6 +223,34 @@
                         id
                     })
                     .done(() => loadData());
+            }
+        });
+    });
+
+    $(document).on('change', '.input-session-id', function() {
+        const id_lembaga = $(this).data('id');
+        const session_id = $(this).val();
+        const base_url = '<?= base_url() ?>';
+
+        $.post(base_url + 'sinkron/update_session_id', {
+            id_lembaga: id_lembaga,
+            session_id: session_id
+        }, function(res) {
+            let r = typeof res === 'string' ? JSON.parse(res) : res;
+            if (r.status) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: r.msg,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: r.msg
+                });
             }
         });
     });

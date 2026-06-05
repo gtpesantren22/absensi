@@ -365,10 +365,46 @@ Jam ke : ' . $dari . ' - ' . $sampai . '
 
 					// echo $psn;
 					// kirim_person('085236924510', $psn);
-					kirim_group('120363418007064631@g.us', $psn, 'cQLhx5rw8xw00pfMxq1JpcwaQvvjfGpgGWbE02zvhFUjMDyXZfN2JpTK6AuWHTWh');
 
-					// Real
-					// kirim_group('6285258800849-1471341787@g.us', $psn);
+					// Get WA API settings
+					$wa_api_url_db = $this->db->get_where('setting', ['key' => 'wa_api_url'])->row('isi');
+					$wa_api_key_db = $this->db->get_where('setting', ['key' => 'wa_api_key'])->row('isi');
+
+					$wa_api_url = $wa_api_url_db ?: "http://203.145.34.118:3001";
+					$wa_api_key = $wa_api_key_db ?: "";
+
+					// Get session ID from lembaga
+					$lembaga = $this->db->get_where('lembaga', ['id_lembaga' => $id_lembaga])->row();
+					$sessionId = ($lembaga && !empty($lembaga->session_id)) ? $lembaga->session_id : "default";
+
+					// Get selected groups for this institution
+					$selected_groups_db = $this->db->get_where('setting', [
+						'key' => 'wa_selected_groups',
+						'id_lembaga' => $id_lembaga
+					])->row('isi');
+
+					$selected_groups = json_decode($selected_groups_db, true) ?: [];
+
+					// Send to each selected group
+					foreach ($selected_groups as $group) {
+						$groupId = $group['id'];
+
+						$ch = curl_init();
+						curl_setopt_array($ch, [
+							CURLOPT_URL => $wa_api_url . '/send-group',
+							CURLOPT_RETURNTRANSFER => true,
+							CURLOPT_CUSTOMREQUEST => 'POST',
+							CURLOPT_POSTFIELDS => http_build_query([
+								'groupId' => $groupId,
+								'message' => $psn,
+								'apiKey' => $wa_api_key,
+								'sessionId' => $sessionId
+							]),
+							CURLOPT_TIMEOUT => 20
+						]);
+						curl_exec($ch);
+						curl_close($ch);
+					}
 
 					$this->session->set_flashdata('ok', 'Input Absen Berhasil');
 					redirect('kbm/hasil');
@@ -499,12 +535,45 @@ Jam ke : ' . $dari . ' - ' . $sampai . '
 
 				$psn .= "\n" . "\n" . '_Demikian Laporan ini kami sampaikan terimakasih_';
 
-				// echo $psn;
-				// kirim_person('085236924510', $psn);
-				kirim_group('120363418007064631@g.us', $psn, 'cQLhx5rw8xw00pfMxq1JpcwaQvvjfGpgGWbE02zvhFUjMDyXZfN2JpTK6AuWHTWh');
+				// Get WA API settings
+				$wa_api_url_db = $this->db->get_where('setting', ['key' => 'wa_api_url'])->row('isi');
+				$wa_api_key_db = $this->db->get_where('setting', ['key' => 'wa_api_key'])->row('isi');
 
-				// Real
-				// kirim_group('6285258800849-1471341787@g.us', $psn);
+				$wa_api_url = $wa_api_url_db ?: "http://203.145.34.118:3001";
+				$wa_api_key = $wa_api_key_db ?: "";
+
+				// Get session ID from lembaga
+				$lembaga = $this->db->get_where('lembaga', ['id_lembaga' => $this->id_lembaga])->row();
+				$sessionId = ($lembaga && !empty($lembaga->session_id)) ? $lembaga->session_id : "default";
+
+				// Get selected groups for this institution
+				$selected_groups_db = $this->db->get_where('setting', [
+					'key' => 'wa_selected_groups',
+					'id_lembaga' => $this->id_lembaga
+				])->row('isi');
+
+				$selected_groups = json_decode($selected_groups_db, true) ?: [];
+
+				// Send to each selected group
+				foreach ($selected_groups as $group) {
+					$groupId = $group['id'];
+
+					$ch = curl_init();
+					curl_setopt_array($ch, [
+						CURLOPT_URL => $wa_api_url . '/send-group',
+						CURLOPT_RETURNTRANSFER => true,
+						CURLOPT_CUSTOMREQUEST => 'POST',
+						CURLOPT_POSTFIELDS => http_build_query([
+							'groupId' => $groupId,
+							'message' => $psn,
+							'apiKey' => $wa_api_key,
+							'sessionId' => $sessionId
+						]),
+						CURLOPT_TIMEOUT => 20
+					]);
+					curl_exec($ch);
+					curl_close($ch);
+				}
 
 				$this->session->set_flashdata('ok', 'Input Absen Berhasil');
 
