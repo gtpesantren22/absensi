@@ -33,8 +33,8 @@ class Whatsapp extends CI_Controller
 		$wa_api_url_db = $this->db->get_where('setting', ['key' => 'wa_api_url'])->row('isi');
 		$wa_api_key_db = $this->db->get_where('setting', ['key' => 'wa_api_key'])->row('isi');
 
-		$wa_api_url = $wa_api_url_db ?: "http://203.145.34.118:3001";
-		$wa_api_key = $wa_api_key_db ?: "--";
+		$wa_api_url = $wa_api_url_db ?: (getenv('WA_API_URL') ?: '');
+		$wa_api_key = $wa_api_key_db ?: (getenv('WA_API_KEY') ?: '');
 
 		$details_sent = [];
 
@@ -92,6 +92,29 @@ class Whatsapp extends CI_Controller
 			}
 
 			$message .= "=========================\n";
+
+			// Get piket teachers
+			$piket_teachers = $this->db->select('g.nama')
+				->from('piket p')
+				->join('guru g', 'p.id_guru = g.id_guru')
+				->where('p.hari', $day_now)
+				->where('p.id_lembaga', $id_lembaga)
+				->order_by('g.nama', 'ASC')
+				->get()
+				->result_array();
+
+			$message .= "*Guru Piket:*\n";
+			if (!empty($piket_teachers)) {
+				$no = 1;
+				foreach ($piket_teachers as $pt) {
+					$message .= $no . ". " . $pt['nama'] . "\n";
+					$no++;
+				}
+			} else {
+				$message .= "-\n";
+			}
+			$message .= "=========================\n";
+
 			$message .= "Harap diperhatikan oleh guru dan siswa. Terima kasih.";
 
 			// Send to all selected groups

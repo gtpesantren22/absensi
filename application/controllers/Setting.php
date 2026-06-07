@@ -40,9 +40,9 @@ class Setting extends MY_Controller
 		$lembaga = $this->db->query("SELECT * FROM lembaga WHERE id_lembaga = '$this->id_lembaga'")->row();
 		$wa_api_session_id = ($lembaga && !empty($lembaga->session_id)) ? $lembaga->session_id : "default";
 
-		$data['wa_api_url'] = $wa_api_url_db ?: "http://203.145.34.118:3001";
+		$data['wa_api_url'] = $wa_api_url_db ?: (getenv('WA_API_URL') ?: '');
 		$data['wa_api_session_id'] = $wa_api_session_id;
-		$data['wa_api_key'] = $wa_api_key_db ?: "----";
+		$data['wa_api_key'] = $wa_api_key_db ?: (getenv('WA_API_KEY') ?: '');
 		$data['wa_group_id'] = $wa_group_id_db ?: "";
 		$data['wa_group_name'] = $wa_group_name_db ?: "";
 		$data['wa_selected_groups'] = $wa_selected_groups_db ?: '[]';
@@ -190,11 +190,11 @@ class Setting extends MY_Controller
 
 	public function wa_status()
 	{
-		$wa_api_url_db = $this->model->getBy2('setting', 'key', 'wa_api_url', 'id_lembaga', $this->id_lembaga)->row('isi');
+		$wa_api_url_db = $this->model->getBy('setting', 'key', 'wa_api_url')->row('isi');
 		$lembaga = $this->db->query("SELECT * FROM lembaga WHERE id_lembaga = '$this->id_lembaga'")->row();
 		$wa_api_session_id = ($lembaga && !empty($lembaga->session_id)) ? $lembaga->session_id : "default";
 
-		$url = ($wa_api_url_db ?: "http://203.145.34.118:3001") . '/sessions/' . $wa_api_session_id . '/status';
+		$url = ($wa_api_url_db ?: (getenv('WA_API_URL') ?: '')) . '/sessions/' . $wa_api_session_id . '/status';
 		$res = $this->_api_request($url);
 
 		$this->output
@@ -205,11 +205,11 @@ class Setting extends MY_Controller
 
 	public function wa_disconnect()
 	{
-		$wa_api_url_db = $this->model->getBy2('setting', 'key', 'wa_api_url', 'id_lembaga', $this->id_lembaga)->row('isi');
+		$wa_api_url_db = $this->model->getBy('setting', 'key', 'wa_api_url')->row('isi');
 		$lembaga = $this->db->query("SELECT * FROM lembaga WHERE id_lembaga = '$this->id_lembaga'")->row();
 		$wa_api_session_id = ($lembaga && !empty($lembaga->session_id)) ? $lembaga->session_id : "default";
 
-		$url = ($wa_api_url_db ?: "http://203.145.34.118:3001") . '/disconnect';
+		$url = ($wa_api_url_db ?: (getenv('WA_API_URL') ?: '')) . '/disconnect';
 		$res = $this->_api_request($url, 'POST', ['sessionId' => $wa_api_session_id]);
 
 		$this->output
@@ -220,11 +220,11 @@ class Setting extends MY_Controller
 
 	public function wa_groups()
 	{
-		$wa_api_url_db = $this->model->getBy2('setting', 'key', 'wa_api_url', 'id_lembaga', $this->id_lembaga)->row('isi');
+		$wa_api_url_db = $this->model->getBy('setting', 'key', 'wa_api_url')->row('isi');
 		$lembaga = $this->db->query("SELECT * FROM lembaga WHERE id_lembaga = '$this->id_lembaga'")->row();
 		$wa_api_session_id = ($lembaga && !empty($lembaga->session_id)) ? $lembaga->session_id : "default";
 
-		$url = ($wa_api_url_db ?: "http://203.145.34.118:3001") . '/groups?sessionId=' . $wa_api_session_id;
+		$url = ($wa_api_url_db ?: (getenv('WA_API_URL') ?: '')) . '/groups?sessionId=' . $wa_api_session_id;
 		$res = $this->_api_request($url);
 
 		$this->output

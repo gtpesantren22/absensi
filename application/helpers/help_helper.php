@@ -44,11 +44,19 @@ function translateDay($englishDay, $language)
 
 function kirim_person($no_hp, $pesan, $apiKey)
 {
+    $CI =& get_instance();
+    $wa_api_url_db = $CI->db->get_where('setting', ['key' => 'wa_api_url'])->row('isi');
+    $wa_api_url = $wa_api_url_db ?: (getenv('WA_API_URL') ?: '');
+
+    if (empty($wa_api_url)) {
+        return;
+    }
+
     $curl2 = curl_init();
     curl_setopt_array(
         $curl2,
         array(
-            CURLOPT_URL => 'http://203.145.34.118:3001/send-personal',
+            CURLOPT_URL => rtrim($wa_api_url, '/') . '/send-personal',
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
             CURLOPT_MAXREDIRS => 10,
@@ -65,11 +73,19 @@ function kirim_person($no_hp, $pesan, $apiKey)
 
 function kirim_group($id_group, $pesan, $apiKey)
 {
+    $CI =& get_instance();
+    $wa_api_url_db = $CI->db->get_where('setting', ['key' => 'wa_api_url'])->row('isi');
+    $wa_api_url = $wa_api_url_db ?: (getenv('WA_API_URL') ?: '');
+
+    if (empty($wa_api_url)) {
+        return;
+    }
+
     $curl2 = curl_init();
     curl_setopt_array(
         $curl2,
         array(
-            CURLOPT_URL => 'http://203.145.34.118:3001/send-group',
+            CURLOPT_URL => rtrim($wa_api_url, '/') . '/send-group',
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => '',
             CURLOPT_MAXREDIRS => 10,

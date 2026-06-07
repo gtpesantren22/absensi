@@ -9,7 +9,10 @@ class Sinkron extends MY_Controller
 		$this->load->model('Modeldata', 'model');
 
 		$this->config->load('api', true);
-		$this->token = $this->config->item('ppdwk_token', 'api');
+		
+		// Load token dynamically from setting table, getenv, or config
+		$token_db = $this->db->get_where('setting', ['key' => 'ppdwk_token'])->row('isi');
+		$this->token = $token_db ?: (getenv('PPDWK_TOKEN') ?: $this->config->item('ppdwk_token', 'api'));
 
 		$this->mustLogin();
 		$this->onlyAdminSuper();

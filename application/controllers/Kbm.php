@@ -370,8 +370,8 @@ Jam ke : ' . $dari . ' - ' . $sampai . '
 					$wa_api_url_db = $this->db->get_where('setting', ['key' => 'wa_api_url'])->row('isi');
 					$wa_api_key_db = $this->db->get_where('setting', ['key' => 'wa_api_key'])->row('isi');
 
-					$wa_api_url = $wa_api_url_db ?: "http://203.145.34.118:3001";
-					$wa_api_key = $wa_api_key_db ?: "";
+					$wa_api_url = $wa_api_url_db ?: (getenv('WA_API_URL') ?: '');
+					$wa_api_key = $wa_api_key_db ?: (getenv('WA_API_KEY') ?: '');
 
 					// Get session ID from lembaga
 					$lembaga = $this->db->get_where('lembaga', ['id_lembaga' => $id_lembaga])->row();
@@ -539,8 +539,8 @@ Jam ke : ' . $dari . ' - ' . $sampai . '
 				$wa_api_url_db = $this->db->get_where('setting', ['key' => 'wa_api_url'])->row('isi');
 				$wa_api_key_db = $this->db->get_where('setting', ['key' => 'wa_api_key'])->row('isi');
 
-				$wa_api_url = $wa_api_url_db ?: "http://203.145.34.118:3001";
-				$wa_api_key = $wa_api_key_db ?: "";
+				$wa_api_url = $wa_api_url_db ?: (getenv('WA_API_URL') ?: '');
+				$wa_api_key = $wa_api_key_db ?: (getenv('WA_API_KEY') ?: '');
 
 				// Get session ID from lembaga
 				$lembaga = $this->db->get_where('lembaga', ['id_lembaga' => $this->id_lembaga])->row();

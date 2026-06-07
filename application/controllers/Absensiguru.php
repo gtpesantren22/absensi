@@ -146,6 +146,7 @@ class Absensiguru extends MY_Controller
             // Cek apakah data sudah ada
             $this->db->where('id_guru', $id_guru);
             $this->db->where('hari', $hari);
+            $this->db->where('id_lembaga', $this->id_lembaga);
             $query = $this->db->get('apel_sett');
 
             if ($query->num_rows() < 1) {
@@ -162,6 +163,7 @@ class Absensiguru extends MY_Controller
             // Hapus record jika ada
             $this->db->where('id_guru', $id_guru);
             $this->db->where('hari', $hari);
+            $this->db->where('id_lembaga', $this->id_lembaga);
             $this->db->delete('apel_sett');
 
             echo json_encode(['success' => true]);

@@ -68,6 +68,7 @@ class Piket extends MY_Controller
             // Cek apakah data sudah ada
             $this->db->where('id_guru', $id_guru);
             $this->db->where('hari', $hari);
+            $this->db->where('id_lembaga', $this->id_lembaga);
             $query = $this->db->get('piket');
 
             if ($query->num_rows() < 1) {
@@ -84,6 +85,7 @@ class Piket extends MY_Controller
             // Hapus record jika ada
             $this->db->where('id_guru', $id_guru);
             $this->db->where('hari', $hari);
+            $this->db->where('id_lembaga', $this->id_lembaga);
             $this->db->delete('piket');
 
             echo json_encode(['success' => true]);
