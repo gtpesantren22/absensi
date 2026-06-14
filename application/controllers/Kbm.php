@@ -337,24 +337,28 @@ Jam ke : ' . $dari . ' - ' . $sampai . '
 
 *Sakit*
 ';
+					$no_sakit = 1;
 					foreach ($sakitHsl->result() as $skt) {
 						$nmsiswa = $this->db->query("SELECT * FROM siswa WHERE id_siswa = '$skt->id_siswa' ")->row();
-						$psn .= '- ' . ucwords(strtolower($nmsiswa->nama)) . "\n";
+						$psn .= $no_sakit++ . '. ' . ucwords(strtolower($nmsiswa->nama)) . "\n";
 					}
 					$psn .= "\n" . '*Izin*' . "\n";
+					$no_izin = 1;
 					foreach ($izinHsl->result() as $izn) {
 						$nmsiswa = $this->db->query("SELECT * FROM siswa WHERE id_siswa = '$izn->id_siswa' ")->row();
-						$psn .= '- ' . ucwords(strtolower($nmsiswa->nama)) . "\n";
+						$psn .= $no_izin++ . '. ' . ucwords(strtolower($nmsiswa->nama)) . "\n";
 					}
 					$psn .= "\n" . '*Alpha*' . "\n";
+					$no_alpha = 1;
 					foreach ($alphaHsl->result() as $alp) {
 						$nmsiswa = $this->db->query("SELECT * FROM siswa WHERE id_siswa = '$alp->id_siswa' ")->row();
-						$psn .= '- ' . ucwords(strtolower($nmsiswa->nama)) . "\n";
+						$psn .= $no_alpha++ . '. ' . ucwords(strtolower($nmsiswa->nama)) . "\n";
 					}
 					$psn .= "\n" . '*Telat*' . "\n";
+					$no_telat = 1;
 					foreach ($telatHsl->result() as $tl) {
 						$nmsiswa = $this->db->query("SELECT * FROM siswa WHERE id_siswa = '$tl->id_siswa' ")->row();
-						$psn .= '- ' . ucwords(strtolower($nmsiswa->nama)) . "\n";
+						$psn .= $no_telat++ . '. ' . ucwords(strtolower($nmsiswa->nama)) . "\n";
 					}
 
 					$psn .= "\n" . '*Hadir :* '  . $hadirHsl->num_rows() . ' siswa';
@@ -509,24 +513,28 @@ Jam ke : ' . $dari . ' - ' . $sampai . '
 
 *Sakit*
 ';
+				$no_sakit = 1;
 				foreach ($sakitHsl->result() as $skt) {
 					$nmsiswa = $this->db->query("SELECT * FROM siswa WHERE id_siswa = '$skt->id_siswa' ")->row();
-					$psn .= '- ' . ucwords(strtolower($nmsiswa->nama)) . "\n";
+					$psn .= $no_sakit++ . '. ' . ucwords(strtolower($nmsiswa->nama)) . "\n";
 				}
 				$psn .= "\n" . '*Izin*' . "\n";
+				$no_izin = 1;
 				foreach ($izinHsl->result() as $izn) {
 					$nmsiswa = $this->db->query("SELECT * FROM siswa WHERE id_siswa = '$izn->id_siswa' ")->row();
-					$psn .= '- ' . ucwords(strtolower($nmsiswa->nama)) . "\n";
+					$psn .= $no_izin++ . '. ' . ucwords(strtolower($nmsiswa->nama)) . "\n";
 				}
 				$psn .= "\n" . '*Alpha*' . "\n";
+				$no_alpha = 1;
 				foreach ($alphaHsl->result() as $alp) {
 					$nmsiswa = $this->db->query("SELECT * FROM siswa WHERE id_siswa = '$alp->id_siswa' ")->row();
-					$psn .= '- ' . ucwords(strtolower($nmsiswa->nama)) . "\n";
+					$psn .= $no_alpha++ . '. ' . ucwords(strtolower($nmsiswa->nama)) . "\n";
 				}
 				$psn .= "\n" . '*Telat*' . "\n";
+				$no_telat = 1;
 				foreach ($telatHsl->result() as $tl) {
 					$nmsiswa = $this->db->query("SELECT * FROM siswa WHERE id_siswa = '$tl->id_siswa' ")->row();
-					$psn .= '- ' . ucwords(strtolower($nmsiswa->nama)) . "\n";
+					$psn .= $no_telat++ . '. ' . ucwords(strtolower($nmsiswa->nama)) . "\n";
 				}
 
 				$psn .= "\n" . '*Hadir :* '  . $hadirHsl->num_rows() . ' siswa';
