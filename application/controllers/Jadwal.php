@@ -1,5 +1,13 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
+require FCPATH . 'vendor/autoload.php';
+
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
 class Jadwal extends MY_Controller
 {
@@ -469,5 +477,323 @@ class Jadwal extends MY_Controller
             'jadwal' => $jadwalDt,
             'bentrok' => $bentrok
         ]);
+    }
+
+    public function full()
+    {
+        $data['judul'] = 'Full Jadwal Pelajaran';
+        $data['menu'] = 'jadwal';
+        $data['sub'] = 'jadwal';
+        $data['hideSidebar'] = true;
+
+        $data['kelas'] = $this->db
+            ->select('id_kelas, nama')
+            ->where('id_lembaga', $this->id_lembaga)
+            ->order_by('nama', 'ASC')
+            ->get('kelas')
+            ->result();
+
+        $data['gurus'] = $this->db->query("
+            SELECT g.id_guru, g.nama, g.kode_guru, g.warna, 
+                   COALESCE(SUM(j.jam_sampai - j.jam_dari + 1), 0) as total_jp
+            FROM registrasi r
+            JOIN guru g ON r.id_guru = g.id_guru
+            LEFT JOIN jadwal j ON g.id_guru = j.id_guru AND j.id_lembaga = r.id_lembaga
+            WHERE r.id_lembaga = ?
+            GROUP BY g.id_guru, g.nama, g.kode_guru, g.warna
+            ORDER BY total_jp DESC, g.nama ASC
+        ", [$this->id_lembaga])->result();
+
+        $breakdown = $this->db->query("
+            SELECT id_guru, id_kelas, SUM(jam_sampai - jam_dari + 1) as jp_kelas
+            FROM jadwal
+            WHERE id_lembaga = ?
+            GROUP BY id_guru, id_kelas
+        ", [$this->id_lembaga])->result_array();
+
+        $jpMap = [];
+        foreach ($breakdown as $b) {
+            $jpMap[$b['id_guru']][$b['id_kelas']] = (int)$b['jp_kelas'];
+        }
+        $data['jpMap'] = $jpMap;
+
+        $this->load->view('admin/jadwal_full', $data);
+    }
+
+    public function export_excel()
+    {
+        $this->mustLogin();
+        $this->AdminOrSuper();
+
+        $spreadsheet = new Spreadsheet();
+        
+        // --- SHEET 1: REKAP JAM MENGAJAR GURU ---
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Rekap Jam Mengajar');
+
+        // Styles
+        $style_header = [
+            'font' => ['bold' => true, 'size' => 12],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => 'E5E7EB'],
+            ],
+            'borders' => [
+                'allBorders' => ['borderStyle' => Border::BORDER_THIN],
+            ],
+        ];
+
+        $style_data = [
+            'borders' => [
+                'allBorders' => ['borderStyle' => Border::BORDER_THIN],
+            ],
+            'alignment' => [
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ]
+        ];
+
+        // Title
+        $sheet->setCellValue('A1', 'REKAP JAM MENGAJAR GURU');
+        $sheet->mergeCells('A1:C1');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+
+        // Fetch data
+        $kelas = $this->db
+            ->select('id_kelas, nama')
+            ->where('id_lembaga', $this->id_lembaga)
+            ->order_by('nama', 'ASC')
+            ->get('kelas')
+            ->result();
+
+        $gurus = $this->db->query("
+            SELECT g.id_guru, g.nama, g.kode_guru, 
+                   COALESCE(SUM(j.jam_sampai - j.jam_dari + 1), 0) as total_jp
+            FROM registrasi r
+            JOIN guru g ON r.id_guru = g.id_guru
+            LEFT JOIN jadwal j ON g.id_guru = j.id_guru AND j.id_lembaga = r.id_lembaga
+            WHERE r.id_lembaga = ?
+            GROUP BY g.id_guru, g.nama, g.kode_guru
+            ORDER BY total_jp DESC, g.nama ASC
+        ", [$this->id_lembaga])->result();
+
+        $breakdown = $this->db->query("
+            SELECT id_guru, id_kelas, SUM(jam_sampai - jam_dari + 1) as jp_kelas
+            FROM jadwal
+            WHERE id_lembaga = ?
+            GROUP BY id_guru, id_kelas
+        ", [$this->id_lembaga])->result_array();
+
+        $jpMap = [];
+        foreach ($breakdown as $b) {
+            $jpMap[$b['id_guru']][$b['id_kelas']] = (int)$b['jp_kelas'];
+        }
+
+        // Header Row (Row 3)
+        $sheet->setCellValueByColumnAndRow(1, 3, 'No');
+        $sheet->setCellValueByColumnAndRow(2, 3, 'Nama Guru');
+        
+        $colIdx = 3;
+        $classCols = [];
+        foreach ($kelas as $k) {
+            $sheet->setCellValueByColumnAndRow($colIdx, 3, $k->nama);
+            $classCols[$k->id_kelas] = $colIdx;
+            $colIdx++;
+        }
+        
+        $totalColIdx = $colIdx;
+        $sheet->setCellValueByColumnAndRow($totalColIdx, 3, 'Total JP');
+
+        // Apply header styles
+        $lastColLetter = Coordinate::stringFromColumnIndex($totalColIdx);
+        $sheet->getStyle("A3:{$lastColLetter}3")->applyFromArray($style_header);
+
+        // Data Rows
+        $rowNum = 4;
+        $no = 1;
+        foreach ($gurus as $g) {
+            $sheet->setCellValueByColumnAndRow(1, $rowNum, $no++);
+            $sheet->setCellValueByColumnAndRow(2, $rowNum, $g->nama . ' (' . $g->kode_guru . ')');
+            
+            foreach ($kelas as $k) {
+                $jp = $jpMap[$g->id_guru][$k->id_kelas] ?? 0;
+                $colIndex = $classCols[$k->id_kelas];
+                $sheet->setCellValueByColumnAndRow($colIndex, $rowNum, $jp > 0 ? $jp . ' JP' : '-');
+            }
+            
+            $sheet->setCellValueByColumnAndRow($totalColIdx, $rowNum, $g->total_jp . ' JP');
+            
+            // Format numbers
+            $sheet->getStyle("A{$rowNum}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            for ($c = 3; $c <= $totalColIdx; $c++) {
+                $colLetter = Coordinate::stringFromColumnIndex($c);
+                $sheet->getStyle("{$colLetter}{$rowNum}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            }
+            
+            $sheet->getStyle("A{$rowNum}:{$lastColLetter}{$rowNum}")->applyFromArray($style_data);
+            $rowNum++;
+        }
+
+        // Auto width
+        for ($c = 1; $c <= $totalColIdx; $c++) {
+            $colLetter = Coordinate::stringFromColumnIndex($c);
+            $sheet->getColumnDimension($colLetter)->setAutoSize(true);
+        }
+
+        // --- SHEET 2-7: JADWAL HARIAN ---
+        $daysOfWeek = [
+            'Monday' => 'Senin',
+            'Tuesday' => 'Selasa',
+            'Wednesday' => 'Rabu',
+            'Thursday' => 'Kamis',
+            'Friday' => 'Jumat',
+            'Saturday' => 'Sabtu'
+        ];
+
+        $totalJam = $this->model->getBy2('setting', 'key', 'jml_jp', 'id_lembaga', $this->id_lembaga)->row('isi');
+
+        foreach ($daysOfWeek as $eng => $ind) {
+            $newSheet = $spreadsheet->createSheet();
+            $newSheet->setTitle('Jadwal ' . $ind);
+
+            // Title
+            $newSheet->setCellValue('A1', 'JADWAL PELAJARAN - HARI ' . strtoupper($ind));
+            $newSheet->mergeCells('A1:C1');
+            $newSheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+
+            // Header Row (Row 3)
+            $newSheet->setCellValueByColumnAndRow(1, 3, 'Jam / Kelas');
+            
+            $colIdx = 2;
+            $kelasCols = [];
+            foreach ($kelas as $k) {
+                $newSheet->setCellValueByColumnAndRow($colIdx, 3, $k->nama);
+                $kelasCols[$k->id_kelas] = $colIdx;
+                $colIdx++;
+            }
+            $lastClassColIdx = $colIdx - 1;
+            $lastClassColLetter = Coordinate::stringFromColumnIndex($lastClassColIdx);
+
+            $newSheet->getStyle("A3:{$lastClassColLetter}3")->applyFromArray($style_header);
+
+            // Load schedule entries for this day
+            $jadwalList = $this->db->query("
+                SELECT j.id_kelas, j.id_mapel, j.jam_dari, j.jam_sampai, g.kode_guru
+                FROM jadwal j
+                LEFT JOIN guru g ON j.id_guru = g.id_guru
+                WHERE j.hari = ? AND j.id_lembaga = ?
+            ", [$eng, $this->id_lembaga])->result_array();
+
+            $mapelIds = array_unique(array_filter(array_column($jadwalList, 'id_mapel')));
+            $mapelMap = [];
+            if (!empty($mapelIds)) {
+                $mapelList = $this->db
+                    ->where_in('id_mapel', $mapelIds)
+                    ->get('mapel')
+                    ->result_array();
+                $mapelMap = array_column($mapelList, 'kode_mapel', 'id_mapel');
+            }
+
+            // Map hours
+            $jadwalMap = [];
+            foreach ($jadwalList as $j) {
+                $kodeMapel = $mapelMap[$j['id_mapel']] ?? '-';
+                for ($jam = (int)$j['jam_dari']; $jam <= (int)$j['jam_sampai']; $jam++) {
+                    $jadwalMap[$jam][$j['id_kelas']][] = $j['kode_guru'] . '-' . $kodeMapel;
+                }
+            }
+
+            // Render table content rows
+            $rowNum = 4;
+            for ($jam = 1; $jam <= $totalJam; $jam++) {
+                $newSheet->setCellValueByColumnAndRow(1, $rowNum, 'Jam ke-' . $jam);
+                $newSheet->getStyle('A' . $rowNum)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+                foreach ($kelas as $k) {
+                    $colIndex = $kelasCols[$k->id_kelas];
+                    $colLetter = Coordinate::stringFromColumnIndex($colIndex);
+                    $entries = $jadwalMap[$jam][$k->id_kelas] ?? [];
+                    $val = !empty($entries) ? implode("\n", $entries) : '-';
+                    $newSheet->setCellValueByColumnAndRow($colIndex, $rowNum, $val);
+                    
+                    if (count($entries) > 1) {
+                        $newSheet->getStyle("{$colLetter}{$rowNum}")->getAlignment()->setWrapText(true);
+                    }
+                    $newSheet->getStyle("{$colLetter}{$rowNum}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                }
+
+                $newSheet->getStyle("A{$rowNum}:{$lastClassColLetter}{$rowNum}")->applyFromArray($style_data);
+                $rowNum++;
+            }
+
+            // Auto width for all columns in this worksheet
+            for ($c = 1; $c <= $lastClassColIdx; $c++) {
+                $colLetter = Coordinate::stringFromColumnIndex($c);
+                $newSheet->getColumnDimension($colLetter)->setAutoSize(true);
+            }
+        }
+
+        // Set active sheet to sheet 1 (Rekap Jam Mengajar)
+        $spreadsheet->setActiveSheetIndex(0);
+
+        // Output
+        $filename = 'Jadwal_Pelajaran_dan_Rekap_Mengajar.xlsx';
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header("Content-Disposition: attachment; filename=\"$filename\"");
+        header('Cache-Control: max-age=0');
+
+        (new Xlsx($spreadsheet))->save('php://output');
+        exit;
+    }
+
+    public function reset()
+    {
+        $this->mustLogin();
+        $this->AdminOrSuper();
+
+        $password = $this->input->post('password');
+
+        if (empty($password)) {
+            $this->output
+                ->set_content_type('application/json')
+                ->set_output(json_encode(['status' => false, 'msg' => 'Password wajib diisi!']));
+            return;
+        }
+
+        // Verify password
+        $user = $this->db->get_where('user', ['id_user' => $this->iduser])->row();
+        if (!$user || !password_verify($password, $user->password)) {
+            $this->output
+                ->set_content_type('application/json')
+                ->set_output(json_encode(['status' => false, 'msg' => 'Password salah!']));
+            return;
+        }
+
+        // Delete schedule for current institution
+        $this->db->trans_start();
+        
+        $this->db->query("
+            DELETE FROM jadwal_dtl 
+            WHERE id_jadwal IN (
+                SELECT id_jadwal FROM jadwal WHERE id_lembaga = ?
+            )
+        ", [$this->id_lembaga]);
+
+        $this->db->where('id_lembaga', $this->id_lembaga)->delete('jadwal');
+
+        $this->db->trans_complete();
+
+        if ($this->db->trans_status() === FALSE) {
+            $this->output
+                ->set_content_type('application/json')
+                ->set_output(json_encode(['status' => false, 'msg' => 'Gagal menghapus jadwal!']));
+        } else {
+            $this->output
+                ->set_content_type('application/json')
+                ->set_output(json_encode(['status' => true, 'msg' => 'Jadwal berhasil di-reset!']));
+        }
     }
 }

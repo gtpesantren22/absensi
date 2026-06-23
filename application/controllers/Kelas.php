@@ -106,12 +106,17 @@ class Kelas extends MY_Controller
 	public function hapus()
 	{
 		$id = $this->input->post('id', true);
-		$sql = $this->model->hapus('kelas', 'id_kelas', $id);
-		if (!$sql) {
+		
+		$this->db->trans_start();
+		$this->db->where('id_kelas', $id)->delete('rombel');
+		$this->db->where('id_kelas', $id)->delete('kelas');
+		$this->db->trans_complete();
+
+		if ($this->db->trans_status() === FALSE) {
 			$this->session->set_flashdata('error', 'Data kelas gagal dihapus.');
 			redirect('kelas');
 		} else {
-			$this->session->set_flashdata('ok', 'Data kelas berhasil dihapus.');
+			$this->session->set_flashdata('ok', 'Data kelas berhasil dihapus beserta anggotanya.');
 			redirect('kelas');
 		}
 	}
@@ -439,5 +444,53 @@ class Kelas extends MY_Controller
 
 		$this->session->set_flashdata('ok', 'Data anggota kelas berhasil diupload.');
 		redirect('kelas/anggota/' . $id_kelas);
+	}
+
+	public function reset()
+	{
+		$this->mustLogin();
+		$this->AdminOrSuper();
+
+		$password = $this->input->post('password');
+
+		if (empty($password)) {
+			$this->output
+				->set_content_type('application/json')
+				->set_output(json_encode(['status' => false, 'msg' => 'Password wajib diisi!']));
+			return;
+		}
+
+		// Verify password
+		$user = $this->db->get_where('user', ['id_user' => $this->iduser])->row();
+		if (!$user || !password_verify($password, $user->password)) {
+			$this->output
+				->set_content_type('application/json')
+				->set_output(json_encode(['status' => false, 'msg' => 'Password salah!']));
+			return;
+		}
+
+		// Delete all classes and their rombel members for this institution
+		$this->db->trans_start();
+		
+		$this->db->query("
+			DELETE FROM rombel 
+			WHERE id_kelas IN (
+				SELECT id_kelas FROM kelas WHERE id_lembaga = ?
+			)
+		", [$this->id_lembaga]);
+
+		$this->db->where('id_lembaga', $this->id_lembaga)->delete('kelas');
+
+		$this->db->trans_complete();
+
+		if ($this->db->trans_status() === FALSE) {
+			$this->output
+				->set_content_type('application/json')
+				->set_output(json_encode(['status' => false, 'msg' => 'Gagal mereset data kelas!']));
+		} else {
+			$this->output
+				->set_content_type('application/json')
+				->set_output(json_encode(['status' => true, 'msg' => 'Semua data kelas dan anggotanya berhasil di-reset!']));
+		}
 	}
 }

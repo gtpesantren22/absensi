@@ -87,7 +87,11 @@
                 <i class="fas fa-plus mr-2"></i>
                 Tambah Jadwal
             </button> -->
-        <button onclick="window.location.href=''" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
+        <button onclick="resetJadwal()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
+            <i class="fas fa-trash-alt mr-2"></i>
+            Reset Jadwal
+        </button>
+        <button onclick="window.location.href='<?= base_url('jadwal/full') ?>'" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
             <i class="fas fa-calendar mr-2"></i>
             Cek Full Jadwal
         </button>
@@ -615,5 +619,83 @@
     function closeBentrokModal() {
         document.getElementById('bentrokModal').classList.add('hidden');
         document.getElementById('bentrokModal').classList.remove('flex');
+    }
+
+    function resetJadwal() {
+        Swal.fire({
+            title: 'Yakin ingin mereset jadwal?',
+            text: 'Tindakan ini akan menghapus seluruh data jadwal pelajaran untuk lembaga ini secara permanen!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, Lanjutkan',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Tanyakan password sebagai verifikasi ke-2
+                Swal.fire({
+                    title: 'Verifikasi Keamanan',
+                    text: 'Masukkan password akun Anda untuk melakukan reset:',
+                    input: 'password',
+                    inputAttributes: {
+                        autocapitalize: 'off',
+                        autocorrect: 'off'
+                    },
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'Reset Sekarang',
+                    cancelButtonText: 'Batal',
+                    showLoaderOnConfirm: true,
+                    preConfirm: (password) => {
+                        if (!password) {
+                            Swal.showValidationMessage('Password wajib diisi!');
+                            return false;
+                        }
+                        
+                        const formData = new FormData();
+                        formData.append('password', password);
+                        
+                        return fetch('<?= base_url("jadwal/reset") ?>', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(response.statusText);
+                            }
+                            return response.json();
+                        })
+                        .catch(error => {
+                            Swal.showValidationMessage(`Request gagal: ${error}`);
+                        });
+                    },
+                    allowOutsideClick: () => !Swal.isLoading()
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        if (result.value.status) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil',
+                                text: result.value.msg
+                            }).then(() => {
+                                // Reload current schedule grid
+                                if (selectedDayLive) {
+                                    showJadwal(selectedDayLive);
+                                } else {
+                                    location.reload();
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal',
+                                text: result.value.msg
+                            });
+                        }
+                    }
+                });
+            }
+        });
     }
 </script>

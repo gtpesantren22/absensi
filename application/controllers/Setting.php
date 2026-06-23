@@ -50,6 +50,12 @@ class Setting extends MY_Controller
 		$data['waktu_pembiasaan'] = $waktu_pembiasaan_db ?: "";
 		$data['waktu_kehadiran'] = $waktu_kehadiran_db ?: "";
 
+		// Retrieve API Token settings
+		$api_token_db = $this->model->getBy('setting', 'key', 'api_token')->row('isi');
+		$this->config->load('api', TRUE);
+		$api_token_config = $this->config->item('api_token', 'api') ?: 'absensi_api_token_secret_xyz';
+		$data['api_token'] = $api_token_db ?: $api_token_config;
+
 		$this->load->view('admin/setting', $data);
 	}
 
@@ -332,5 +338,42 @@ class Setting extends MY_Controller
 			$this->model->tambah('jp', ['hari' => $hari, 'jam' => $jam, 'waktu' => $waktu]);
 			echo json_encode(['status' => true]);
 		}
+	}
+
+	public function backup_sql()
+	{
+		if ($this->session->userdata('level') !== 'admin' && $this->session->userdata('level') !== 'super_admin') {
+			redirect('welcome/no_akes');
+		}
+
+		$this->load->dbutil();
+
+		$prefs = array(
+			'format'      => 'txt',
+			'filename'    => 'backup.sql',
+			'add_drop'    => TRUE,
+			'add_insert'  => TRUE,
+			'newline'     => "\n"
+		);
+
+		$backup = $this->dbutil->backup($prefs);
+
+		$this->load->helper('download');
+		force_download('backup-db-absensi-' . date('Y-m-d-H-i-s') . '.sql', $backup);
+	}
+
+	public function save_api_token()
+	{
+		$token = $this->input->post('api_token', TRUE);
+
+		$cek = $this->model->getBy('setting', 'key', 'api_token')->row();
+		if ($cek) {
+			$this->model->edit('setting', 'key', 'api_token', ['isi' => $token]);
+		} else {
+			$this->model->tambah('setting', ['key' => 'api_token', 'isi' => $token]);
+		}
+
+		$this->session->set_flashdata('ok', 'API Token berhasil diupdate');
+		redirect('setting');
 	}
 }

@@ -11,6 +11,13 @@
         font-weight: 600;
         color: white;
     }
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    .animate-spin-hover:hover {
+        animation: spin 0.8s linear infinite;
+    }
 </style>
 
 <!-- Header Halaman -->
@@ -21,6 +28,10 @@
     </div>
 
     <div class="flex flex-wrap items-center gap-2 mt-4 md:mt-0">
+        <button onclick="generateWarnaAll()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
+            <i class="fas fa-palette mr-2"></i>
+            Generate Semua Warna
+        </button>
 
         <?php if (isset($ksjdhkjdf)) { ?>
             <!-- Tombol Tambah Siswa -->
@@ -71,6 +82,7 @@
                     <th onclick="sort('nama')" class="py-3 px-4 font-medium cursor-pointer">Nama Guru</th>
                     <th onclick="sort('jkl')" class="py-3 px-4 font-medium cursor-pointer">Jenis Kelamin</th>
                     <th onclick="sort('no_hp')" class="py-3 px-4 font-medium cursor-pointer">No HP</th>
+                    <th onclick="sort('warna')" class="py-3 px-4 font-medium cursor-pointer">Warna</th>
                     <th class="py-3 px-4 font-medium">Aksi</th>
                 </tr>
             </thead>
@@ -316,7 +328,7 @@
         if (!Array.isArray(data)) return;
 
         data.forEach(row => {
-            let wrn = row.warna != '' && row.warna != null ? row.warna : 'black'
+            let wrn = row.warna != '' && row.warna != null ? row.warna : '#000000'
             tbody.innerHTML += `
             <tr class="border-b">
                 <td class="p-2">
@@ -331,6 +343,15 @@
                     ${row.jkl }
                 </td>
                 <td class="p-2">${row.no_hp}</td>
+                <td class="p-2">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-6 h-6 rounded-full inline-block border border-gray-300 dark:border-gray-600 shadow-sm" style="background-color: ${wrn};"></span>
+                        <span class="font-mono text-sm uppercase">${wrn}</span>
+                        <button onclick="generateWarnaSingle('${row.id_guru}')" class="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 rounded" title="Generate warna baru">
+                            <i class="fas fa-sync-alt text-xs animate-spin-hover"></i>
+                        </button>
+                    </div>
+                </td>
                 <td class="p-2">
                     <button data-id="${row.id_guru}" class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 tombol-hapus">Hapus</button>
                 </td>
@@ -464,4 +485,61 @@
             }
         });
     });
+
+    function generateWarnaAll() {
+        Swal.fire({
+            title: 'Generate Semua Warna?',
+            text: 'Tindakan ini akan men-generate ulang warna unik untuk semua guru',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#4f46e5',
+            confirmButtonText: 'Ya, Generate',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Memproses...',
+                    text: 'Sedang men-generate warna',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                fetch(`<?= site_url('guru/generate_warna_all') ?>`, { method: 'POST' })
+                    .then(res => res.json())
+                    .then(res => {
+                        if (res.status) {
+                            Swal.fire('Selesai', res.msg, 'success').then(() => loadData());
+                        } else {
+                            Swal.fire('Gagal', res.msg, 'error');
+                        }
+                    })
+                    .catch(() => {
+                        Swal.fire('Gagal', 'Terjadi kesalahan sistem', 'error');
+                    });
+            }
+        });
+    }
+
+    function generateWarnaSingle(id) {
+        const formData = new FormData();
+        formData.append('id', id);
+
+        fetch(`<?= site_url('guru/generate_warna_single') ?>`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(res => {
+            if (res.status) {
+                loadData();
+            } else {
+                Swal.fire('Gagal', res.msg, 'error');
+            }
+        })
+        .catch(() => {
+            Swal.fire('Gagal', 'Terjadi kesalahan sistem', 'error');
+        });
+    }
 </script>

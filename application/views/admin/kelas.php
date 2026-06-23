@@ -21,7 +21,10 @@
     </div>
 
     <div class="flex flex-wrap items-center gap-2 mt-4 md:mt-0">
-
+        <button onclick="resetKelas()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
+            <i class="fas fa-trash-alt mr-2"></i>
+            Reset Kelas
+        </button>
 
         <!-- Tombol Tambah Siswa -->
         <button onclick="openModal('uploadKelasModal')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
@@ -445,9 +448,11 @@
 
         Swal.fire({
             title: 'Yakin?',
-            text: 'Data kelas akan dihapus permanen',
+            text: 'Data kelas beserta seluruh anggota rombelnya akan dihapus permanen',
             icon: 'warning',
             showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
             confirmButtonText: 'Hapus'
         }).then((result) => {
             if (result.isConfirmed) {
@@ -491,4 +496,77 @@
         }
         window.location.href = "<?= base_url('kelas/downloadTemplateAnggotaKelas/') ?>" + currentKelasId
     })
+
+    function resetKelas() {
+        Swal.fire({
+            title: 'Yakin ingin mereset kelas?',
+            text: 'Tindakan ini akan menghapus seluruh data kelas dan anggota rombel untuk lembaga ini secara permanen!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, Lanjutkan',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Tanyakan password sebagai verifikasi ke-2
+                Swal.fire({
+                    title: 'Verifikasi Keamanan',
+                    text: 'Masukkan password akun Anda untuk melakukan reset:',
+                    input: 'password',
+                    inputAttributes: {
+                        autocapitalize: 'off',
+                        autocorrect: 'off'
+                    },
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    confirmButtonText: 'Reset Sekarang',
+                    cancelButtonText: 'Batal',
+                    showLoaderOnConfirm: true,
+                    preConfirm: (password) => {
+                        if (!password) {
+                            Swal.showValidationMessage('Password wajib diisi!');
+                            return false;
+                        }
+                        
+                        const formData = new FormData();
+                        formData.append('password', password);
+                        
+                        return fetch('<?= base_url("kelas/reset") ?>', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(response.statusText);
+                            }
+                            return response.json();
+                        })
+                        .catch(error => {
+                            Swal.showValidationMessage(`Request gagal: ${error}`);
+                        });
+                    },
+                    allowOutsideClick: () => !Swal.isLoading()
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        if (result.value.status) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil',
+                                text: result.value.msg
+                            }).then(() => {
+                                loadData();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal',
+                                text: result.value.msg
+                            });
+                        }
+                    }
+                });
+            }
+        });
+    }
 </script>

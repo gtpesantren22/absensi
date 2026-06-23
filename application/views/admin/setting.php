@@ -62,6 +62,73 @@
     </form>
 </div>
 
+<?php if ($this->session->userdata('level') === 'admin' || $this->session->userdata('level') === 'super_admin'): ?>
+<div class="w-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-sm p-6 mb-4">
+    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2">
+        <i class="fas fa-database text-green-500"></i>
+        <span>Backup Database</span>
+    </h3>
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+                Unduh salinan cadangan seluruh database sistem dalam format SQL. Backup ini berisi struktur tabel dan semua data saat ini.
+            </p>
+            <p class="text-xs text-amber-500 dark:text-amber-400 mt-1">
+                <i class="fas fa-exclamation-triangle mr-1"></i> Harap simpan file hasil backup ini di tempat yang aman dan rahasia.
+            </p>
+        </div>
+        <div>
+            <a href="<?= base_url('setting/backup_sql') ?>" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition duration-200 shadow-sm hover:shadow-md">
+                <i class="fas fa-download"></i>
+                <span>Download Backup SQL</span>
+            </a>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+<?php if ($this->session->userdata('level') === 'admin' || $this->session->userdata('level') === 'super_admin'): ?>
+<div class="w-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-sm p-6 mb-4">
+    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2">
+        <i class="fas fa-key text-yellow-500"></i>
+        <span>API Token &amp; Endpoint</span>
+    </h3>
+    <form action="<?= base_url('setting/save_api_token') ?>" method="post">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div class="md:col-span-3">
+                <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">API Bearer Token / API Key</label>
+                <input type="text" name="api_token" value="<?= htmlspecialchars($api_token, ENT_QUOTES, 'UTF-8') ?>" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 text-gray-700 dark:text-gray-200" required>
+            </div>
+            <div>
+                <button type="submit" class="w-full px-6 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition duration-200 shadow-sm hover:shadow-md">
+                    Simpan Token
+                </button>
+            </div>
+        </div>
+    </form>
+    <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+        <p class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">Endpoint URL:</p>
+        <div class="space-y-3">
+            <div>
+                <span class="block text-[10px] text-gray-500 dark:text-gray-400 mb-1">1. Rekap Semua Guru</span>
+                <div class="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 p-2.5 rounded-lg border border-gray-200 dark:border-gray-800 select-all font-mono text-xs text-gray-700 dark:text-gray-300 overflow-x-auto">
+                    <span>GET <?= base_url('api/jam_mengajar') ?></span>
+                </div>
+            </div>
+            <div>
+                <span class="block text-[10px] text-gray-500 dark:text-gray-400 mb-1">2. Detail Guru Berdasarkan ID</span>
+                <div class="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 p-2.5 rounded-lg border border-gray-200 dark:border-gray-800 select-all font-mono text-xs text-gray-700 dark:text-gray-300 overflow-x-auto">
+                    <span>GET <?= base_url('api/guru/[id_guru]') ?></span>
+                </div>
+            </div>
+        </div>
+        <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-3">
+            Gunakan Header: <code class="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded font-mono font-semibold">Authorization: Bearer [Token]</code> atau <code class="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded font-mono font-semibold">X-API-KEY: [Token]</code>, atau parameter query <code class="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded font-mono font-semibold">?api_key=[Token]</code>.
+        </p>
+    </div>
+</div>
+<?php endif; ?>
+
 <div class="w-full mb-4 mx-auto">
     <div class="
         bg-white dark:bg-gray-800

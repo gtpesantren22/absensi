@@ -237,4 +237,99 @@ class Guru extends MY_Controller
 	// 	$this->session->set_flashdata('ok', 'Data guru berhasil diupload.');
 	// 	redirect('guru');
 	// }
+
+	public function generate_warna_all()
+	{
+		$this->mustLogin();
+		$this->AdminOrSuper();
+
+		// Fetch all teachers registered in this lembaga
+		$this->db->select('guru.id_guru, guru.nama');
+		$this->db->from('registrasi');
+		$this->db->join('guru', 'registrasi.id_guru = guru.id_guru');
+		$this->db->where('registrasi.id_lembaga', $this->id_lembaga);
+		$gurus = $this->db->get()->result_array();
+
+		$count = count($gurus);
+		if ($count === 0) {
+			$this->output
+				->set_content_type('application/json')
+				->set_output(json_encode(['status' => false, 'msg' => 'Tidak ada data guru']));
+			return;
+		}
+
+		$colors = [];
+		$golden_ratio_conjugate = 0.618033988749895;
+		$h = mt_rand(0, 1000) / 1000;
+
+		for ($i = 0; $i < $count; $i++) {
+			$h += $golden_ratio_conjugate;
+			$h = fmod($h, 1.0);
+			$colors[] = $this->hslToHex($h, 0.65, 0.5);
+		}
+
+		shuffle($colors);
+
+		$this->db->trans_start();
+		foreach ($gurus as $index => $g) {
+			$this->db->where('id_guru', $g['id_guru'])->update('guru', ['warna' => $colors[$index]]);
+		}
+		$this->db->trans_complete();
+
+		$this->output
+			->set_content_type('application/json')
+			->set_output(json_encode(['status' => true, 'msg' => 'Berhasil men-generate warna unik untuk semua guru']));
+	}
+
+	public function generate_warna_single()
+	{
+		$this->mustLogin();
+		$this->AdminOrSuper();
+
+		$id = $this->input->post('id');
+
+		if (empty($id)) {
+			$this->output
+				->set_content_type('application/json')
+				->set_output(json_encode(['status' => false, 'msg' => 'ID guru tidak ditemukan']));
+			return;
+		}
+
+		// Generate random hex color
+		$h = mt_rand(0, 1000) / 1000;
+		$color = $this->hslToHex($h, 0.65, 0.5);
+
+		$this->db->where('id_guru', $id)->update('guru', ['warna' => $color]);
+
+		$this->output
+			->set_content_type('application/json')
+			->set_output(json_encode(['status' => true, 'warna' => $color, 'msg' => 'Warna berhasil di-generate']));
+	}
+
+	private function hslToHex($h, $s, $l)
+	{
+		$r = $g = $b = $l;
+		$v = ($l <= 0.5) ? ($l * (1.0 + $s)) : ($l + $s - $l * $s);
+		if ($v > 0) {
+			$m = $l + $l - $v;
+			$sv = ($v - $m) / $v;
+			$h *= 6.0;
+			$sextant = floor($h);
+			$fract = $h - $sextant;
+			$vsf = $v * $sv * $fract;
+			$mid1 = $m + $vsf;
+			$mid2 = $v - $vsf;
+
+			switch ($sextant) {
+				case 0: $r = $v; $g = $mid1; $b = $m; break;
+				case 1: $r = $mid2; $g = $v; $b = $m; break;
+				case 2: $r = $m; $g = $v; $b = $mid1; break;
+				case 3: $r = $m; $g = $mid2; $b = $v; break;
+				case 4: $r = $mid1; $g = $m; $b = $v; break;
+				case 5: $r = $v; $g = $m; $b = $mid2; break;
+			}
+		}
+
+		return sprintf("#%02x%02x%02x", round($r * 255), round($g * 255), round($b * 255));
+	}
 }
