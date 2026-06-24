@@ -121,6 +121,18 @@
                     <span>GET <?= base_url('api/guru/[id_guru]') ?></span>
                 </div>
             </div>
+            <div>
+                <span class="block text-[10px] text-gray-500 dark:text-gray-400 mb-1">3. Rekap Rombel &amp; Jumlah Anggota (per Lembaga)</span>
+                <div class="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 p-2.5 rounded-lg border border-gray-200 dark:border-gray-800 select-all font-mono text-xs text-gray-700 dark:text-gray-300 overflow-x-auto">
+                    <span>GET <?= base_url('api/rombel') ?></span>
+                </div>
+            </div>
+            <div>
+                <span class="block text-[10px] text-gray-500 dark:text-gray-400 mb-1">4. Data Jadwal Pelajaran (dengan Filter)</span>
+                <div class="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 p-2.5 rounded-lg border border-gray-200 dark:border-gray-800 select-all font-mono text-xs text-gray-700 dark:text-gray-300 overflow-x-auto">
+                    <span>GET <?= base_url('api/jadwal?id_lembaga=&amp;hari=&amp;id_kelas=&amp;id_guru=') ?></span>
+                </div>
+            </div>
         </div>
         <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-3">
             Gunakan Header: <code class="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded font-mono font-semibold">Authorization: Bearer [Token]</code> atau <code class="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded font-mono font-semibold">X-API-KEY: [Token]</code>, atau parameter query <code class="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded font-mono font-semibold">?api_key=[Token]</code>.
