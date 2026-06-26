@@ -52,6 +52,7 @@
                         <th onclick="sort('nama')" class="py-3 px-4 font-medium cursor-pointer">Nama Lembaga</th>
                         <th onclick="sort('npsn')" class="py-3 px-4 font-medium cursor-pointer">NPSN</th>
                         <th onclick="sort('jenjang')" class="py-3 px-4 font-medium cursor-pointer">Jenjang</th>
+                        <th onclick="sort('jenis_lembaga')" class="py-3 px-4 font-medium cursor-pointer">Jenis Lembaga</th>
                         <th onclick="sort('session_id')" class="py-3 px-4 font-medium cursor-pointer">Session ID</th>
                         <th class="py-3 px-4 font-medium">Aksi</th>
                     </tr>
@@ -131,6 +132,13 @@
 
         data.forEach(row => {
             let wrn = row.warna != '' ? row.warna : 'black'
+            let jenisLembagaName = row.jenis_lembaga || '-';
+            if (jenisLembagaName && jenisLembagaName.startsWith('{')) {
+                try {
+                    let parsed = JSON.parse(jenisLembagaName);
+                    jenisLembagaName = parsed?.nama || jenisLembagaName;
+                } catch(e) {}
+            }
             tbody.innerHTML += `
             <tr class="border-b">
                 <td class="p-2"> 
@@ -140,6 +148,7 @@
                     ${row.npsn }
                 </td>
                 <td class="p-2">${row.jenjang}</td>
+                <td class="p-2">${jenisLembagaName}</td>
                 <td class="p-2">
                     <input type="text" value="${row.session_id || ''}" 
                            class="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-800 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 w-32 input-session-id" 
@@ -316,6 +325,7 @@
                     nama: lembaga?.nama ?? '',
                     npsn: lembaga?.npsn ?? '',
                     jenjang: lembaga?.jenjang_pendidikan?.nama ?? '',
+                    jenis_lembaga: lembaga?.jenis_lembaga ?? null,
                     alamat: [
                         lembaga?.wilayah?.nama,
                         lembaga?.wilayah?.parrent_recursive?.nama,

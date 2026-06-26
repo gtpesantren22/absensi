@@ -360,3 +360,4 @@
             </div>
             <div class="flash-data" data-flashdata="<?= $this->session->flashdata('ok') ?>"></div>
             <div class="flash-data-error" data-flashdata="<?= $this->session->flashdata('error') ?>"></div>
+            <div class="flash-data-warning" data-flashdata="<?= $this->session->flashdata('warning') ?>"></div>

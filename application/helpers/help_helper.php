@@ -315,3 +315,157 @@ function inisial($nama){
         return strtoupper(substr($nama,0,2));
     }
 }
+
+function generate_kode_mapel($nama, $id_master = null)
+{
+    $nama_clean = trim($nama);
+    $kode = $id_master ? 'M-' . $id_master : 'M-' . mt_rand(1000, 9999);
+
+    // 1. Try extracting text inside parentheses first (e.g., "Ilmu Pengetahuan Alam (IPA)" -> "IPA")
+    if (preg_match('/\(([^)]+)\)/', $nama_clean, $matches)) {
+        $inner = trim($matches[1]);
+        $inner_clean = preg_replace('/[^A-Za-z]/', '', $inner);
+        $len = strlen($inner_clean);
+        
+        // If the inner text is a short alphabetic abbreviation (2 to 5 characters) and not a blacklist word
+        $blacklist = ['umum', 'wajib', 'minat', 'peminatan', 'pemin', 'wjb', 'umm', 'kpm', 'sore', 'pagi'];
+        if ($len >= 2 && $len <= 5 && !in_array(strtolower($inner_clean), $blacklist)) {
+            return strtoupper($inner_clean);
+        }
+        
+        // Otherwise, strip the parentheses and their contents and keep processing
+        $nama_clean = trim(preg_replace('/\s*\([^)]+\)/', '', $nama_clean));
+    }
+
+    // 2. Clean multiple spaces and non-alphanumeric chars (keep spaces and letters)
+    $nama_clean = preg_replace('/[^A-Za-z0-9\s-]/', '', $nama_clean);
+    $nama_clean = preg_replace('/\s+/', ' ', $nama_clean);
+    $nama_upper = strtoupper(trim($nama_clean));
+
+    if (empty($nama_upper)) {
+        return $kode;
+    }
+
+    // 3. Custom mappings for common Indonesian subjects (both multi-word and single-word)
+    $custom_codes = [
+        // Multi-word subjects
+        'BAHASA INDONESIA' => 'BIN',
+        'BAHASA INGGRIS' => 'BIG',
+        'BAHASA ARAB' => 'BAR',
+        'BAHASA DAERAH' => 'BDH',
+        'PENDIDIKAN AGAMA ISLAM' => 'PAI',
+        'PENDIDIKAN AGAMA ISLAM DAN BUDI PEKERTI' => 'PABP',
+        'PENDIDIKAN PANCASILA DAN KEWARGANEGARAAN' => 'PPKN',
+        'PENDIDIKAN PANCASILA' => 'PPN',
+        'PENDIDIKAN JASMANI OLAHRAGA DAN KESEHATAN' => 'PJOK',
+        'PENDIDIKAN JASMANI, OLAHRAGA, DAN KESEHATAN' => 'PJOK',
+        'PENDIDIKAN JASMANI OLAHRAGA KESEHATAN' => 'PJOK',
+        'ILMU PENGETAHUAN ALAM' => 'IPA',
+        'ILMU PENGETAHUAN SOSIAL' => 'IPS',
+        'SENI BUDAYA' => 'SBD',
+        'SENI BUDAYA DAN KETERAMPILAN' => 'SBK',
+        'SENI BUDAYA DAN PRAKARYA' => 'SBP',
+        'PRAKARYA DAN KEWIRAUSAHAAN' => 'PKWU',
+        'SEJARAH INDONESIA' => 'SIND',
+        'BIMBINGAN CONSELING' => 'BK',
+        'BIMBINGAN KONSELING' => 'BK',
+
+        // 1-word subjects
+        'MATEMATIKA' => 'MTK',
+        'BIOLOGI' => 'BIO',
+        'FISIKA' => 'FIS',
+        'KIMIA' => 'KIM',
+        'GEOGRAFI' => 'GEO',
+        'SEJARAH' => 'SJR',
+        'EKONOMI' => 'EKO',
+        'SOSIOLOGI' => 'SOS',
+        'TAFHIDZ' => 'TFZ',
+        'TAHFIDZ' => 'TFZ',
+        'HADITS' => 'HDT',
+        'HADIS' => 'HDT',
+        'FIQIH' => 'FQH',
+        'FIKIH' => 'FQH',
+        'AQIDAH' => 'AQD',
+        'AKHLAK' => 'AKH',
+        'NAHWU' => 'NHW',
+        'SHOROF' => 'SRF',
+        'TEMATIK' => 'TMK',
+        'PRAMUKA' => 'PRM',
+        'KEWIRAUSAHAAN' => 'KWU',
+        'INFORMATIKA' => 'INF',
+        'KERAJINAN' => 'KRJ',
+        'OLAHRAGA' => 'OR',
+        'SENI' => 'SEN',
+        'BUDAYA' => 'BDY',
+        'BAHASA' => 'BHS',
+        'SASTRA' => 'SST',
+        'DINIYAH' => 'DNY',
+        'TAJWID' => 'TJW',
+        'KHAT' => 'KHT',
+        'IMLA' => 'IML',
+        'INSYA' => 'INS',
+        'MAHFUDZAT' => 'MFZ',
+        'MUTALAAH' => 'MTL',
+        'BALAGHAH' => 'BLG',
+        'FAROIDH' => 'FRD',
+        'KALIGRAFI' => 'KLG',
+        'ASWAJA' => 'ASW',
+        'KEASWAJAAN' => 'ASW',
+        'PANCASILA' => 'PPN'
+    ];
+
+    if (isset($custom_codes[$nama_upper])) {
+        return $custom_codes[$nama_upper];
+    }
+
+    $words = array_filter(explode(' ', $nama_clean));
+    if (count($words) === 1) {
+        // --- 1-word subject abbreviation logic ---
+        $word = strtoupper($words[0]);
+        $len = strlen($word);
+
+        if ($len <= 3) {
+            return $word;
+        }
+
+        // Identify consonants (exclude A, E, I, O, U)
+        $consonants = [];
+        for ($i = 0; $i < $len; $i++) {
+            $char = $word[$i];
+            if ($char >= 'A' && $char <= 'Z' && !in_array($char, ['A', 'E', 'I', 'O', 'U'])) {
+                $consonants[] = $char;
+            }
+        }
+        $unique_consonants = array_values(array_unique($consonants));
+
+        $vowels = ['A', 'E', 'I', 'O', 'U'];
+        $starts_with_vowel = in_array($word[0], $vowels);
+
+        if ($starts_with_vowel) {
+            // e.g. Aqidah -> A + Q + D = AQD
+            if (count($unique_consonants) >= 2) {
+                return $word[0] . $unique_consonants[0] . $unique_consonants[1];
+            }
+        } else {
+            // e.g. Matematika -> M + T + K = MTK
+            // e.g. Tematik -> T + M + K = TMK
+            if (count($unique_consonants) >= 3) {
+                return $unique_consonants[0] . $unique_consonants[1] . $unique_consonants[2];
+            }
+        }
+
+        // Fallback: first 3 letters of the word
+        return substr($word, 0, 3);
+    } else {
+        // --- Multi-word subject abbreviation logic ---
+        $initials = '';
+        foreach ($words as $w) {
+            $w_clean = preg_replace('/[^A-Za-z0-9]/', '', $w);
+            if (!empty($w_clean)) {
+                $initials .= strtoupper($w_clean[0]);
+            }
+        }
+        return (strlen($initials) >= 2) ? substr($initials, 0, 4) : $kode;
+    }
+}
+

@@ -40,8 +40,16 @@ class Sinkron extends MY_Controller
 
 		$this->load->view('sinkron/siswa', $data);
 	}
+	private function _ensure_lembaga_columns()
+	{
+		if (!$this->db->field_exists('jenis_lembaga', 'lembaga')) {
+			$this->db->query("ALTER TABLE `lembaga` ADD COLUMN `jenis_lembaga` TEXT NULL;");
+		}
+	}
+
 	public function lembaga()
 	{
+		$this->_ensure_lembaga_columns();
 		$data['judul'] = 'Data Lembaga';
 		$data['menu'] = 'sinkron';
 		$data['sub'] = 'sinc_lembaga';
@@ -152,6 +160,7 @@ class Sinkron extends MY_Controller
 				->like('nama', $search)
 				->or_like('npsn', $search)
 				->or_like('jenjang', $search)
+				->or_like('jenis_lembaga', $search)
 				->group_end();
 		}
 
@@ -483,6 +492,7 @@ class Sinkron extends MY_Controller
 			return;
 		}
 
+		$this->_ensure_lembaga_columns();
 
 		$this->db->trans_start();
 
@@ -490,11 +500,25 @@ class Sinkron extends MY_Controller
 		// 1. SIMPAN / UPDATE lembaga
 		// ======================
 
+		$jenis_lembaga = $lembaga['jenis_lembaga'] ?? null;
+		$jenis_lembaga_name = '';
+		if (is_array($jenis_lembaga)) {
+			$jenis_lembaga_name = $jenis_lembaga['nama'] ?? '';
+		} elseif (is_string($jenis_lembaga)) {
+			$decoded = json_decode($jenis_lembaga, true);
+			if (is_array($decoded)) {
+				$jenis_lembaga_name = $decoded['nama'] ?? '';
+			} else {
+				$jenis_lembaga_name = $jenis_lembaga;
+			}
+		}
+
 		$datalembaga = [
-			'nama'     => $lembaga['nama'],
-			'npsn'     => $lembaga['npsn'],
-			'jenjang'     => $lembaga['jenjang'],
-			'alamat'     => $lembaga['alamat'],
+			'nama'          => $lembaga['nama'],
+			'npsn'          => $lembaga['npsn'],
+			'jenjang'       => $lembaga['jenjang'],
+			'alamat'        => $lembaga['alamat'],
+			'jenis_lembaga' => $jenis_lembaga_name,
 		];
 
 		$ceklembaga = $this->db
@@ -832,5 +856,149 @@ class Sinkron extends MY_Controller
 		}
 
 		return sprintf("#%02x%02x%02x", round($r * 255), round($g * 255), round($b * 255));
+	}
+
+	private function _ensure_master_mapel_table()
+	{
+		if (!$this->db->table_exists('master_mapel')) {
+			$this->db->query("CREATE TABLE `master_mapel` (
+				`id_master_mapel` INT PRIMARY KEY,
+				`kode_mapel` VARCHAR(50) NOT NULL,
+				`nama` VARCHAR(100) NOT NULL,
+				`jenis_lembaga` TEXT NULL
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+		} else {
+			// Drop unique key if it exists to prevent duplicate code errors
+			$query = $this->db->query("SHOW KEYS FROM `master_mapel` WHERE Key_name='unique_kode'");
+			if ($query->num_rows() > 0) {
+				$this->db->query("ALTER TABLE `master_mapel` DROP INDEX `unique_kode` ");
+			}
+		}
+		if (!$this->db->field_exists('id_master_mapel', 'mapel')) {
+			$this->db->query("ALTER TABLE `mapel` ADD COLUMN `id_master_mapel` INT NULL;");
+		}
+	}
+
+	public function mapel()
+	{
+		$this->_ensure_master_mapel_table();
+		$data['judul'] = 'Data Master Mapel';
+		$data['menu'] = 'sinkron';
+		$data['sub'] = 'sinc_mapel';
+
+		$this->load->view('sinkron/mapel', $data);
+	}
+
+	public function data_master_mapel()
+	{
+		$this->_ensure_master_mapel_table();
+		$search      = $this->input->get('search') ?? '';
+		$peruntukan  = $this->input->get('peruntukan') ?? '';
+		$page        = max(1, (int) ($this->input->get('page') ?? 1));
+		$perPage     = max(1, (int) ($this->input->get('perPage') ?? 10));
+		$sortBy      = $this->input->get('sortBy') ?? 'nama';
+		$sortDir     = strtoupper($this->input->get('sortDir') ?? 'ASC');
+
+		$offset = ($page - 1) * $perPage;
+
+		$this->db->from('master_mapel');
+		if (!empty($search)) {
+			$this->db->group_start()
+				->like('nama', $search)
+				->or_like('kode_mapel', $search)
+				->group_end();
+		}
+
+		if (!empty($peruntukan)) {
+			$this->db->like('jenis_lembaga', '"nama":"' . $peruntukan . '"');
+		}
+
+		$total = $this->db->count_all_results('', false);
+
+		$this->db->order_by($sortBy, $sortDir);
+		$this->db->limit($perPage, $offset);
+		$data = $this->db->get()->result_array();
+
+		$result = [
+			'data'      => $data,
+			'total'     => $total,
+			'page'      => $page,
+			'perPage'   => $perPage,
+			'lastPage'  => ceil($total / $perPage),
+		];
+
+		$this->output
+			->set_content_type('application/json')
+			->set_output(json_encode($result));
+	}
+
+	public function fetch_page_mapel()
+	{
+		$page = $this->input->post('page') ?? 1;
+		$perPage = 10;
+
+		$url = "https://data.ppdwk.com/api/datatables?"
+			. "data=referensi-mata-pelajaran"
+			. "&page={$page}"
+			. "&per_page={$perPage}"
+			. "&q=&sortby=mata_pelajaran_id&sortbydesc=ASC";
+
+		$ch = curl_init($url);
+		curl_setopt_array($ch, [
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_HTTPHEADER => [
+				'Authorization: Bearer ' . $this->token,
+				'Accept: application/json'
+			],
+			CURLOPT_TIMEOUT => 20
+		]);
+
+		$result = curl_exec($ch);
+		curl_close($ch);
+
+		echo $result;
+	}
+
+	public function sync_one_mapel()
+	{
+		$raw = file_get_contents('php://input');
+		$payload = json_decode($raw, true);
+
+		if (!is_array($payload)) {
+			echo json_encode(['status' => false, 'msg' => 'Payload tidak valid']);
+			return;
+		}
+
+		$mapel = $payload['mapel'] ?? null;
+
+		if (!$mapel || !isset($mapel['id_master_mapel'])) {
+			echo json_encode(['status' => false, 'msg' => 'Data mapel kosong']);
+			return;
+		}
+
+		$id = $mapel['id_master_mapel'];
+		$nama = $mapel['nama'];
+		$jenis_lembaga = $mapel['jenis_lembaga'];
+
+		$cek = $this->db->get_where('master_mapel', ['id_master_mapel' => $id])->row();
+
+		// Generate clean abbreviation/initials code using helper function
+		$kode = generate_kode_mapel($nama, $id);
+
+		$data = [
+			'nama' => $nama,
+			'jenis_lembaga' => is_array($jenis_lembaga) ? json_encode($jenis_lembaga) : $jenis_lembaga
+		];
+
+		if ($cek) {
+			$this->db->where('id_master_mapel', $id)->update('master_mapel', $data);
+			$this->db->where('id_master_mapel', $id)->update('mapel', ['nama' => $nama]);
+			echo json_encode(['status' => true, 'msg' => 'Update ' . $nama . ' sukses']);
+		} else {
+			$data['id_master_mapel'] = $id;
+			$data['kode_mapel'] = $kode;
+			$this->db->insert('master_mapel', $data);
+			echo json_encode(['status' => true, 'msg' => 'Insert ' . $nama . ' sukses']);
+		}
 	}
 }

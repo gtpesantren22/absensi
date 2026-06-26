@@ -1,8 +1,5 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
-require FCPATH . 'vendor/autoload.php';
-
-use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class Siswa extends MY_Controller
 {

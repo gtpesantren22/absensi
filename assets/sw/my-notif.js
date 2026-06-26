@@ -2,6 +2,7 @@
 
 const flashData = $('.flash-data').data('flashdata');
 const flashDataError = $('.flash-data-error').data('flashdata');
+const flashDataWarning = $('.flash-data-warning').data('flashdata');
 
 if (flashData) {
 	Swal.fire({
@@ -17,6 +18,13 @@ if (flashDataError) {
 		icon: 'error',
 		title: 'Error',
 		text: flashDataError
+	})
+}
+if (flashDataWarning) {
+	Swal.fire({
+		icon: 'warning',
+		title: 'Perhatian',
+		text: flashDataWarning
 	})
 }
 

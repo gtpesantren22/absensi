@@ -145,45 +145,7 @@
                     </div>
                 </div>
 
-                <!-- Modal Upload Siswa -->
-                <div id="uploadSiswaModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
-                    <div class="bg-white dark:bg-gray-800 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <!-- Header Modal -->
-                        <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-                            <h3 class="text-xl font-bold">Upload Data Siswa</h3>
-                            <button onclick="closeModal('uploadSiswaModal')" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
 
-                        <!-- Form Upload Siswa -->
-                        <div class="p-6">
-                            <form id="" action="<?= base_url('siswa/upload_excel') ?>" method="POST" enctype="multipart/form-data">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                    <div class="md:col-span-2">
-                                        <label class="block text-sm font-medium mb-2">Pilih file</label>
-                                        <input type="file" name="file" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Masukkan kode siswa" required>
-                                        <small class="text-red-500">upload file yang didownload dari aplikasi ini</small>
-                                    </div>
-                                    <div class="md:col-span-2">
-                                        <button type="button" onclick="window.location.href='<?= base_url() ?>siswa/downloadTemplate'" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
-                                            Download Template
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="flex justify-end space-x-3">
-                                    <button type="button" onclick="closeModal('uploadSiswaModal')" class="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
-                                        Batal
-                                    </button>
-                                    <button type="submit" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium">
-                                        Upload
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
             <?php } ?>
         </div>
     </div>

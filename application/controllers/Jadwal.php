@@ -1,13 +1,13 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
-require FCPATH . 'vendor/autoload.php';
+// require FCPATH . 'vendor/autoload.php';
 
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+// use PhpOffice\PhpSpreadsheet\Spreadsheet;
+// use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+// use PhpOffice\PhpSpreadsheet\Style\Fill;
+// use PhpOffice\PhpSpreadsheet\Style\Alignment;
+// use PhpOffice\PhpSpreadsheet\Style\Border;
+// use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
 class Jadwal extends MY_Controller
 {

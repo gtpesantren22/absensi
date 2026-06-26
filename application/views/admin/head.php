@@ -255,6 +255,10 @@
                                                 <i class="fas fa-arrow-right mr-2"></i>
                                                 Sinc. Lembaga
                                             </a>
+                                            <a href="<?= base_url('sinkron/mapel') ?>" class="flex items-center sidebar-item <?= $sub == 'sinc_mapel' ? 'active' : '' ?> px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                                                <i class="fas fa-arrow-right mr-2"></i>
+                                                Sinc. Mapel
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -459,3 +463,4 @@
                 class="flex-1 p-4 transition-all duration-300 <?= empty($hideSidebar) ? 'md:ml-64' : 'ml-0' ?>">
                 <div class="flash-data" data-flashdata="<?= $this->session->flashdata('ok') ?>"></div>
                 <div class="flash-data-error" data-flashdata="<?= $this->session->flashdata('error') ?>"></div>
+                <div class="flash-data-warning" data-flashdata="<?= $this->session->flashdata('warning') ?>"></div>

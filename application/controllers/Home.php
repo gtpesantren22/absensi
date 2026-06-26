@@ -22,11 +22,16 @@ class Home extends MY_Controller
 			$data['menu'] = 'home';
 			$data['sub'] = 'dashboard';
 
-			$data['jumlah'] = $this->db->query("SELECT
+			$jumlah = $this->db->query("SELECT
 				(SELECT COUNT(*) FROM registrasi WHERE id_lembaga='$this->id_lembaga' ) as jumlah_guru,
 				(SELECT COUNT(*) FROM registrasi_siswa WHERE id_lembaga='$this->id_lembaga' ) as jumlah_siswa,
 				(SELECT COUNT(*) FROM kelas WHERE id_lembaga='$this->id_lembaga' ) as jumlah_kelas,
 				(SELECT COUNT(*) FROM jadwal WHERE id_lembaga='$this->id_lembaga' ) as jumlah_jadwal")->row();
+
+			$data['jumlah_guru'] = (object) ['jumlah' => $jumlah->jumlah_guru];
+			$data['jumlah_siswa'] = (object) ['jumlah' => $jumlah->jumlah_siswa];
+			$data['jumlah_kelas'] = (object) ['jumlah' => $jumlah->jumlah_kelas];
+			$data['jumlah_jadwal'] = (object) ['jumlah' => $jumlah->jumlah_jadwal];
 
 			$data['sekolah'] = $this->db->query("SELECT s.nama, s.alamat, s.nickname FROM user u JOIN lembaga s ON u.id_lembaga=s.id_lembaga WHERE id_user = '$this->iduser' ")->row();
 
