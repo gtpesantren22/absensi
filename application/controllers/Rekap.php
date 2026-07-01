@@ -517,6 +517,7 @@ class Rekap extends MY_Controller
 		];
 
 		$dataKelas = $this->db->query("SELECT * FROM kelas WHERE id_lembaga = '$this->id_lembaga' ORDER BY nama ASC")->result();
+		$used_titles = [];
 		foreach ($dataKelas as $dtsk) {
 
 			$sheet = $spreadsheet->createSheet();
@@ -627,8 +628,28 @@ class Rekap extends MY_Controller
 			// Set orientasi kertas jadi LANDSCAPE
 			$sheet->getPageSetup()->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE);
 
+			// Clean invalid characters for sheet title: \ * : ? / [ ] and limit to 31 chars
+			$nmKelasClean = str_replace(['\\', '/', '?', '*', ':', '[', ']'], '-', $nmKelas);
+			// Excel sheet names cannot start or end with a single quote (')
+			$nmKelasClean = trim($nmKelasClean, "' \t\n\r\0\x0B");
+			$nmKelasClean = substr($nmKelasClean, 0, 31);
+			$nmKelasClean = trim($nmKelasClean, "' \t\n\r\0\x0B");
+			if (empty($nmKelasClean)) {
+				$nmKelasClean = 'Kelas - ' . $dtsk->id_kelas;
+			}
+			
+			// Ensure unique title
+			$origTitle = $nmKelasClean;
+			$counter = 1;
+			while (isset($used_titles[strtolower($nmKelasClean)])) {
+				$suffix = ' (' . $counter . ')';
+				$nmKelasClean = substr($origTitle, 0, 31 - strlen($suffix)) . $suffix;
+				$counter++;
+			}
+			$used_titles[strtolower($nmKelasClean)] = true;
+
 			// Set judul file excel nya
-			$sheet->setTitle($nmKelas);
+			$sheet->setTitle($nmKelasClean);
 		}
 
 		$fileName = 'Rekap absensi tanggal ' . tanggal_indo($dari) . ' s/d ' . tanggal_indo($sampai);
