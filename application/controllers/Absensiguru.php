@@ -307,7 +307,7 @@ class Absensiguru extends MY_Controller
         curl_setopt_array(
             $curl2,
             array(
-                CURLOPT_URL => 'http://31.97.179.141:3100/capture?url=' . base_url() . 'screen/apel_guru/' . $tgl . '/' . $lembaga->id_lembaga . '&filename=APEL-GURU-' . $nick . '_' . $tgl,
+                CURLOPT_URL => 'https://capture.ppdwk.site/capture?url=' . base_url() . 'screen/apel_guru/' . $tgl . '/' . $lembaga->id_lembaga . '&filename=APEL-GURU-' . $nick . '_' . $tgl,
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_ENCODING => '',
                 CURLOPT_MAXREDIRS => 10,
@@ -332,7 +332,7 @@ class Absensiguru extends MY_Controller
         if ($result['status'] === true) {
 
             // URL FILE SUDAH DITENTUKAN
-            $fileUrl = "http://31.97.179.141:3100/capture-result/APEL-GURU-$nick"  . "_$tgl.png";
+            $fileUrl = "https://capture.ppdwk.site/capture-result/APEL-GURU-$nick"  . "_$tgl.png";
             $fileName = "APEL-GURU-$nick"  . "_$tgl.png";
 
             // === AMBIL FILE DARI URL ===

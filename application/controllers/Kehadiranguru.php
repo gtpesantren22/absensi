@@ -216,7 +216,7 @@ class Kehadiranguru extends MY_Controller
         curl_setopt_array(
             $curl2,
             array(
-                CURLOPT_URL => 'http://31.97.179.141:3100/capture?url=' . base_url() . 'screen/kehadiran_guru/' . $tgl . '/' . $lembaga->id_lembaga . '&filename=KEHADIRAN-GURU-' . $nick . '_' . $tgl,
+                CURLOPT_URL => 'https://capture.ppdwk.site/capture?url=' . base_url() . 'screen/kehadiran_guru/' . $tgl . '/' . $lembaga->id_lembaga . '&filename=KEHADIRAN-GURU-' . $nick . '_' . $tgl,
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_ENCODING => '',
                 CURLOPT_MAXREDIRS => 10,
@@ -241,7 +241,7 @@ class Kehadiranguru extends MY_Controller
         if ($result['status'] === true) {
 
             // URL FILE SUDAH DITENTUKAN
-            $fileUrl = "http://31.97.179.141:3100/capture-result/KEHADIRAN-GURU-$nick"  . "_$tgl.png";
+            $fileUrl = "https://capture.ppdwk.site/capture-result/KEHADIRAN-GURU-$nick"  . "_$tgl.png";
             $fileName = "KEHADIRAN-GURU-$nick"  . "_$tgl.png";
 
             // === AMBIL FILE DARI URL ===
