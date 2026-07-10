@@ -202,6 +202,7 @@ class Api extends CI_Controller
 			FROM kelas k
 			JOIN lembaga l ON k.id_lembaga = l.id_lembaga
 			LEFT JOIN rombel r ON r.id_kelas = k.id_kelas
+			WHERE k.id_tahun = (SELECT id_tahun FROM tahun_ajaran WHERE is_active = 1 LIMIT 1)
 			GROUP BY k.id_kelas, l.id_lembaga, l.nama, k.nama, k.jenis
 			ORDER BY l.nama ASC, k.nama ASC
 		")->result_array();

@@ -20,21 +20,42 @@
         <p class="text-gray-600 dark:text-gray-400">Halaman kelola data kelas</p>
     </div>
 
-    <div class="flex flex-wrap items-center gap-2 mt-4 md:mt-0">
-        <button onclick="resetKelas()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
-            <i class="fas fa-trash-alt mr-2"></i>
-            Reset Kelas
+    <div class="relative inline-block text-left mt-4 md:mt-0">
+        <button id="aksiKelasBtn" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2.5 rounded-lg font-medium flex items-center shadow transition-all duration-200">
+            <i class="fas fa-tasks mr-2"></i>
+            Aksi Kelas
+            <i id="aksiKelasIcon" class="fas fa-chevron-down ml-2 text-xs transition-transform duration-200"></i>
         </button>
+        
+        <div id="aksiKelasDropdown" class="hidden absolute right-0 mt-2 w-56 rounded-xl bg-white dark:bg-gray-800 shadow-lg border border-gray-100 dark:border-gray-700 py-1.5 z-40 focus:outline-none">
+            
+            <a href="javascript:void(0)" onclick="closeAksiDropdown(); openModal('tambahKelasModal')" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <i class="fas fa-plus text-primary-500 w-5"></i>
+                Tambah Kelas
+            </a>
+            
+            <a href="javascript:void(0)" onclick="closeAksiDropdown(); openModal('uploadKelasModal')" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <i class="fas fa-upload text-emerald-500 w-5"></i>
+                Upload Kelas
+            </a>
+            
+            <a href="javascript:void(0)" onclick="closeAksiDropdown(); salinStrukturKelas()" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <i class="fas fa-copy text-indigo-500 w-5"></i>
+                Salin Kelas Tahun Lalu
+            </a>
 
-        <!-- Tombol Tambah Siswa -->
-        <button onclick="openModal('uploadKelasModal')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
-            <i class="fas fa-upload mr-2"></i>
-            Upload Kelas
-        </button>
-        <button onclick="openModal('tambahKelasModal')" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
-            <i class="fas fa-plus mr-2"></i>
-            Tambah Kelas
-        </button>
+            <a href="<?= base_url('kelas/kenaikan') ?>" class="flex items-center px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <i class="fas fa-graduation-cap text-orange-500 w-5"></i>
+                Kenaikan Kelas
+            </a>
+            
+            <hr class="my-1.5 border-gray-100 dark:border-gray-700">
+            
+            <a href="javascript:void(0)" onclick="closeAksiDropdown(); resetKelas()" class="flex items-center px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 font-medium">
+                <i class="fas fa-trash-alt text-red-500 w-5"></i>
+                Reset Kelas
+            </a>
+        </div>
     </div>
 </div>
 
@@ -568,5 +589,57 @@
                 });
             }
         });
+    }
+
+    function salinStrukturKelas() {
+        Swal.fire({
+            title: 'Salin Kelas Tahun Lalu?',
+            text: 'Tindakan ini akan menyalin seluruh nama kelas dari tahun ajaran sebelumnya ke tahun ajaran aktif ini.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#4f46e5',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, Salin',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = "<?= base_url('kelas/salin_struktur_kelas') ?>";
+            }
+        });
+    }
+
+    // Toggle Dropdown Aksi Kelas
+    const aksiKelasBtn = document.getElementById('aksiKelasBtn');
+    const aksiKelasDropdown = document.getElementById('aksiKelasDropdown');
+    const aksiKelasIcon = document.getElementById('aksiKelasIcon');
+
+    if (aksiKelasBtn && aksiKelasDropdown) {
+        aksiKelasBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            aksiKelasDropdown.classList.toggle('hidden');
+            if (aksiKelasIcon) {
+                aksiKelasIcon.classList.toggle('rotate-180');
+            }
+        });
+
+        // Tutup dropdown saat klik di luar
+        document.addEventListener('click', () => {
+            aksiKelasDropdown.classList.add('hidden');
+            if (aksiKelasIcon) {
+                aksiKelasIcon.classList.remove('rotate-180');
+            }
+        });
+
+        // Mencegah dropdown tertutup saat klik di dalam dropdown
+        aksiKelasDropdown.addEventListener('click', (e) => e.stopPropagation());
+    }
+
+    function closeAksiDropdown() {
+        if (aksiKelasDropdown) {
+            aksiKelasDropdown.classList.add('hidden');
+        }
+        if (aksiKelasIcon) {
+            aksiKelasIcon.classList.remove('rotate-180');
+        }
     }
 </script>

@@ -30,10 +30,12 @@ class Piket extends MY_Controller
             ->get()
             ->result_array();
 
+        $id_semester_aktif = $this->session->userdata('id_semester_aktif');
         $apelList = $this->db
             ->select('id_guru, GROUP_CONCAT(TRIM(hari) ORDER BY hari SEPARATOR ",") AS daftar_hari')
             ->from('piket')
             ->where('id_lembaga', $this->id_lembaga)
+            ->where('id_semester', $id_semester_aktif)
             ->group_by('id_guru')
             ->get()
             ->result_array();
@@ -64,11 +66,13 @@ class Piket extends MY_Controller
         $hari = $input['hari'] ?? null;
         $status = $input['status'] ?? null;
 
+        $id_semester_aktif = $this->session->userdata('id_semester_aktif');
         if ($status == 1) {
             // Cek apakah data sudah ada
             $this->db->where('id_guru', $id_guru);
             $this->db->where('hari', $hari);
             $this->db->where('id_lembaga', $this->id_lembaga);
+            $this->db->where('id_semester', $id_semester_aktif);
             $query = $this->db->get('piket');
 
             if ($query->num_rows() < 1) {
@@ -76,7 +80,8 @@ class Piket extends MY_Controller
                 $this->db->insert('piket', [
                     'id_guru' => $id_guru,
                     'hari' => $hari,
-                    'id_lembaga' => $this->id_lembaga
+                    'id_lembaga' => $this->id_lembaga,
+                    'id_semester' => $id_semester_aktif
                 ]);
             }
 
@@ -86,6 +91,7 @@ class Piket extends MY_Controller
             $this->db->where('id_guru', $id_guru);
             $this->db->where('hari', $hari);
             $this->db->where('id_lembaga', $this->id_lembaga);
+            $this->db->where('id_semester', $id_semester_aktif);
             $this->db->delete('piket');
 
             echo json_encode(['success' => true]);

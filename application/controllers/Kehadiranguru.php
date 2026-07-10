@@ -37,10 +37,13 @@ class Kehadiranguru extends MY_Controller
         $offset = ($page - 1) * $perPage;
 
 
+        $id_semester_aktif = $this->session->userdata('id_semester_aktif');
+
         /* ================= TOTAL ================= */
         $this->db->from('kehadiran_guru');
 
         $this->db->where('kehadiran_guru.id_lembaga', $this->id_lembaga);
+        $this->db->where('kehadiran_guru.id_semester', $id_semester_aktif);
 
         if (!empty($search)) {
             $this->db->group_start()
@@ -63,6 +66,7 @@ class Kehadiranguru extends MY_Controller
         $this->db->from('kehadiran_guru');
 
         $this->db->where('kehadiran_guru.id_lembaga', $this->id_lembaga);
+        $this->db->where('kehadiran_guru.id_semester', $id_semester_aktif);
 
         if (!empty($search)) {
             $this->db->group_start()
@@ -115,11 +119,13 @@ class Kehadiranguru extends MY_Controller
             ->get()
             ->result_array();
 
+        $id_semester_aktif = $this->session->userdata('id_semester_aktif');
         $hadirList = $this->db
             ->select('id_guru, ket')
             ->from('kehadiran_guru')
             ->where('tanggal', $tanggal)
             ->where('id_lembaga', $this->id_lembaga)
+            ->where('id_semester', $id_semester_aktif)
             ->get()
             ->result_array();
 
@@ -148,19 +154,29 @@ class Kehadiranguru extends MY_Controller
         $data = $this->input->post('data', true);
         $tanggal = $this->input->post('tanggal', true);
         if (!empty($data)) {
+            $id_semester_aktif = $this->session->userdata('id_semester_aktif');
             foreach ($data as $item) {
-                $cek = $this->model->getBy2('kehadiran_guru', 'tanggal', $tanggal, 'id_guru', $item['id_guru'])->row();
+                $cek = $this->db->get_where('kehadiran_guru', [
+                    'tanggal' => $tanggal,
+                    'id_guru' => $item['id_guru'],
+                    'id_semester' => $id_semester_aktif
+                ])->row();
                 $dtsm = [
                     'tanggal' => $tanggal,
                     'id_guru' => $item['id_guru'],
                     'ket' => isset($item['ket']) ? $item['ket'] : '',
                     'waktu' => date('H:i:s'),
-                    'id_lembaga' => $this->id_lembaga
+                    'id_lembaga' => $this->id_lembaga,
+                    'id_semester' => $id_semester_aktif
                 ];
                 if (!$cek) {
-                    $sql = $this->model->tambah('kehadiran_guru', $dtsm);
+                    $sql = $this->db->insert('kehadiran_guru', $dtsm);
                 } else {
-                    $sql = $this->model->edit2('kehadiran_guru',  'tanggal', $tanggal, 'id_guru', $item['id_guru'], $dtsm);
+                    $sql = $this->db->where([
+                        'tanggal' => $tanggal,
+                        'id_guru' => $item['id_guru'],
+                        'id_semester' => $id_semester_aktif
+                    ])->update('kehadiran_guru', $dtsm);
                 }
             }
             if ($sql) {
@@ -179,18 +195,28 @@ class Kehadiranguru extends MY_Controller
         $ket = $this->input->post('value', TRUE);
         $tanggal = $this->input->post('tanggal', TRUE);
 
-        $cek = $this->model->getBy2('kehadiran_guru', 'tanggal', $tanggal, 'id_guru', $id_guru)->row();
+        $id_semester_aktif = $this->session->userdata('id_semester_aktif');
+        $cek = $this->db->get_where('kehadiran_guru', [
+            'tanggal' => $tanggal,
+            'id_guru' => $id_guru,
+            'id_semester' => $id_semester_aktif
+        ])->row();
         $dtsm = [
             'tanggal' => $tanggal,
             'id_guru' => $id_guru,
             'ket' => isset($ket) ? $ket : '',
             'waktu' => date('H:i:s'),
-            'id_lembaga' => $this->id_lembaga
+            'id_lembaga' => $this->id_lembaga,
+            'id_semester' => $id_semester_aktif
         ];
         if (!$cek) {
-            $sql = $this->model->tambah('kehadiran_guru', $dtsm);
+            $sql = $this->db->insert('kehadiran_guru', $dtsm);
         } else {
-            $sql = $this->model->edit2('kehadiran_guru',  'tanggal', $tanggal, 'id_guru', $id_guru, $dtsm);
+            $sql = $this->db->where([
+                'tanggal' => $tanggal,
+                'id_guru' => $id_guru,
+                'id_semester' => $id_semester_aktif
+            ])->update('kehadiran_guru', $dtsm);
         }
 
         if ($sql) {
@@ -203,7 +229,12 @@ class Kehadiranguru extends MY_Controller
     public function hapusKehadiran()
     {
         $id = $this->input->post('id', true);
-        $this->model->hapus3('kehadiran_guru', 'tanggal', $id, 'id_guru !=', '0', 'ket !=', '');
+        $id_semester_aktif = $this->session->userdata('id_semester_aktif');
+        $this->db->where('tanggal', $id)
+            ->where('id_semester', $id_semester_aktif)
+            ->where('id_guru !=', '0')
+            ->where('ket !=', '')
+            ->delete('kehadiran_guru');
         echo json_encode(['success' => true]);
     }
 

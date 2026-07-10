@@ -166,6 +166,30 @@
                         </div>
                     <?php } ?>
 
+                    <!-- Academic Session Selector -->
+                    <?php
+                    $list_semesters = $this->db->select('s.*, t.nama_tahun')
+                        ->from('semester s')
+                        ->join('tahun_ajaran t', 's.id_tahun = t.id_tahun')
+                        ->order_by('t.nama_tahun', 'DESC')
+                        ->order_by('s.nama_semester', 'DESC')
+                        ->get()
+                        ->result();
+                    $current_sem_id = $this->session->userdata('id_semester_aktif');
+                    ?>
+                    <?php if (!empty($list_semesters)): ?>
+                    <div class="hidden sm:block relative">
+                        <select onchange="gantiSesiAkademik(this.value)"
+                            class="px-3 py-1.5 bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 text-sky-800 dark:text-sky-300 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500 max-w-[220px]">
+                            <?php foreach ($list_semesters as $ls): ?>
+                                <option value="<?= $ls->id_semester ?>" <?= $ls->id_semester == $current_sem_id ? 'selected' : '' ?> class="text-gray-800 dark:text-gray-200">
+                                    <?= $ls->nama_tahun ?> (<?= $ls->nama_semester ?>)
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <?php endif; ?>
+
                     <!-- Dark/Light Mode Toggle -->
                     <button id="themeToggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
                         <i id="themeIcon" class="fas fa-moon text-lg"></i>
@@ -189,9 +213,16 @@
                             <a href="<?= base_url('profile') ?>" class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">
                                 <i class="fas fa-user mr-2"></i> Profil Saya
                             </a>
-                            <a href="<?= base_url('setting') ?>" class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">
-                                <i class="fas fa-cog mr-2"></i> Pengaturan
-                            </a>
+                            <?php if ($this->session->userdata('level') === 'admin' || $this->session->userdata('level') === 'super_admin'): ?>
+                                <a href="<?= base_url('setting') ?>" class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">
+                                    <i class="fas fa-cog mr-2"></i> Pengaturan
+                                </a>
+                            <?php endif; ?>
+                            <?php if ($this->session->userdata('level') === 'super_admin'): ?>
+                                <a href="<?= base_url('sistem') ?>" class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">
+                                    <i class="fas fa-cogs mr-2"></i> Sistem
+                                </a>
+                            <?php endif; ?>
                             <hr class="my-2 border-gray-200 dark:border-gray-700">
                             <a href="<?= base_url('auth/logout') ?>" class="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 text-red-600 dark:text-red-400 tbl-confirm" value="Anda akan keluar aplikasi">
                                 <i class="fas fa-sign-out-alt mr-2"></i> Keluar
@@ -420,10 +451,18 @@
                                     </div>
                                 </div>
 
-                                <a href="<?= base_url('setting') ?>" class="sidebar-item <?= $menu == 'setting' ? 'active' : '' ?> flex items-center px-4 py-3 text-sm font-medium border-l-4 border-transparent hover:border-primary-300 hover:bg-gray-50 dark:hover:bg-gray-700">
-                                    <i class="fas fa-cog mr-3"></i>
-                                    Pengaturan
-                                </a>
+                                <?php if ($this->session->userdata('level') === 'admin' || $this->session->userdata('level') === 'super_admin'): ?>
+                                    <a href="<?= base_url('setting') ?>" class="sidebar-item <?= $menu == 'setting' ? 'active' : '' ?> flex items-center px-4 py-3 text-sm font-medium border-l-4 border-transparent hover:border-primary-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                        <i class="fas fa-cog mr-3"></i>
+                                        Pengaturan
+                                    </a>
+                                <?php endif; ?>
+                                <?php if ($this->session->userdata('level') === 'super_admin'): ?>
+                                    <a href="<?= base_url('sistem') ?>" class="sidebar-item <?= $menu == 'sistem' ? 'active' : '' ?> flex items-center px-4 py-3 text-sm font-medium border-l-4 border-transparent hover:border-primary-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                        <i class="fas fa-cogs mr-3"></i>
+                                        Sistem
+                                    </a>
+                                <?php endif; ?>
                             <?php endif ?>
                         </nav>
 

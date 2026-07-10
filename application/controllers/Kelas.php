@@ -1,9 +1,9 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
-require FCPATH . 'vendor/autoload.php';
+// require FCPATH . 'vendor/autoload.php';
 
-use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
+// use PhpOffice\PhpSpreadsheet\IOFactory;
+// use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
 class Kelas extends MY_Controller
 {
@@ -49,8 +49,11 @@ class Kelas extends MY_Controller
 				->group_end();
 		}
 
+		$id_tahun_aktif = $this->session->userdata('id_tahun_aktif');
+
 		/* ================= TOTAL ================= */
 		$this->db->where('kelas.id_lembaga', $this->id_lembaga);
+		$this->db->where('kelas.id_tahun', $id_tahun_aktif);
 		$total = $this->db->count_all_results('', false);
 
 		/* ================= DATA ================= */
@@ -61,6 +64,7 @@ class Kelas extends MY_Controller
 
 		$this->db->join('rombel', 'rombel.id_kelas = kelas.id_kelas', 'left');
 		$this->db->where('kelas.id_lembaga', $this->id_lembaga);
+		$this->db->where('kelas.id_tahun', $id_tahun_aktif);
 
 		$this->db->group_by('kelas.id_kelas');
 		$this->db->order_by($sortBy, $sortDir);
@@ -87,10 +91,13 @@ class Kelas extends MY_Controller
 		$nama         = $this->input->post('nama', true);
 		$jenis        = $this->input->post('jenis', true);
 
+		$id_tahun_aktif = $this->session->userdata('id_tahun_aktif');
+
 		$data = [
 			'nama'         => $nama,
 			'jenis'        => $jenis,
-			'id_lembaga'   => $this->id_lembaga
+			'id_lembaga'   => $this->id_lembaga,
+			'id_tahun'     => $id_tahun_aktif
 		];
 
 		$sql = $this->model->tambah('kelas', $data);
@@ -106,7 +113,7 @@ class Kelas extends MY_Controller
 	public function hapus()
 	{
 		$id = $this->input->post('id', true);
-		
+
 		$this->db->trans_start();
 		$this->db->where('id_kelas', $id)->delete('rombel');
 		$this->db->where('id_kelas', $id)->delete('kelas');
@@ -222,6 +229,7 @@ class Kelas extends MY_Controller
 		$sheetData   = $spreadsheet->getActiveSheet()->toArray();
 
 		$dataInsert = [];
+		$id_tahun_aktif = $this->session->userdata('id_tahun_aktif');
 
 		foreach ($sheetData as $i => $row) {
 			if ($i == 0) continue; // skip header
@@ -230,7 +238,8 @@ class Kelas extends MY_Controller
 			$dataInsert[] = [
 				'nama' => $row[0],
 				'jenis'      => trim($row[1]),
-				'id_lembaga' => $this->id_lembaga
+				'id_lembaga' => $this->id_lembaga,
+				'id_tahun'   => $id_tahun_aktif
 			];
 		}
 
@@ -355,10 +364,12 @@ class Kelas extends MY_Controller
 			return;
 		}
 
+		$id_tahun_aktif = $this->session->userdata('id_tahun_aktif');
 		$data = [
 			'id_kelas' => $id_kelas,
 			'id_siswa' => $id_siswa,
-			'id_lembaga' => $this->id_lembaga
+			'id_lembaga' => $this->id_lembaga,
+			'id_tahun' => $id_tahun_aktif
 		];
 
 		$sql = $this->model->tambah('rombel', $data);
@@ -423,6 +434,7 @@ class Kelas extends MY_Controller
 		$sheetData   = $spreadsheet->getActiveSheet()->toArray();
 
 		$dataInsert = [];
+		$id_tahun_aktif = $this->session->userdata('id_tahun_aktif');
 
 		foreach ($sheetData as $i => $row) {
 			if ($i < 2) continue; // skip header
@@ -435,7 +447,8 @@ class Kelas extends MY_Controller
 				$dataInsert[] = [
 					'id_kelas' => $id_kelas,
 					'id_siswa' => $siswa->id_siswa,
-					'id_lembaga' => $this->id_lembaga
+					'id_lembaga' => $this->id_lembaga,
+					'id_tahun' => $id_tahun_aktif
 				];
 			}
 		}
@@ -469,17 +482,20 @@ class Kelas extends MY_Controller
 			return;
 		}
 
-		// Delete all classes and their rombel members for this institution
+		// Delete all classes and their rombel members for this institution and year
+		$id_tahun_aktif = $this->session->userdata('id_tahun_aktif');
 		$this->db->trans_start();
-		
+
 		$this->db->query("
 			DELETE FROM rombel 
 			WHERE id_kelas IN (
-				SELECT id_kelas FROM kelas WHERE id_lembaga = ?
+				SELECT id_kelas FROM kelas WHERE id_lembaga = ? AND id_tahun = ?
 			)
-		", [$this->id_lembaga]);
+		", [$this->id_lembaga, $id_tahun_aktif]);
 
-		$this->db->where('id_lembaga', $this->id_lembaga)->delete('kelas');
+		$this->db->where('id_lembaga', $this->id_lembaga)
+			->where('id_tahun', $id_tahun_aktif)
+			->delete('kelas');
 
 		$this->db->trans_complete();
 
@@ -492,5 +508,133 @@ class Kelas extends MY_Controller
 				->set_content_type('application/json')
 				->set_output(json_encode(['status' => true, 'msg' => 'Semua data kelas dan anggotanya berhasil di-reset!']));
 		}
+	}
+
+	public function salin_struktur_kelas()
+	{
+		$id_tahun_aktif = $this->session->userdata('id_tahun_aktif');
+		
+		// Find another year before the active year
+		$prev_year = $this->db->query("SELECT id_tahun FROM tahun_ajaran WHERE id_tahun < ? ORDER BY id_tahun DESC LIMIT 1", [$id_tahun_aktif])->row();
+		if (!$prev_year) {
+			$this->session->set_flashdata('error', 'Tahun ajaran sebelum ini tidak ditemukan!');
+			redirect('kelas');
+		}
+
+		// Fetch all classes of previous year
+		$classes = $this->db->get_where('kelas', ['id_lembaga' => $this->id_lembaga, 'id_tahun' => $prev_year->id_tahun])->result();
+		if (empty($classes)) {
+			$this->session->set_flashdata('error', 'Tidak ada data kelas tahun lalu untuk disalin!');
+			redirect('kelas');
+		}
+
+		$this->db->trans_start();
+		foreach ($classes as $c) {
+			// Check if class with same name already exists in active year
+			$exists = $this->db->get_where('kelas', [
+				'nama' => $c->nama,
+				'id_lembaga' => $this->id_lembaga,
+				'id_tahun' => $id_tahun_aktif
+			])->row();
+			if (!$exists) {
+				$this->db->insert('kelas', [
+					'nama' => $c->nama,
+					'jenis' => $c->jenis,
+					'id_lembaga' => $this->id_lembaga,
+					'id_tahun' => $id_tahun_aktif
+				]);
+			}
+		}
+		$this->db->trans_complete();
+
+		if ($this->db->trans_status() === FALSE) {
+			$this->session->set_flashdata('error', 'Gagal menyalin kelas!');
+		} else {
+			$this->session->set_flashdata('ok', 'Berhasil menyalin struktur kelas dari tahun lalu.');
+		}
+		redirect('kelas');
+	}
+
+	public function kenaikan()
+	{
+		$data['judul'] = 'Kenaikan Kelas';
+		$data['menu'] = 'master';
+		$data['sub'] = 'kenaikan_kelas';
+
+		$data['tahun_ajaran'] = $this->db->order_by('nama_tahun', 'DESC')->get('tahun_ajaran')->result();
+		
+		$this->load->view('admin/kenaikan_kelas', $data);
+	}
+
+	public function get_kelas_by_tahun($id_tahun)
+	{
+		$kelas = $this->db->get_where('kelas', [
+			'id_lembaga' => $this->id_lembaga,
+			'id_tahun' => $id_tahun
+		])->result_array();
+		
+		$this->output
+			->set_content_type('application/json')
+			->set_output(json_encode($kelas));
+	}
+
+	public function get_siswa_by_kelas($id_kelas)
+	{
+		$siswa = $this->db
+			->select('siswa.id_siswa, siswa.nama, siswa.nisn, rombel.id_rombel')
+			->from('rombel')
+			->join('siswa', 'siswa.id_siswa = rombel.id_siswa')
+			->where('rombel.id_kelas', $id_kelas)
+			->order_by('siswa.nama', 'ASC')
+			->get()
+			->result_array();
+			
+		$this->output
+			->set_content_type('application/json')
+			->set_output(json_encode($siswa));
+	}
+
+	public function proses_kenaikan()
+	{
+		$id_tahun_tujuan = $this->input->post('id_tahun_tujuan', true);
+		$id_kelas_tujuan = $this->input->post('id_kelas_tujuan', true);
+		$id_siswa_list   = $this->input->post('id_siswa', true); // array
+
+		if (empty($id_tahun_tujuan) || empty($id_kelas_tujuan) || empty($id_siswa_list)) {
+			$this->session->set_flashdata('error', 'Mohon pilih kelas tujuan dan siswa yang akan dinaikkan kelas!');
+			redirect('kelas/kenaikan');
+		}
+
+		$this->db->trans_start();
+		$insert_data = [];
+		foreach ($id_siswa_list as $id_siswa) {
+			// Check if student is already in a class in the target year to prevent double addition
+			$exists = $this->db->get_where('rombel', [
+				'id_siswa' => $id_siswa,
+				'id_tahun' => $id_tahun_tujuan,
+				'id_lembaga' => $this->id_lembaga
+			])->row();
+
+			if (!$exists) {
+				$insert_data[] = [
+					'id_kelas' => $id_kelas_tujuan,
+					'id_siswa' => $id_siswa,
+					'id_lembaga' => $this->id_lembaga,
+					'id_tahun' => $id_tahun_tujuan
+				];
+			}
+		}
+
+		if (!empty($insert_data)) {
+			$this->db->insert_batch('rombel', $insert_data);
+		}
+		$this->db->trans_complete();
+
+		if ($this->db->trans_status() === FALSE) {
+			$this->session->set_flashdata('error', 'Gagal memproses kenaikan kelas!');
+		} else {
+			$this->session->set_flashdata('ok', 'Kenaikan kelas berhasil diproses untuk ' . count($insert_data) . ' siswa.');
+		}
+		redirect('kelas/kenaikan');
 	}
 }

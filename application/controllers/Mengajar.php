@@ -36,10 +36,13 @@ class Mengajar extends MY_Controller
 
         $offset = ($page - 1) * $perPage;
 
+        $id_semester_aktif = $this->session->userdata('id_semester_aktif');
+
         /* ================= TOTAL ================= */
         $this->db->from('mengajar');
 
         $this->db->where('mengajar.id_lembaga', $this->id_lembaga);
+        $this->db->where('mengajar.id_semester', $id_semester_aktif);
 
         if (!empty($search)) {
             $this->db->group_start()
@@ -63,6 +66,7 @@ class Mengajar extends MY_Controller
         $this->db->from('mengajar');
 
         $this->db->where('mengajar.id_lembaga', $this->id_lembaga);
+        $this->db->where('mengajar.id_semester', $id_semester_aktif);
 
         if (!empty($search)) {
             $this->db->group_start()
@@ -110,11 +114,12 @@ class Mengajar extends MY_Controller
 
 
         // $harini = 'Monday';
-        $dataJadwal = $this->db->query("SELECT id_guru FROM jadwal WHERE hari = '$harini' AND id_lembaga = '$this->id_lembaga' GROUP BY id_guru ")->result();
+        $id_semester_aktif = $this->session->userdata('id_semester_aktif');
+        $dataJadwal = $this->db->query("SELECT id_guru FROM jadwal WHERE hari = '$harini' AND id_lembaga = '$this->id_lembaga' AND id_semester = '$id_semester_aktif' GROUP BY id_guru ")->result();
         $dataKirim = [];
         foreach ($dataJadwal as $key) {
             // $hadir = $this->db->query("SELECT * FROM kehadiran WHERE tanggal = '$tglni' AND guru = '$key->guru' ")->row();
-            $jam = $this->db->query("SELECT * FROM jadwal WHERE hari = '$harini' AND id_guru = '$key->id_guru' AND id_lembaga = '$this->id_lembaga' ")->result();
+            $jam = $this->db->query("SELECT * FROM jadwal WHERE hari = '$harini' AND id_guru = '$key->id_guru' AND id_lembaga = '$this->id_lembaga' AND id_semester = '$id_semester_aktif' ")->result();
             $guru = $this->db->query("SELECT * FROM guru WHERE id_guru = '$key->id_guru' ")->row();
             $array_hasil = [];
             foreach ($jam as $datas) {
@@ -147,7 +152,8 @@ class Mengajar extends MY_Controller
         $guru = $this->db->query("SELECT * FROM guru WHERE id_guru = '$kdguru' ")->row();
 
         // $mapel = $this->model->getBy('mapel', 'kode_mapel', $key->mapel)->row();
-        $jadwal = $this->db->query("SELECT * FROM jadwal WHERE hari = '$harini' AND id_guru = '$kdguru' AND id_lembaga = '$this->id_lembaga' ORDER BY jam_dari ASC ")->result();
+        $id_semester_aktif = $this->session->userdata('id_semester_aktif');
+        $jadwal = $this->db->query("SELECT * FROM jadwal WHERE hari = '$harini' AND id_guru = '$kdguru' AND id_lembaga = '$this->id_lembaga' AND id_semester = '$id_semester_aktif' ORDER BY jam_dari ASC ")->result();
         $array_hasil = [];
         foreach ($jadwal as $datas) {
             $array_range = range($datas->jam_dari, $datas->jam_sampai);
@@ -200,7 +206,7 @@ class Mengajar extends MY_Controller
 
         $hariini = $tanggalIni;
         for ($i = 1; $i <= $jml_jp; $i++):
-            $cek = $this->db->query("SELECT * FROM mengajar WHERE id_guru='$guru->id_guru' AND tanggal='$hariini' AND jam=$i AND id_lembaga = '$this->id_lembaga' ")->row();
+            $cek = $this->db->query("SELECT * FROM mengajar WHERE id_guru='$guru->id_guru' AND tanggal='$hariini' AND jam=$i AND id_lembaga = '$this->id_lembaga' AND id_semester = '$id_semester_aktif' ")->row();
             $ket = $cek ? $cek->ket : '';
 
             echo '<tr class="
@@ -295,18 +301,26 @@ class Mengajar extends MY_Controller
         $datas = $this->input->post('datas', true);
         $tanggal = $this->input->post('tanggal', true);
 
+        $id_semester_aktif = $this->session->userdata('id_semester_aktif');
         foreach ($datas as $data) {
             $guru = $data['guru'];
             $jam = $data['jam'];
             $ket = $data['value'];
             $alasan = !empty($data['alasan']) ? $data['alasan'] : '-';
 
-            $cek = $this->model->getBy4('mengajar', 'id_guru', $guru, 'jam', $jam, 'tanggal', $tanggal, 'id_lembaga', $this->id_lembaga)->row();
+            $cek = $this->db->get_where('mengajar', [
+                'id_guru' => $guru,
+                'jam' => $jam,
+                'tanggal' => $tanggal,
+                'id_lembaga' => $this->id_lembaga,
+                'id_semester' => $id_semester_aktif
+            ])->row();
             if ($cek) {
                 $this->db->where('id_guru', $guru);
                 $this->db->where('jam', $jam);
                 $this->db->where('tanggal', $tanggal);
                 $this->db->where('id_lembaga', $this->id_lembaga);
+                $this->db->where('id_semester', $id_semester_aktif);
                 $this->db->update('mengajar', ['ket' => $ket, 'alasan' => $alasan]);
             } else {
                 $simpan = [
@@ -316,8 +330,9 @@ class Mengajar extends MY_Controller
                     'tanggal' =>  $tanggal,
                     'alasan' =>  $alasan,
                     'id_lembaga' => $this->id_lembaga,
+                    'id_semester' => $id_semester_aktif
                 ];
-                $this->model->tambah('mengajar', $simpan);
+                $this->db->insert('mengajar', $simpan);
             }
         }
 

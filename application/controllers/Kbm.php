@@ -27,7 +27,8 @@ class Kbm extends MY_Controller
 		$data['sub'] = 'kbm';
 
 		$days = date('l');
-		$data['kelas'] = $this->db->query("SELECT id_kelas FROM jadwal WHERE hari = '$days' AND id_lembaga = '$this->id_lembaga' GROUP BY id_kelas ORDER BY id_kelas ASC ");
+		$id_semester_aktif = $this->session->userdata('id_semester_aktif');
+		$data['kelas'] = $this->db->query("SELECT id_kelas FROM jadwal WHERE hari = '$days' AND id_lembaga = '$this->id_lembaga' AND id_semester = '$id_semester_aktif' GROUP BY id_kelas ORDER BY id_kelas ASC ");
 		$data['harini'] = $days;
 		$data['dateDays'] = date('Y-m-d');
 		$data['id_lembaga'] = $this->id_lembaga;
@@ -46,7 +47,8 @@ class Kbm extends MY_Controller
 		$data['guru'] = $this->db->query("SELECT * FROM guru WHERE id_guru = '$userData->id_guru' ")->row();
 
 		$kls = [];
-		$jdwal = $this->db->query("SELECT * FROM jadwal WHERE hari = '$days' AND id_guru = '$userData->id_guru' ORDER BY jam_dari ASC ")->result();
+		$id_semester_aktif = $this->session->userdata('id_semester_aktif');
+		$jdwal = $this->db->query("SELECT * FROM jadwal WHERE hari = '$days' AND id_guru = '$userData->id_guru' AND id_semester = '$id_semester_aktif' ORDER BY jam_dari ASC ")->result();
 		foreach ($jdwal as $jdwl) {
 			$dtl = $this->db->query("SELECT * FROM jadwal_dtl WHERE id_jadwal = '$jdwl->id_jadwal' ")->row();
 			$kls[] = [
@@ -73,6 +75,7 @@ class Kbm extends MY_Controller
 		$data['idguru'] = $idguru->id_guru;
 		$data['guru'] = $this->db->query("SELECT * FROM guru WHERE id_guru = '$idguru->id_guru' ")->row();
 
+		$id_semester_aktif = $this->session->userdata('id_semester_aktif');
 		$data['lmb'] =  $this->db
 			->select('
 					j.id_lembaga,
@@ -83,6 +86,7 @@ class Kbm extends MY_Controller
 			->join('lembaga l', 'l.id_lembaga = j.id_lembaga')
 			->where('j.hari', $data['days'])
 			->where('j.id_guru', $idguru->id_guru)
+			->where('j.id_semester', $id_semester_aktif)
 			->group_by('j.id_lembaga, l.nama')
 			->order_by('jam_pertama', 'ASC')
 			->get()
@@ -102,9 +106,12 @@ class Kbm extends MY_Controller
 
 		$dyas = date('Y-m-d');
 
-		$listdata = $this->db->query("SELECT * FROM rombel WHERE id_kelas = $jadwal->id_kelas ");
+		$id_tahun_aktif = $this->session->userdata('id_tahun_aktif');
+		$id_semester_aktif = $this->session->userdata('id_semester_aktif');
 
-		$cek = $this->db->query("SELECT * FROM harian WHERE id_guru = '$jadwal->id_guru' AND id_mapel = '$jadwal->id_mapel' AND id_kelas = '$jadwal->id_kelas' AND tanggal = '$dyas' AND dari = '$jadwal->jam_dari' AND id_lembaga = '$jadwal->id_lembaga' ")->row();
+		$listdata = $this->db->query("SELECT * FROM rombel WHERE id_kelas = $jadwal->id_kelas AND id_tahun = '$id_tahun_aktif' ");
+
+		$cek = $this->db->query("SELECT * FROM harian WHERE id_guru = '$jadwal->id_guru' AND id_mapel = '$jadwal->id_mapel' AND id_kelas = '$jadwal->id_kelas' AND tanggal = '$dyas' AND dari = '$jadwal->jam_dari' AND id_lembaga = '$jadwal->id_lembaga' AND id_semester = '$id_semester_aktif' ")->row();
 
 
 		if (!$cek) {
@@ -251,7 +258,8 @@ class Kbm extends MY_Controller
 
 		$jmlAbs = ($sampai - $dari) + 1;
 
-		$cek = $this->db->query("SELECT * FROM harian WHERE id_guru = '$guru' AND id_mapel = '$mapel' AND id_kelas = '$kelas' AND tanggal = '$tanggal' AND dari = '$dari' AND id_lembaga = '$id_lembaga' ")->row();
+		$id_semester_aktif = $this->session->userdata('id_semester_aktif');
+		$cek = $this->db->query("SELECT * FROM harian WHERE id_guru = '$guru' AND id_mapel = '$mapel' AND id_kelas = '$kelas' AND tanggal = '$tanggal' AND dari = '$dari' AND id_lembaga = '$id_lembaga' AND id_semester = '$id_semester_aktif' ")->row();
 
 		$nmGuru = $this->db->query("SELECT * FROM guru WHERE id_guru = '$guru' ")->row();
 		$nmMapel = $this->db->query("SELECT * FROM mapel WHERE id_mapel = '$mapel'")->row();
@@ -312,6 +320,7 @@ class Kbm extends MY_Controller
 						'guru' => $nmGuru->nama,
 						'nama_siswa' => $nmsiswa->nama,
 						'id_lembaga' => $id_lembaga,
+						'id_semester' => $id_semester_aktif,
 					];
 					$sql = $this->db->insert('harian', $dtsm);
 				}
@@ -319,7 +328,9 @@ class Kbm extends MY_Controller
 				if ($sql) {
 					$this->db->insert('jurnal_guru', [
 						'kode_absen' => $kode,
-						'isi' => $isi ? $isi : '-'
+						'isi' => $isi ? $isi : '-',
+						'id_lembaga' => $id_lembaga,
+						'id_semester' => $id_semester_aktif,
 					]);
 					$hadirHsl = $this->db->query("SELECT * FROM harian WHERE ket= 'hadir' AND kode = '$kode' AND id_lembaga = '$id_lembaga'");
 					$sakitHsl = $this->db->query("SELECT * FROM harian WHERE ket= 'sakit' AND kode = '$kode' AND id_lembaga = '$id_lembaga'");

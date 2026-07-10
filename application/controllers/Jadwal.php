@@ -1,13 +1,13 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
-// require FCPATH . 'vendor/autoload.php';
+require FCPATH . 'vendor/autoload.php';
 
-// use PhpOffice\PhpSpreadsheet\Spreadsheet;
-// use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-// use PhpOffice\PhpSpreadsheet\Style\Fill;
-// use PhpOffice\PhpSpreadsheet\Style\Alignment;
-// use PhpOffice\PhpSpreadsheet\Style\Border;
-// use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
 class Jadwal extends MY_Controller
 {
@@ -33,6 +33,7 @@ class Jadwal extends MY_Controller
         $data['kelas'] = $this->db
             ->select('id_kelas, nama')
             ->where('id_lembaga', $this->id_lembaga)
+            ->where('id_tahun', $this->session->userdata('id_tahun_aktif'))
             ->order_by('nama', 'ASC')
             ->get('kelas')
             ->result();
@@ -63,6 +64,7 @@ class Jadwal extends MY_Controller
 
         $kelasList = $this->db
             ->where('id_lembaga', $this->id_lembaga)
+            ->where('id_tahun', $this->session->userdata('id_tahun_aktif'))
             ->order_by('nama', 'ASC')
             ->get('kelas')
             ->result();
@@ -79,8 +81,8 @@ class Jadwal extends MY_Controller
                 g.warna
             FROM jadwal j
             LEFT JOIN guru g ON j.id_guru = g.id_guru
-            WHERE j.hari = ? AND j.id_lembaga = ?
-        ", [$day, $this->id_lembaga])->result_array();
+            WHERE j.hari = ? AND j.id_lembaga = ? AND j.id_semester = ?
+        ", [$day, $this->id_lembaga, $this->session->userdata('id_semester_aktif')])->result_array();
 
 
         $mapelIds = array_unique(array_filter(array_column($jadwalList, 'id_mapel')));
@@ -197,6 +199,7 @@ class Jadwal extends MY_Controller
         $dtguru = $this->model->getBy('guru', 'id_guru', $id_guru)->row();
         $dtlembaga = $this->model->getBy('lembaga', 'id_lembaga', $this->id_lembaga)->row();
         $idnew = $this->uuid->v4();
+        $id_semester_aktif = $this->session->userdata('id_semester_aktif');
         $data = [
             'id_jadwal' => $idnew,
             'hari' => $this->input->post('hari', TRUE),
@@ -205,7 +208,8 @@ class Jadwal extends MY_Controller
             'id_guru' => $id_guru,
             'jam_dari' => $jam_dari,
             'jam_sampai' => $jam_sampai,
-            'id_lembaga' => $this->id_lembaga
+            'id_lembaga' => $this->id_lembaga,
+            'id_semester' => $id_semester_aktif
         ];
         $dataDtl = [
             'id_jadwal' => $idnew,
@@ -215,7 +219,8 @@ class Jadwal extends MY_Controller
             'id_guru' => $dtguru->nama,
             'jam_dari' => $jam_dari,
             'jam_sampai' => $jam_sampai,
-            'id_lembaga' => $dtlembaga->nama
+            'id_lembaga' => $dtlembaga->nama,
+            'id_semester' => $id_semester_aktif
         ];
 
         $sql = $this->db->insert('jadwal', $data);
@@ -387,9 +392,11 @@ class Jadwal extends MY_Controller
 
     public function cek_bentrok_hari($hari)
     {
-        // 1️⃣ Ambil semua jadwal di hari tersebut
+        $id_semester_aktif = $this->session->userdata('id_semester_aktif');
+        // 1️⃣ Ambil semua jadwal di hari tersebut untuk semester aktif
         $jadwal = $this->db
             ->where('hari', $hari)
+            ->where('id_semester', $id_semester_aktif)
             ->order_by('id_guru')
             ->order_by('jam_dari')
             ->get('jadwal')
@@ -459,12 +466,14 @@ class Jadwal extends MY_Controller
             return;
         }
 
+        $id_semester_aktif = $this->session->userdata('id_semester_aktif');
         // Jadwal bentrok
         $bentrok = $this->db
             ->select('jadwal_dtl.*')
             ->join('jadwal_dtl', 'jadwal.id_jadwal=jadwal_dtl.id_jadwal')
             ->where('jadwal.hari', $jadwal->hari)
             ->where('jadwal.id_guru', $jadwal->id_guru)
+            ->where('jadwal.id_semester', $id_semester_aktif)
             ->where('jadwal.id_jadwal !=', $id_jadwal)
             ->where('jadwal.jam_dari <=', $jadwal->jam_sampai)
             ->where('jadwal.jam_sampai >=', $jadwal->jam_dari)
@@ -486,9 +495,13 @@ class Jadwal extends MY_Controller
         $data['sub'] = 'jadwal';
         $data['hideSidebar'] = true;
 
+        $id_tahun_aktif = $this->session->userdata('id_tahun_aktif');
+        $id_semester_aktif = $this->session->userdata('id_semester_aktif');
+
         $data['kelas'] = $this->db
             ->select('id_kelas, nama')
             ->where('id_lembaga', $this->id_lembaga)
+            ->where('id_tahun', $id_tahun_aktif)
             ->order_by('nama', 'ASC')
             ->get('kelas')
             ->result();
@@ -498,18 +511,18 @@ class Jadwal extends MY_Controller
                    COALESCE(SUM(j.jam_sampai - j.jam_dari + 1), 0) as total_jp
             FROM registrasi r
             JOIN guru g ON r.id_guru = g.id_guru
-            LEFT JOIN jadwal j ON g.id_guru = j.id_guru AND j.id_lembaga = r.id_lembaga
+            LEFT JOIN jadwal j ON g.id_guru = j.id_guru AND j.id_lembaga = r.id_lembaga AND j.id_semester = ?
             WHERE r.id_lembaga = ?
             GROUP BY g.id_guru, g.nama, g.kode_guru, g.warna
             ORDER BY total_jp DESC, g.nama ASC
-        ", [$this->id_lembaga])->result();
+        ", [$id_semester_aktif, $this->id_lembaga])->result();
 
         $breakdown = $this->db->query("
             SELECT id_guru, id_kelas, SUM(jam_sampai - jam_dari + 1) as jp_kelas
             FROM jadwal
-            WHERE id_lembaga = ?
+            WHERE id_lembaga = ? AND id_semester = ?
             GROUP BY id_guru, id_kelas
-        ", [$this->id_lembaga])->result_array();
+        ", [$this->id_lembaga, $id_semester_aktif])->result_array();
 
         $jpMap = [];
         foreach ($breakdown as $b) {
@@ -561,10 +574,14 @@ class Jadwal extends MY_Controller
         $sheet->mergeCells('A1:C1');
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
 
+        $id_tahun_aktif = $this->session->userdata('id_tahun_aktif');
+        $id_semester_aktif = $this->session->userdata('id_semester_aktif');
+
         // Fetch data
         $kelas = $this->db
             ->select('id_kelas, nama')
             ->where('id_lembaga', $this->id_lembaga)
+            ->where('id_tahun', $id_tahun_aktif)
             ->order_by('nama', 'ASC')
             ->get('kelas')
             ->result();
@@ -574,18 +591,18 @@ class Jadwal extends MY_Controller
                    COALESCE(SUM(j.jam_sampai - j.jam_dari + 1), 0) as total_jp
             FROM registrasi r
             JOIN guru g ON r.id_guru = g.id_guru
-            LEFT JOIN jadwal j ON g.id_guru = j.id_guru AND j.id_lembaga = r.id_lembaga
+            LEFT JOIN jadwal j ON g.id_guru = j.id_guru AND j.id_lembaga = r.id_lembaga AND j.id_semester = ?
             WHERE r.id_lembaga = ?
             GROUP BY g.id_guru, g.nama, g.kode_guru
             ORDER BY total_jp DESC, g.nama ASC
-        ", [$this->id_lembaga])->result();
+        ", [$id_semester_aktif, $this->id_lembaga])->result();
 
         $breakdown = $this->db->query("
             SELECT id_guru, id_kelas, SUM(jam_sampai - jam_dari + 1) as jp_kelas
             FROM jadwal
-            WHERE id_lembaga = ?
+            WHERE id_lembaga = ? AND id_semester = ?
             GROUP BY id_guru, id_kelas
-        ", [$this->id_lembaga])->result_array();
+        ", [$this->id_lembaga, $id_semester_aktif])->result_array();
 
         $jpMap = [];
         foreach ($breakdown as $b) {
@@ -684,8 +701,8 @@ class Jadwal extends MY_Controller
                 SELECT j.id_kelas, j.id_mapel, j.jam_dari, j.jam_sampai, g.kode_guru
                 FROM jadwal j
                 LEFT JOIN guru g ON j.id_guru = g.id_guru
-                WHERE j.hari = ? AND j.id_lembaga = ?
-            ", [$eng, $this->id_lembaga])->result_array();
+                WHERE j.hari = ? AND j.id_lembaga = ? AND j.id_semester = ?
+            ", [$eng, $this->id_lembaga, $id_semester_aktif])->result_array();
 
             $mapelIds = array_unique(array_filter(array_column($jadwalList, 'id_mapel')));
             $mapelMap = [];
@@ -772,17 +789,21 @@ class Jadwal extends MY_Controller
             return;
         }
 
-        // Delete schedule for current institution
+        $id_semester_aktif = $this->session->userdata('id_semester_aktif');
+
+        // Delete schedule for current institution and semester
         $this->db->trans_start();
         
         $this->db->query("
             DELETE FROM jadwal_dtl 
             WHERE id_jadwal IN (
-                SELECT id_jadwal FROM jadwal WHERE id_lembaga = ?
+                SELECT id_jadwal FROM jadwal WHERE id_lembaga = ? AND id_semester = ?
             )
-        ", [$this->id_lembaga]);
+        ", [$this->id_lembaga, $id_semester_aktif]);
 
-        $this->db->where('id_lembaga', $this->id_lembaga)->delete('jadwal');
+        $this->db->where('id_lembaga', $this->id_lembaga)
+            ->where('id_semester', $id_semester_aktif)
+            ->delete('jadwal');
 
         $this->db->trans_complete();
 

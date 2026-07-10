@@ -49,11 +49,14 @@ class Rekap_model extends CI_Model
                 //     continue;
                 // }
 
+                $id_semester_aktif = $this->session->userdata('id_semester_aktif');
+
                 // 2️⃣ CEK APEL SETT
                 $apelWajib = $this->db->get_where('apel_sett', [
                     'id_guru' => $guru->id_guru,
                     'hari'    => $hari,
-                    'id_lembaga' => $this->id_lembaga
+                    'id_lembaga' => $this->id_lembaga,
+                    'id_semester' => $id_semester_aktif
                 ])->row();
 
                 if (!$apelWajib) {
@@ -67,7 +70,8 @@ class Rekap_model extends CI_Model
                 $absen = $this->db->get_where('apel_guru', [
                     'id_guru' => $guru->id_guru,
                     'tanggal' => $tanggal,
-                    'id_lembaga' => $this->id_lembaga
+                    'id_lembaga' => $this->id_lembaga,
+                    'id_semester' => $id_semester_aktif
                 ])->row();
 
                 if ($absen) {
@@ -127,11 +131,14 @@ class Rekap_model extends CI_Model
                 //     continue;
                 // }
 
+                $id_semester_aktif = $this->session->userdata('id_semester_aktif');
+
                 // 3️⃣ CEK ABSENSI
                 $absen = $this->db->get_where('kehadiran_guru', [
                     'id_guru' => $guru->id_guru,
                     'tanggal' => $tanggal,
-                    'id_lembaga' => $this->id_lembaga
+                    'id_lembaga' => $this->id_lembaga,
+                    'id_semester' => $id_semester_aktif
                 ])->row();
 
                 if ($absen) {
@@ -145,7 +152,8 @@ class Rekap_model extends CI_Model
                 $apelWajib = $this->db->get_where('apel_sett', [
                     'id_guru' => $guru->id_guru,
                     'hari'    => $hari,
-                    'id_lembaga' => $this->id_lembaga
+                    'id_lembaga' => $this->id_lembaga,
+                    'id_semester' => $id_semester_aktif
                 ])->row();
 
                 if (!$apelWajib) {
@@ -208,12 +216,15 @@ class Rekap_model extends CI_Model
                 //     continue;
                 // }
 
+                $id_semester_aktif = $this->session->userdata('id_semester_aktif');
+
                 // 3️⃣ CEK ABSENSI
                 $absen = $this->db
                     ->select('ket, COUNT(*) AS jml')
                     ->from('mengajar')
                     ->where('id_guru', $guru->id_guru)
                     ->where('tanggal', $tanggal)
+                    ->where('id_semester', $id_semester_aktif)
                     ->group_by('ket')
                     ->get()
                     ->result();
@@ -241,12 +252,13 @@ class Rekap_model extends CI_Model
                 $telat  += $map['T'];
 
 
-                // 2️⃣ CEK APEL SETT
+                // 2️⃣ CEK APEL SETT (Jadwal Wajib Mengajar)
                 $apelWajib = $this->db
                     ->select('SUM((jam_sampai - jam_dari)+1) AS jml')
                     ->where('id_guru', $guru->id_guru)
                     ->where('hari', $hari)
                     ->where('id_lembaga', $this->id_lembaga)
+                    ->where('id_semester', $id_semester_aktif)
                     ->from('jadwal')->get()
                     ->row();
 

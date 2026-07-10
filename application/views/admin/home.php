@@ -28,7 +28,7 @@
                         <?= $sekolah->alamat ?>
                     </p>
                     <p class="text-xs text-gray-400 dark:text-slate-500">
-                        Tahun Ajaran 2025 / 2026
+                        Tahun Ajaran <?= $this->session->userdata('nama_tahun_aktif') ?: '2025/2026' ?> (<?= $this->session->userdata('nama_semester_aktif') ?: 'Ganjil' ?>)
                     </p>
                 </div>
             </div>

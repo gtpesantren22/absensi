@@ -89,4 +89,26 @@ class Home extends MY_Controller
 			$this->load->view('guru/home', $data);
 		}
 	}
+
+	public function set_akademik_session($id_semester)
+	{
+		$active_sem = $this->db->select('s.*, t.nama_tahun')
+			->from('semester s')
+			->join('tahun_ajaran t', 's.id_tahun = t.id_tahun')
+			->where('s.id_semester', $id_semester)
+			->get()
+			->row();
+
+		if ($active_sem) {
+			$this->session->set_userdata([
+				'id_tahun_aktif' => $active_sem->id_tahun,
+				'nama_tahun_aktif' => $active_sem->nama_tahun,
+				'id_semester_aktif' => $active_sem->id_semester,
+				'nama_semester_aktif' => $active_sem->nama_semester
+			]);
+			$this->session->set_flashdata('ok', 'Sesi akademik berhasil diubah ke ' . $active_sem->nama_tahun . ' - ' . $active_sem->nama_semester);
+		}
+
+		redirect($_SERVER['HTTP_REFERER']);
+	}
 }

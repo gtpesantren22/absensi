@@ -280,6 +280,10 @@
         window.location.href = "<?= site_url('setting/set_lembaga') ?>/" + id;
     }
 
+    function gantiSesiAkademik(id) {
+        window.location.href = "<?= site_url('home/set_akademik_session') ?>/" + id;
+    }
+
     // Panggil fungsi update waktu setiap menit
     updateDateTime();
     setInterval(updateDateTime, 60000);
