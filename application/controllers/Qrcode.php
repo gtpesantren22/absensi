@@ -85,8 +85,12 @@ class Qrcode extends MY_Controller
             exit;
         }
 
-        $this->load->view('scan', $data);
-    }
+		if ($this->session->userdata('level') === 'guru') {
+			$this->load->view('guru/scan', $data);
+		} else {
+			$this->load->view('scan', $data);
+		}
+	}
 
     public function sendScan($jenis)
     {

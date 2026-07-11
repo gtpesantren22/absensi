@@ -1,13 +1,13 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
-require FCPATH . 'vendor/autoload.php';
+// require FCPATH . 'vendor/autoload.php';
 
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Style\Border;
-use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+// use PhpOffice\PhpSpreadsheet\Spreadsheet;
+// use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+// use PhpOffice\PhpSpreadsheet\Style\Fill;
+// use PhpOffice\PhpSpreadsheet\Style\Alignment;
+// use PhpOffice\PhpSpreadsheet\Style\Border;
+// use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
 class Jadwal extends MY_Controller
 {
@@ -539,7 +539,7 @@ class Jadwal extends MY_Controller
         $this->AdminOrSuper();
 
         $spreadsheet = new Spreadsheet();
-        
+
         // --- SHEET 1: REKAP JAM MENGAJAR GURU ---
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Rekap Jam Mengajar');
@@ -612,7 +612,7 @@ class Jadwal extends MY_Controller
         // Header Row (Row 3)
         $sheet->setCellValueByColumnAndRow(1, 3, 'No');
         $sheet->setCellValueByColumnAndRow(2, 3, 'Nama Guru');
-        
+
         $colIdx = 3;
         $classCols = [];
         foreach ($kelas as $k) {
@@ -620,7 +620,7 @@ class Jadwal extends MY_Controller
             $classCols[$k->id_kelas] = $colIdx;
             $colIdx++;
         }
-        
+
         $totalColIdx = $colIdx;
         $sheet->setCellValueByColumnAndRow($totalColIdx, 3, 'Total JP');
 
@@ -634,22 +634,22 @@ class Jadwal extends MY_Controller
         foreach ($gurus as $g) {
             $sheet->setCellValueByColumnAndRow(1, $rowNum, $no++);
             $sheet->setCellValueByColumnAndRow(2, $rowNum, $g->nama . ' (' . $g->kode_guru . ')');
-            
+
             foreach ($kelas as $k) {
                 $jp = $jpMap[$g->id_guru][$k->id_kelas] ?? 0;
                 $colIndex = $classCols[$k->id_kelas];
                 $sheet->setCellValueByColumnAndRow($colIndex, $rowNum, $jp > 0 ? $jp . ' JP' : '-');
             }
-            
+
             $sheet->setCellValueByColumnAndRow($totalColIdx, $rowNum, $g->total_jp . ' JP');
-            
+
             // Format numbers
             $sheet->getStyle("A{$rowNum}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             for ($c = 3; $c <= $totalColIdx; $c++) {
                 $colLetter = Coordinate::stringFromColumnIndex($c);
                 $sheet->getStyle("{$colLetter}{$rowNum}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
             }
-            
+
             $sheet->getStyle("A{$rowNum}:{$lastColLetter}{$rowNum}")->applyFromArray($style_data);
             $rowNum++;
         }
@@ -683,7 +683,7 @@ class Jadwal extends MY_Controller
 
             // Header Row (Row 3)
             $newSheet->setCellValueByColumnAndRow(1, 3, 'Jam / Kelas');
-            
+
             $colIdx = 2;
             $kelasCols = [];
             foreach ($kelas as $k) {
@@ -735,7 +735,7 @@ class Jadwal extends MY_Controller
                     $entries = $jadwalMap[$jam][$k->id_kelas] ?? [];
                     $val = !empty($entries) ? implode("\n", $entries) : '-';
                     $newSheet->setCellValueByColumnAndRow($colIndex, $rowNum, $val);
-                    
+
                     if (count($entries) > 1) {
                         $newSheet->getStyle("{$colLetter}{$rowNum}")->getAlignment()->setWrapText(true);
                     }
@@ -793,7 +793,7 @@ class Jadwal extends MY_Controller
 
         // Delete schedule for current institution and semester
         $this->db->trans_start();
-        
+
         $this->db->query("
             DELETE FROM jadwal_dtl 
             WHERE id_jadwal IN (

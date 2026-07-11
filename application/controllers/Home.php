@@ -70,6 +70,8 @@ class Home extends MY_Controller
 
 			$data['hadir'] = $this->model->getBy2('kehadiran_guru', 'id_guru', $idguru->id_guru, 'tanggal  ', date('Y-m-d'))->row();
 
+			$id_semester_aktif = $this->session->userdata('id_semester_aktif');
+
 			$data['lmb'] =  $this->db
 				->select('
 					j.id_lembaga,
@@ -80,6 +82,7 @@ class Home extends MY_Controller
 				->join('lembaga l', 'l.id_lembaga = j.id_lembaga')
 				->where('j.hari', $data['days'])
 				->where('j.id_guru', $idguru->id_guru)
+				->where('j.id_semester', $id_semester_aktif)
 				->group_by('j.id_lembaga, l.nama')
 				->order_by('jam_pertama', 'ASC')
 				->get()

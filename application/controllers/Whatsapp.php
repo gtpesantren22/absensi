@@ -15,6 +15,10 @@ class Whatsapp extends CI_Controller
 		$time_now = date('H:i');
 		$day_now = date('l');
 
+		// Get active semester from database
+		$active_semester = $this->db->get_where('semester', ['is_active' => 1])->row();
+		$id_semester = $active_semester ? $active_semester->id_semester : null;
+
 		// Find settings where key = 'waktu_info_jadwal' and value matches the current hour/minute
 		$settings = $this->db->get_where('setting', [
 			'key' => 'waktu_info_jadwal',
@@ -54,12 +58,15 @@ class Whatsapp extends CI_Controller
 			if (empty($selected_groups)) continue;
 
 			// Fetch schedules for today (English day name in DB)
-			$schedules = $this->db->select('jd.id_kelas as kelas_nama, jd.id_mapel as mapel_nama, jd.id_guru as guru_nama, j.jam_dari, j.jam_sampai')
+			$this->db->select('jd.id_kelas as kelas_nama, jd.id_mapel as mapel_nama, jd.id_guru as guru_nama, j.jam_dari, j.jam_sampai')
 				->from('jadwal j')
 				->join('jadwal_dtl jd', 'j.id_jadwal = jd.id_jadwal')
 				->where('j.hari', $day_now)
-				->where('j.id_lembaga', $id_lembaga)
-				->order_by('jd.id_kelas', 'ASC')
+				->where('j.id_lembaga', $id_lembaga);
+			if ($id_semester !== null) {
+				$this->db->where('j.id_semester', $id_semester);
+			}
+			$schedules = $this->db->order_by('jd.id_kelas', 'ASC')
 				->order_by('j.jam_dari', 'ASC')
 				->get()
 				->result_array();
@@ -94,12 +101,16 @@ class Whatsapp extends CI_Controller
 			$message .= "=========================\n";
 
 			// Get piket teachers
-			$piket_teachers = $this->db->select('g.nama')
+			$this->db->select('g.nama')
 				->from('piket p')
 				->join('guru g', 'p.id_guru = g.id_guru')
+				->join('registrasi r', 'r.id_guru = g.id_guru AND r.id_lembaga = p.id_lembaga')
 				->where('p.hari', $day_now)
-				->where('p.id_lembaga', $id_lembaga)
-				->order_by('g.nama', 'ASC')
+				->where('p.id_lembaga', $id_lembaga);
+			if ($id_semester !== null) {
+				$this->db->where('p.id_semester', $id_semester);
+			}
+			$piket_teachers = $this->db->order_by('g.nama', 'ASC')
 				->get()
 				->result_array();
 

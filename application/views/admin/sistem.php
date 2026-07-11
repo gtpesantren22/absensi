@@ -195,6 +195,40 @@
     </div>
 </div>
 
+<!-- Card Pengaturan Aplikasi -->
+<div class="w-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-sm p-6 mb-6">
+    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2">
+        <i class="fas fa-sliders-h text-primary-500"></i>
+        <span>Pengaturan Aplikasi</span>
+    </h3>
+    <form action="<?= base_url('sistem/save_app_settings') ?>" method="post" enctype="multipart/form-data" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Nama Aplikasi -->
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Nama Aplikasi</label>
+                <input type="text" name="app_name" value="<?= htmlspecialchars($app_name, ENT_QUOTES, 'UTF-8') ?>" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500 text-gray-700 dark:text-gray-200" required>
+            </div>
+            <!-- Logo Aplikasi -->
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1.5">Logo Aplikasi (Format Image)</label>
+                <div class="flex items-center gap-4">
+                    <?php if (!empty($app_logo) && file_exists('./uploads/logo/' . $app_logo)): ?>
+                        <div class="w-12 h-12 rounded-xl overflow-hidden border border-gray-200 dark:border-slate-700 p-1 bg-white flex items-center justify-center shrink-0">
+                            <img src="<?= base_url('uploads/logo/' . $app_logo) ?>" class="max-w-full max-h-full object-contain">
+                        </div>
+                    <?php endif; ?>
+                    <input type="file" name="app_logo" accept="image/*" class="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:outline-none text-xs">
+                </div>
+            </div>
+        </div>
+        <div class="flex justify-end pt-2">
+            <button type="submit" class="px-6 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition duration-200 shadow-sm hover:shadow-md">
+                Simpan Pengaturan
+            </button>
+        </div>
+    </form>
+</div>
+
 
 <!-- Modal Tahun Ajaran -->
 <div id="modalTahun" class="fixed inset-0 z-50 overflow-y-auto hidden">

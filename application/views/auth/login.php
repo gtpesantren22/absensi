@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Aplikasi Absensi Sekolah</title>
+    <title>Login - <?= htmlspecialchars($app_name) ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
@@ -71,10 +71,16 @@
         <div class="bg-white dark:bg-gray-800 rounded-2xl login-card p-8">
             <!-- Logo & Brand -->
             <div class="text-center mb-8">
-                <div class="w-16 h-16 rounded-xl bg-primary-600 flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-school text-white text-2xl"></i>
-                </div>
-                <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Absensi APP - DWK</h1>
+                <?php if (!empty($app_logo) && file_exists('./uploads/logo/' . $app_logo)): ?>
+                    <div class="w-16 h-16 rounded-xl overflow-hidden border border-gray-150 dark:border-slate-700 bg-white p-1 flex items-center justify-center mx-auto mb-4 shadow-sm">
+                        <img src="<?= base_url('uploads/logo/' . $app_logo) ?>" class="max-w-full max-h-full object-contain">
+                    </div>
+                <?php else: ?>
+                    <div class="w-16 h-16 rounded-xl bg-primary-600 flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-school text-white text-2xl"></i>
+                    </div>
+                <?php endif; ?>
+                <h1 class="text-2xl font-bold text-gray-800 dark:text-white"><?= htmlspecialchars($app_name) ?></h1>
                 <p class="text-gray-600 dark:text-gray-400 mt-2">Sistem Absensi Digital</p>
             </div>
 
@@ -124,7 +130,7 @@
                     <div class="flex items-center">
                         <input
                             type="checkbox"
-                            id="rememberMe"
+                            id="rememberMe" name="remember"
                             class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500">
                         <label for="rememberMe" class="ml-2 text-sm text-gray-700 dark:text-gray-300">
                             Ingat saya

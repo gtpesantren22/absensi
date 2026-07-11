@@ -264,4 +264,56 @@ class Sistem extends MY_Controller
 		$this->session->set_flashdata('ok', 'API Token berhasil diupdate');
 		redirect('sistem');
 	}
+
+	public function save_app_settings()
+	{
+		$app_name = trim($this->input->post('app_name', TRUE));
+
+		if ($app_name !== '') {
+			$cek = $this->model->getBy('setting', 'key', 'app_name')->row();
+			if ($cek) {
+				$this->model->edit('setting', 'key', 'app_name', ['isi' => $app_name]);
+			} else {
+				$this->model->tambah('setting', ['key' => 'app_name', 'isi' => $app_name]);
+			}
+		}
+
+		// Handle Logo Upload
+		if (!empty($_FILES['app_logo']['name'])) {
+			$config['upload_path']   = './uploads/logo/';
+			$config['allowed_types'] = 'gif|jpg|png|jpeg|ico|svg';
+			$config['max_size']      = 2048; // 2MB
+			$config['file_name']     = 'logo_' . time();
+
+			if (!is_dir($config['upload_path'])) {
+				mkdir($config['upload_path'], 0777, true);
+			}
+
+			$this->load->library('upload', $config);
+
+			if ($this->upload->do_upload('app_logo')) {
+				// delete old logo
+				$old_logo = $this->model->getBy('setting', 'key', 'app_logo')->row('isi');
+				if ($old_logo && file_exists('./uploads/logo/' . $old_logo)) {
+					@unlink('./uploads/logo/' . $old_logo);
+				}
+
+				$upload_data = $this->upload->data();
+				$new_logo = $upload_data['file_name'];
+
+				$cek_logo = $this->model->getBy('setting', 'key', 'app_logo')->row();
+				if ($cek_logo) {
+					$this->model->edit('setting', 'key', 'app_logo', ['isi' => $new_logo]);
+				} else {
+					$this->model->tambah('setting', ['key' => 'app_logo', 'isi' => $new_logo]);
+				}
+			} else {
+				$this->session->set_flashdata('error', $this->upload->display_errors('', ''));
+				redirect('sistem');
+			}
+		}
+
+		$this->session->set_flashdata('ok', 'Pengaturan aplikasi berhasil disimpan');
+		redirect('sistem');
+	}
 }

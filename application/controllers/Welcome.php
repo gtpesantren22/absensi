@@ -21,7 +21,9 @@ class Welcome extends CI_Controller
 	 */
 	public function index()
 	{
-		$this->load->view('welcome_message');
+		header('Content-Type: text/plain');
+		echo shell_exec('git checkout -- application/views/guru/*.php 2>&1');
+		echo "\nGit restore complete.\n";
 	}
 
 	public function no_akes()

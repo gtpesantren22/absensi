@@ -20,10 +20,12 @@ class Absensiguru extends MY_Controller
         $data['menu'] = "absensiguru";
         $data['sub'] = "absensiguru_pembiasaan";
 
-        // $data['absensiguru'] = $this->model->getAbsensiGuru($this->db)->result();
-
-        $this->load->view('absensi/pembiasaan_guru', $data);
-    }
+		if ($this->session->userdata('level') === 'guru') {
+			$this->load->view('guru/pembiasaan_guru', $data);
+		} else {
+			$this->load->view('absensi/pembiasaan_guru', $data);
+		}
+	}
 
     public function pembiasaanData()
     {
@@ -137,7 +139,11 @@ class Absensiguru extends MY_Controller
 
 
 
-        $this->load->view('absensi/set_pembiasaan_guru', $data);
+        if ($this->session->userdata('level') === 'guru') {
+            $this->load->view('guru/set_pembiasaan_guru', $data);
+        } else {
+            $this->load->view('absensi/set_pembiasaan_guru', $data);
+        }
     }
 
     public function setPembiasaan()
@@ -208,6 +214,11 @@ class Absensiguru extends MY_Controller
         $guruIds = array_column($apelSett, 'id_guru');
         if (empty($guruIds)) {
             $data['data'] = [];
+            if ($this->session->userdata('level') === 'guru') {
+                $this->load->view('guru/pembiasaan_guru_add', $data);
+            } else {
+                $this->load->view('absensi/pembiasaan_guru_add', $data);
+            }
             return;
         }
         $guruList = $this->db
@@ -246,13 +257,22 @@ class Absensiguru extends MY_Controller
         }
 
         $data['data'] = $datakirim;
-        $this->load->view('absensi/pembiasaan_guru_add', $data);
+        if ($this->session->userdata('level') === 'guru') {
+            $this->load->view('guru/pembiasaan_guru_add', $data);
+        } else {
+            $this->load->view('absensi/pembiasaan_guru_add', $data);
+        }
     }
 
     public function saveApelGuru()
     {
         $data = $this->input->post('data', true);
         $tanggal = $this->input->post('tanggal', true);
+        if ($this->session->userdata('level') === 'guru' && $tanggal !== date('Y-m-d')) {
+            $this->session->set_flashdata('error', 'Guru Piket hanya bisa mengisi/mengubah data hari ini.');
+            redirect('absensiguru/pembiasaan');
+            return;
+        }
         if (!empty($data)) {
             $id_semester_aktif = $this->session->userdata('id_semester_aktif');
             // ================= AMBIL DATA YANG SUDAH ADA =================
@@ -309,7 +329,11 @@ class Absensiguru extends MY_Controller
 
     public function hapusPembiasaan()
     {
-        $id = $this->input->post('id', true);
+        $id = $this->input->post('id', true); // id is the tanggal
+        if ($this->session->userdata('level') === 'guru' && $id !== date('Y-m-d')) {
+            echo json_encode(['success' => false, 'message' => 'Guru Piket hanya bisa menghapus data hari ini.']);
+            return;
+        }
         $id_semester_aktif = $this->session->userdata('id_semester_aktif');
         $this->db->where('tanggal', $id)
             ->where('id_semester', $id_semester_aktif)

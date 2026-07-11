@@ -1,8 +1,8 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
-require FCPATH . 'vendor/autoload.php';
+// require FCPATH . 'vendor/autoload.php';
 
-use PhpOffice\PhpSpreadsheet\IOFactory;
+// use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class Kbm extends MY_Controller
 {
@@ -33,7 +33,11 @@ class Kbm extends MY_Controller
 		$data['dateDays'] = date('Y-m-d');
 		$data['id_lembaga'] = $this->id_lembaga;
 
-		$this->load->view('absensi/kbm', $data);
+		if ($this->session->userdata('level') === 'guru') {
+			$this->load->view('guru/control_kbm', $data);
+		} else {
+			$this->load->view('absensi/kbm', $data);
+		}
 	}
 
 	public function absensi()
@@ -61,7 +65,11 @@ class Kbm extends MY_Controller
 		$data['kelas'] = $kls;
 
 
-		$this->load->view('absensi/kbm_siswa', $data);
+		if ($this->session->userdata('level') === 'guru') {
+			$this->load->view('guru/kbm_siswa', $data);
+		} else {
+			$this->load->view('absensi/kbm_siswa', $data);
+		}
 	}
 
 	public function hasil()
@@ -93,7 +101,11 @@ class Kbm extends MY_Controller
 			->result();
 		$data['user'] = $idguru;
 
-		$this->load->view('absensi/hasil_kbm_siswa', $data);
+		if ($this->session->userdata('level') === 'guru') {
+			$this->load->view('guru/hasil_kbm_siswa', $data);
+		} else {
+			$this->load->view('absensi/hasil_kbm_siswa', $data);
+		}
 	}
 
 
@@ -444,7 +456,11 @@ Jam ke : ' . $dari . ' - ' . $sampai . '
 		$data['listdata'] = $this->db->query("SELECT * FROM harian WHERE kode = '$kode' ");
 		$data['materi'] = $this->db->query("SELECT * FROM jurnal_guru WHERE kode_absen = '$kode' ")->row();
 
-		$this->load->view('absensi/edit_kbm_siswa', $data);
+		if ($this->session->userdata('level') === 'guru') {
+			$this->load->view('guru/edit_kbm_siswa', $data);
+		} else {
+			$this->load->view('absensi/edit_kbm_siswa', $data);
+		}
 	}
 
 	public function edit_multiple_data()

@@ -22,7 +22,11 @@ class Kehadiranguru extends MY_Controller
         $data['sub'] = "kehadiranguru";
 
 
-        $this->load->view('absensi/kehadiran_guru', $data);
+        if ($this->session->userdata('level') === 'guru') {
+            $this->load->view('guru/kehadiran_guru', $data);
+        } else {
+            $this->load->view('absensi/kehadiran_guru', $data);
+        }
     }
 
     public function kehadiranData()
@@ -146,13 +150,22 @@ class Kehadiranguru extends MY_Controller
         $data['data'] = $datakirim;
 
 
-        $this->load->view('absensi/kehadiran_guru_add', $data);
+        if ($this->session->userdata('level') === 'guru') {
+            $this->load->view('guru/kehadiran_guru_add', $data);
+        } else {
+            $this->load->view('absensi/kehadiran_guru_add', $data);
+        }
     }
 
     public function saveHadirGuru1()
     {
         $data = $this->input->post('data', true);
         $tanggal = $this->input->post('tanggal', true);
+        if ($this->session->userdata('level') === 'guru' && $tanggal !== date('Y-m-d')) {
+            $this->session->set_flashdata('error', 'Guru Piket hanya bisa mengisi/mengubah data hari ini.');
+            redirect('kehadiranguru');
+            return;
+        }
         if (!empty($data)) {
             $id_semester_aktif = $this->session->userdata('id_semester_aktif');
             foreach ($data as $item) {
@@ -195,6 +208,11 @@ class Kehadiranguru extends MY_Controller
         $ket = $this->input->post('value', TRUE);
         $tanggal = $this->input->post('tanggal', TRUE);
 
+        if ($this->session->userdata('level') === 'guru' && $tanggal !== date('Y-m-d')) {
+            echo json_encode(['success' => false, 'message' => 'Guru Piket hanya bisa mengisi/mengubah data hari ini.']);
+            return;
+        }
+
         $id_semester_aktif = $this->session->userdata('id_semester_aktif');
         $cek = $this->db->get_where('kehadiran_guru', [
             'tanggal' => $tanggal,
@@ -228,7 +246,12 @@ class Kehadiranguru extends MY_Controller
 
     public function hapusKehadiran()
     {
-        $id = $this->input->post('id', true);
+        $id = $this->input->post('id', true); // id is the tanggal
+        if ($this->session->userdata('level') === 'guru' && $id !== date('Y-m-d')) {
+            echo json_encode(['success' => false, 'message' => 'Guru Piket hanya bisa menghapus data hari ini.']);
+            return;
+        }
+
         $id_semester_aktif = $this->session->userdata('id_semester_aktif');
         $this->db->where('tanggal', $id)
             ->where('id_semester', $id_semester_aktif)

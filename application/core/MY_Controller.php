@@ -6,6 +6,48 @@ class MY_Controller extends CI_Controller
         parent::__construct();
         $this->load->database();
         $this->load->library('session');
+        $this->load->helper('cookie');
+
+        // Load App Settings globally if setting table exists
+        $app_name = 'Absensi Sekolah';
+        $app_logo = '';
+        if ($this->db->table_exists('setting')) {
+            $row_name = $this->db->get_where('setting', ['key' => 'app_name'])->row();
+            if ($row_name) {
+                $app_name = $row_name->isi;
+            }
+            $row_logo = $this->db->get_where('setting', ['key' => 'app_logo'])->row();
+            if ($row_logo) {
+                $app_logo = $row_logo->isi;
+            }
+        }
+        $this->load->vars([
+            'app_name' => $app_name,
+            'app_logo' => $app_logo
+        ]);
+
+        // Self-healing database check for remember_token
+        if (!$this->db->field_exists('remember_token', 'user')) {
+            $this->db->query("ALTER TABLE `user` ADD COLUMN `remember_token` VARCHAR(255) NULL;");
+        }
+
+        // Auto login via remember token if session does not exist
+        if (!$this->session->userdata('login')) {
+            $token = get_cookie('remember_token');
+            if ($token) {
+                $user = $this->db->get_where('user', ['remember_token' => $token, 'aktif' => 'Y'])->row();
+                if ($user) {
+                    $this->session->set_userdata([
+                        'login' => true,
+                        'id_user' => $user->id_user,
+                        'nama_user' => $user->nama,
+                        'level' => $user->level,
+                        'id_lembaga' => $user->id_lembaga,
+                        'foto_user' => $user->foto
+                    ]);
+                }
+            }
+        }
 
         // Check if logged in but academic session is not initialized
         if ($this->session->userdata('login') && !$this->session->userdata('id_semester_aktif')) {

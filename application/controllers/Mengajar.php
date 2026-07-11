@@ -21,8 +21,11 @@ class Mengajar extends MY_Controller
         $data['menu'] = "absensiguru";
         $data['sub'] = "mengajar";
 
-
-        $this->load->view('absensi/mengajar', $data);
+        if ($this->session->userdata('level') === 'guru') {
+            $this->load->view('guru/mengajar', $data);
+        } else {
+            $this->load->view('absensi/mengajar', $data);
+        }
     }
 
     public function mengajarData()
@@ -136,8 +139,11 @@ class Mengajar extends MY_Controller
         $data['tanggal'] = $tglni;
         $data['hari'] = $harini;
 
-
-        $this->load->view('absensi/mengajar_add', $data);
+        if ($this->session->userdata('level') === 'guru') {
+            $this->load->view('guru/mengajar_add', $data);
+        } else {
+            $this->load->view('absensi/mengajar_add', $data);
+        }
     }
 
     public function rincian_guru()
@@ -167,15 +173,15 @@ class Mengajar extends MY_Controller
             <h4 class="text-lg font-bold text-slate-700 dark:text-gray-100 mb-2">
                 ' . $guru->nama . '
             </h4>
-            <div class="bg-white dark:bg-slate-900 rounded-xl shadow mb-5 p-4">
+            <div class="bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/80 rounded-xl shadow-sm mb-5 p-4">
                 <table class="w-full text-sm border-separate border-spacing-y-2">';
         foreach ($jadwal as $jadwal):
             $mapel = $this->db->query("SELECT * FROM mapel WHERE id_mapel = '$jadwal->id_mapel'")->row();
             $kelas = $this->db->query("SELECT * FROM kelas WHERE id_kelas = '$jadwal->id_kelas'")->row();
 
             echo '<tr class="
-                        bg-slate-50 dark:bg-slate-800
-                        hover:bg-slate-100 dark:hover:bg-slate-700
+                        bg-white dark:bg-slate-900/60
+                        hover:bg-slate-100 dark:hover:bg-slate-800
                         transition rounded-lg">
                             <td class="px-3 py-2 font-medium text-slate-600 dark:text-slate-300">
                                 Jam ' . $jadwal->jam_dari . ' - ' . $jadwal->jam_sampai . '
@@ -188,9 +194,14 @@ class Mengajar extends MY_Controller
         echo '</table>
             </div>
         ';
+        $isReadOnly = false;
+        if ($this->session->userdata('level') === 'guru' && $tanggal !== date('Y-m-d')) {
+            $isReadOnly = true;
+        }
+
         echo '
         <form id="form-absensi" method="POST">
-            <div class="overflow-x-auto bg-white dark:bg-slate-900 rounded-xl shadow">
+            <div class="overflow-x-auto bg-slate-50 dark:bg-slate-800/40 border border-slate-105 dark:border-slate-800/80 rounded-xl shadow-sm">
                 <table class="w-full text-sm border-separate border-spacing-y-2">
 
                     <thead>
@@ -210,10 +221,9 @@ class Mengajar extends MY_Controller
             $ket = $cek ? $cek->ket : '';
 
             echo '<tr class="
-                        bg-white dark:bg-slate-900
-                        hover:bg-slate-50 dark:hover:bg-slate-800
-                        transition
-                        border border-slate-200 dark:border-slate-700">
+                        bg-white dark:bg-slate-900/60
+                        hover:bg-slate-50 dark:hover:bg-slate-800/40
+                        transition">
                                 <td class="px-3 py-2 text-center font-semibold text-slate-700 dark:text-slate-200">' . $i . '</td>
 
                                 <!-- Radio Absen -->
@@ -238,7 +248,8 @@ class Mengajar extends MY_Controller
                                                         data-jam="' . $i . '"
                                                         data-guru="' . $guru->id_guru . '"
                                                         value="' . $val . '"';
-                    echo $ket == $val ? 'checked>' : '>';
+                    echo $ket == $val ? 'checked' : '';
+                    echo $isReadOnly ? ' disabled>' : '>';
                     echo '
                                                     <span class="
                                                         inline-flex items-center justify-center
@@ -248,6 +259,7 @@ class Mengajar extends MY_Controller
                                                         dark:text-' . $color . '-400
                                                         peer-checked:bg-' . $color . '-500
                                                         peer-checked:text-white
+                                                        peer-disabled:opacity-60
                                                         transition
                                                     ">
                                                         ' . $val . '
@@ -265,6 +277,7 @@ class Mengajar extends MY_Controller
                         <textarea
                             name="alasan"
                             rows="10"
+                            ' . ($isReadOnly ? 'disabled' : '') . '
                             class="w-full rounded-lg
                                 border border-slate-300 dark:border-slate-600
                                 bg-white dark:bg-slate-800
@@ -282,13 +295,22 @@ class Mengajar extends MY_Controller
             </div>
 
             <!-- Button -->
-            <div class="mt-4">
+            <div class="mt-4 flex items-center gap-2">';
+        if (!$isReadOnly) {
+            echo '
             <button type="submit"
-                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow">
+                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow transition active:scale-95">
                 <i class="fa fa-save mr-1"></i> Simpan
-            </button>
+            </button>';
+        } else {
+            echo '
+            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3.5 py-2 rounded-lg">
+                <i class="fas fa-eye mr-1"></i> Hanya Lihat (Read-Only)
+            </span>';
+        }
+        echo '
             <button type="button" onclick="closeModal(\'inputModal\')"
-                class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-semibold rounded-lg shadow">
+                class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-semibold rounded-lg shadow transition active:scale-95">
                 <i class="fa fa-x mr-1"></i> Close
             </button>
             </div>
@@ -300,6 +322,11 @@ class Mengajar extends MY_Controller
     {
         $datas = $this->input->post('datas', true);
         $tanggal = $this->input->post('tanggal', true);
+
+        if ($this->session->userdata('level') === 'guru' && $tanggal !== date('Y-m-d')) {
+            echo json_encode(['status' => 'error', 'message' => 'Guru Piket hanya bisa mengisi/mengubah data hari ini.']);
+            return;
+        }
 
         $id_semester_aktif = $this->session->userdata('id_semester_aktif');
         foreach ($datas as $data) {

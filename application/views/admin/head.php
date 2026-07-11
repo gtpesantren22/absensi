@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Absensi Sekolah</title>
+    <title><?= htmlspecialchars($app_name) ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
@@ -128,10 +128,14 @@
                     </button>
 
                     <div class="flex items-center space-x-2">
-                        <div class="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center">
-                            <i class="fas fa-school text-white"></i>
-                        </div>
-                        <h1 class="text-xl font-bold">Absensi APP DWK</h1>
+                        <?php if (!empty($app_logo) && file_exists('./uploads/logo/' . $app_logo)): ?>
+                            <img src="<?= base_url('uploads/logo/' . $app_logo) ?>" class="w-8 h-8 rounded-lg object-contain">
+                        <?php else: ?>
+                            <div class="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center">
+                                <i class="fas fa-school text-white"></i>
+                            </div>
+                        <?php endif; ?>
+                        <h1 class="text-xl font-bold"><?= htmlspecialchars($app_name) ?></h1>
                     </div>
                 </div>
 
@@ -385,6 +389,10 @@
                                         <a href="<?= base_url('mengajar') ?>" class="flex items-center sidebar-item <?= $sub == 'mengajar' ? 'active' : '' ?> px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
                                             <i class="fas fa-arrow-right mr-2"></i>
                                             Mengajar
+                                        </a>
+                                        <a href="<?= base_url('keaktifanguru') ?>" class="flex items-center sidebar-item <?= $sub == 'keaktifanguru' ? 'active' : '' ?> px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                                            <i class="fas fa-arrow-right mr-2"></i>
+                                            Keaktifan Guru
                                         </a>
                                     </div>
                                 </div>
