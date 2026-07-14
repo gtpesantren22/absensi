@@ -199,6 +199,24 @@ class Mengajar extends MY_Controller
             $isReadOnly = true;
         }
 
+        // Check if teacher is absent today
+        $cek_hadir = $this->db->get_where('kehadiran_guru', [
+            'id_guru' => $kdguru,
+            'tanggal' => $tanggal,
+            'id_semester' => $id_semester_aktif
+        ])->row();
+
+        $absentReason = null;
+        $forcedLetter = '';
+        if ($cek_hadir && in_array(strtolower($cek_hadir->ket), ['izin', 'sakit', 'alpha', 'alfa', 'cuti'])) {
+            $absentReason = strtolower($cek_hadir->ket);
+            $isReadOnly = true; // force read-only
+            if ($absentReason === 'izin') $forcedLetter = 'I';
+            elseif ($absentReason === 'sakit') $forcedLetter = 'S';
+            elseif ($absentReason === 'alpha' || $absentReason === 'alfa') $forcedLetter = 'A';
+            elseif ($absentReason === 'cuti') $forcedLetter = 'C';
+        }
+
         echo '
         <form id="form-absensi" method="POST">
             <div class="overflow-x-auto bg-slate-50 dark:bg-slate-800/40 border border-slate-105 dark:border-slate-800/80 rounded-xl shadow-sm">
@@ -219,6 +237,9 @@ class Mengajar extends MY_Controller
         for ($i = 1; $i <= $jml_jp; $i++):
             $cek = $this->db->query("SELECT * FROM mengajar WHERE id_guru='$guru->id_guru' AND tanggal='$hariini' AND jam=$i AND id_lembaga = '$this->id_lembaga' AND id_semester = '$id_semester_aktif' ")->row();
             $ket = $cek ? $cek->ket : '';
+            if ($forcedLetter !== '') {
+                $ket = $forcedLetter;
+            }
 
             echo '<tr class="
                         bg-white dark:bg-slate-900/60
@@ -249,7 +270,7 @@ class Mengajar extends MY_Controller
                                                         data-guru="' . $guru->id_guru . '"
                                                         value="' . $val . '"';
                     echo $ket == $val ? 'checked' : '';
-                    echo $isReadOnly ? ' disabled>' : '>';
+                    echo ($isReadOnly || $forcedLetter !== '') ? ' disabled>' : '>';
                     echo '
                                                     <span class="
                                                         inline-flex items-center justify-center
@@ -272,6 +293,9 @@ class Mengajar extends MY_Controller
 
             if ($i === 1):
                 $cekalasan =  $cek ? $cek->alasan : '-';
+                if ($forcedLetter !== '') {
+                    $cekalasan = 'Tercatat ' . ucfirst($absentReason) . ' di absensi harian guru.';
+                }
                 echo '
                     <td rowspan="' . $jml_jp . '" class="px-3 py-2 align-top">
                         <textarea
@@ -303,10 +327,17 @@ class Mengajar extends MY_Controller
                 <i class="fa fa-save mr-1"></i> Simpan
             </button>';
         } else {
-            echo '
-            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3.5 py-2 rounded-lg">
-                <i class="fas fa-eye mr-1"></i> Hanya Lihat (Read-Only)
-            </span>';
+            if ($forcedLetter !== '') {
+                echo '
+                <span class="text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/20 px-3.5 py-2 rounded-lg border border-rose-200/30">
+                    <i class="fas fa-ban mr-1"></i> Ditutup: Tercatat ' . ucfirst($absentReason) . ' di Kehadiran
+                </span>';
+            } else {
+                echo '
+                <span class="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3.5 py-2 rounded-lg">
+                    <i class="fas fa-eye mr-1"></i> Hanya Lihat (Read-Only)
+                </span>';
+            }
         }
         echo '
             <button type="button" onclick="closeModal(\'inputModal\')"
@@ -329,6 +360,21 @@ class Mengajar extends MY_Controller
         }
 
         $id_semester_aktif = $this->session->userdata('id_semester_aktif');
+
+        // Check if any of the teachers in datas is recorded as absent in kehadiran_guru
+        if (!empty($datas)) {
+            $first_guru = $datas[0]['guru'];
+            $cek_hadir = $this->db->get_where('kehadiran_guru', [
+                'id_guru' => $first_guru,
+                'tanggal' => $tanggal,
+                'id_semester' => $id_semester_aktif
+            ])->row();
+
+            if ($cek_hadir && in_array(strtolower($cek_hadir->ket), ['izin', 'sakit', 'alpha', 'alfa', 'cuti'])) {
+                echo json_encode(['status' => 'error', 'message' => 'Guru tercatat ' . $cek_hadir->ket . ' di absensi kehadiran. Absensi mengajar ditutup.']);
+                return;
+            }
+        }
         foreach ($datas as $data) {
             $guru = $data['guru'];
             $jam = $data['jam'];

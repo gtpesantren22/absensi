@@ -136,6 +136,7 @@
                         <?php else: ?>
                             <?php
                             $hariini = $tanggal;
+                            $id_semester_aktif = $this->session->userdata('id_semester_aktif');
                             foreach ($data as $row) :
                                 $guru = $row['id_guru'];
 
@@ -144,15 +145,37 @@
                                         ->query("SELECT * FROM mengajar WHERE id_guru='$guru' AND tanggal='$hariini' AND jam=$i AND id_lembaga = '$id_lembaga'")
                                         ->row();
                                 }
+
+                                // Get daily attendance status
+                                $cek_hadir = $this->db->get_where('kehadiran_guru', [
+                                    'id_guru' => $guru,
+                                    'tanggal' => $hariini,
+                                    'id_semester' => $id_semester_aktif
+                                ])->row();
+
+                                $forcedLabel = '';
+                                if ($cek_hadir && in_array(strtolower($cek_hadir->ket), ['izin', 'sakit', 'alpha', 'alfa', 'cuti'])) {
+                                    $ketAbsen = strtolower($cek_hadir->ket);
+                                    $badgeColor = 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400';
+                                    if ($ketAbsen === 'izin') {
+                                        $badgeColor = 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400';
+                                    } else if ($ketAbsen === 'sakit') {
+                                        $badgeColor = 'bg-yellow-50 dark:bg-yellow-950/40 text-yellow-600 dark:text-yellow-400';
+                                    }
+                                    $forcedLabel = ' <span class="text-[10px] px-2 py-0.5 rounded-lg border border-slate-205 dark:border-slate-800 font-extrabold capitalize ' . $badgeColor . '">' . $ketAbsen . '</span>';
+                                }
                             ?>
                                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/40">
                                     <!-- Nama Guru -->
                                     <td class="py-3 px-4 font-bold">
-                                        <a data-guru="<?= $row['id_guru'] ?>" 
-                                           class="text-primary-650 hover:text-primary-750 dark:text-primary-400 dark:hover:text-primary-300 hover:underline cursor-pointer show-rinci font-extrabold transition flex items-center gap-1.5">
-                                            <i class="fas fa-user-edit text-xs opacity-60"></i>
-                                            <?= $row['nama'] ?>
-                                        </a>
+                                        <div class="flex items-center gap-1.5 flex-wrap">
+                                            <a data-guru="<?= $row['id_guru'] ?>" 
+                                               class="text-primary-650 hover:text-primary-750 dark:text-primary-400 dark:hover:text-primary-300 hover:underline cursor-pointer show-rinci font-extrabold transition flex items-center gap-1.5">
+                                                <i class="fas fa-user-edit text-xs opacity-60"></i>
+                                                <?= $row['nama'] ?>
+                                            </a>
+                                            <?= $forcedLabel ?>
+                                        </div>
                                     </td>
 
                                     <!-- Jam Matrix Cells -->

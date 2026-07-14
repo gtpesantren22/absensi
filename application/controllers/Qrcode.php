@@ -114,20 +114,52 @@ class Qrcode extends MY_Controller
             exit;
         }
 
+        $id_semester_aktif = $this->session->userdata('id_semester_aktif');
+        $cekExist = $this->db->get_where('kehadiran_guru', [
+            'id_guru' => $dtlUser->id_guru,
+            'tanggal' => date('Y-m-d'),
+            'id_semester' => $id_semester_aktif
+        ])->row();
+
         if ($jenis == 'masuk') {
-            $add = $this->model->tambah('kehadiran_guru', [
-                'id_guru' => $dtlUser->id_guru,
-                'tanggal' => date('Y-m-d'),
-                'ket' => 'hadir',
-                'waktu' => date('H:i:s'),
-                'id_lembaga' => $this->id_lembaga
-            ]);
+            if ($cekExist) {
+                $updateData = [
+                    'ket' => 'hadir',
+                    'id_lembaga' => $this->id_lembaga,
+                    'id_semester' => $id_semester_aktif
+                ];
+                if (empty($cekExist->waktu) || $cekExist->waktu === '00:00:00') {
+                    $updateData['waktu'] = date('H:i:s');
+                }
+                $add = $this->model->edit2('kehadiran_guru', 'id_guru', $dtlUser->id_guru, 'tanggal', date('Y-m-d'), $updateData);
+            } else {
+                $add = $this->model->tambah('kehadiran_guru', [
+                    'id_guru' => $dtlUser->id_guru,
+                    'tanggal' => date('Y-m-d'),
+                    'ket' => 'hadir',
+                    'waktu' => date('H:i:s'),
+                    'id_lembaga' => $this->id_lembaga,
+                    'id_semester' => $id_semester_aktif
+                ]);
+            }
             $this->db->query("UPDATE qrcode SET used = 1 WHERE token = '$token' ");
         } else {
-            $add = $this->model->edit2('kehadiran_guru', 'id_guru', $dtlUser->id_guru, 'tanggal', date('Y-m-d'), [
-                'pulang' => date('H:i:s'),
-                'id_lembaga' => $this->id_lembaga
-            ]);
+            if ($cekExist) {
+                $add = $this->model->edit2('kehadiran_guru', 'id_guru', $dtlUser->id_guru, 'tanggal', date('Y-m-d'), [
+                    'pulang' => date('H:i:s'),
+                    'id_lembaga' => $this->id_lembaga,
+                    'id_semester' => $id_semester_aktif
+                ]);
+            } else {
+                $add = $this->model->tambah('kehadiran_guru', [
+                    'id_guru' => $dtlUser->id_guru,
+                    'tanggal' => date('Y-m-d'),
+                    'ket' => 'hadir',
+                    'pulang' => date('H:i:s'),
+                    'id_lembaga' => $this->id_lembaga,
+                    'id_semester' => $id_semester_aktif
+                ]);
+            }
             $this->db->query("UPDATE qrcode SET used = 1 WHERE token = '$token' ");
         }
 

@@ -249,10 +249,29 @@ class Absensiguru extends MY_Controller
         $datakirim = [];
 
         foreach ($guruIds as $idGuru) {
+            // Check daily attendance
+            $cek_hadir = $this->db->get_where('kehadiran_guru', [
+                'id_guru' => $idGuru,
+                'tanggal' => $tanggal,
+                'id_semester' => $id_semester_aktif
+            ])->row();
+
+            $forcedKet = null;
+            if ($cek_hadir && in_array(strtolower($cek_hadir->ket), ['izin', 'sakit', 'alpha', 'alfa', 'cuti'])) {
+                $forcedKet = strtolower($cek_hadir->ket) === 'alfa' ? 'alpha' : strtolower($cek_hadir->ket);
+            }
+
+            $ketVal = $apelMap[$idGuru] ?? '-';
+            if ($forcedKet !== null) {
+                $ketVal = $forcedKet;
+            }
+
             $datakirim[] = [
                 'id_guru' => $idGuru,
                 'nama'    => $guruMap[$idGuru] ?? '-',
-                'ket'     => $apelMap[$idGuru] ?? '-',
+                'ket'     => $ketVal,
+                'is_forced_absent' => ($forcedKet !== null),
+                'absent_reason' => $forcedKet
             ];
         }
 
@@ -273,8 +292,28 @@ class Absensiguru extends MY_Controller
             redirect('absensiguru/pembiasaan');
             return;
         }
+
+        $id_semester_aktif = $this->session->userdata('id_semester_aktif');
+
+        // Server-side validation: reject saves if teacher is absent on the date
         if (!empty($data)) {
-            $id_semester_aktif = $this->session->userdata('id_semester_aktif');
+            foreach ($data as $item) {
+                $id_guru = $item['id_guru'];
+                $cek_hadir = $this->db->get_where('kehadiran_guru', [
+                    'id_guru' => $id_guru,
+                    'tanggal' => $tanggal,
+                    'id_semester' => $id_semester_aktif
+                ])->row();
+
+                if ($cek_hadir && in_array(strtolower($cek_hadir->ket), ['izin', 'sakit', 'alpha', 'alfa', 'cuti'])) {
+                    $this->session->set_flashdata('error', 'Salah satu guru tercatat ' . $cek_hadir->ket . ' di absensi kehadiran. Absensi pembiasaan ditutup.');
+                    redirect('absensiguru/pembiasaan');
+                    return;
+                }
+            }
+        }
+
+        if (!empty($data)) {
             // ================= AMBIL DATA YANG SUDAH ADA =================
             $exist = $this->db
                 ->where('tanggal', $tanggal)

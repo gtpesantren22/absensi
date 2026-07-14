@@ -143,20 +143,39 @@
                                 $no  = 1;
                                 $nou = 1;
                                 foreach ($data as $row):
+                                    $rowDisabled = $isReadOnly || $row['is_forced_absent'];
                                 ?>
                                     <input type="hidden" name="data[<?= $no ?>][id_guru]" value="<?= $row['id_guru'] ?>">
+                                    <?php if ($row['is_forced_absent']): ?>
+                                        <input type="hidden" name="data[<?= $no ?>][ket]" value="<?= $row['ket'] ?>">
+                                    <?php endif; ?>
                                     <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/40">
                                         <td class="py-3.5 px-4 font-bold text-slate-400 text-center">
                                             <?= $nou++ ?>
                                         </td>
                                         <td class="py-3.5 px-4 font-extrabold text-slate-800 dark:text-slate-200">
-                                            <?= $row['nama'] ?>
+                                            <div class="flex items-center gap-1.5 flex-wrap">
+                                                <span><?= $row['nama'] ?></span>
+                                                <?php if ($row['is_forced_absent']): ?>
+                                                    <?php
+                                                    $badgeColor = 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400';
+                                                    if ($row['absent_reason'] === 'izin') {
+                                                        $badgeColor = 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400';
+                                                    } else if ($row['absent_reason'] === 'sakit') {
+                                                        $badgeColor = 'bg-yellow-50 dark:bg-yellow-950/40 text-yellow-600 dark:text-yellow-400';
+                                                    }
+                                                    ?>
+                                                    <span class="text-[10px] px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-800 font-extrabold capitalize <?= $badgeColor ?>">
+                                                        Tercatat <?= $row['absent_reason'] ?>
+                                                    </span>
+                                                <?php endif; ?>
+                                            </div>
                                         </td>
                                         <td class="py-3.5 px-4 text-center">
                                             <div class="flex items-center justify-center gap-1.5">
                                                 <!-- HADIR -->
                                                 <label class="cursor-pointer">
-                                                    <input type="radio" name="data[<?= $no ?>][ket]" value="hadir" class="peer hidden" <?= $row['ket'] === 'hadir' ? 'checked' : '' ?> <?= $isReadOnly ? 'disabled' : '' ?>>
+                                                    <input type="radio" name="data[<?= $no ?>][ket]" value="hadir" class="peer hidden" <?= $row['ket'] === 'hadir' ? 'checked' : '' ?> <?= $rowDisabled ? 'disabled' : '' ?>>
                                                     <span class="inline-flex items-center justify-center h-8 w-8 rounded-xl border border-emerald-500/30 text-xs font-bold text-emerald-600 peer-checked:bg-emerald-600 peer-checked:border-emerald-600 peer-checked:text-white peer-disabled:opacity-60 transition shadow-sm">
                                                         H
                                                     </span>
@@ -164,7 +183,7 @@
 
                                                 <!-- IZIN -->
                                                 <label class="cursor-pointer">
-                                                    <input type="radio" name="data[<?= $no ?>][ket]" value="izin" class="peer hidden" <?= $row['ket'] === 'izin' ? 'checked' : '' ?> <?= $isReadOnly ? 'disabled' : '' ?>>
+                                                    <input type="radio" name="data[<?= $no ?>][ket]" value="izin" class="peer hidden" <?= $row['ket'] === 'izin' ? 'checked' : '' ?> <?= $rowDisabled ? 'disabled' : '' ?>>
                                                     <span class="inline-flex items-center justify-center h-8 w-8 rounded-xl border border-amber-500/30 text-xs font-bold text-amber-600 peer-checked:bg-amber-50 peer-checked:border-amber-500 peer-checked:text-white peer-disabled:opacity-60 transition shadow-sm">
                                                         I
                                                     </span>
@@ -172,7 +191,7 @@
 
                                                 <!-- ALPHA -->
                                                 <label class="cursor-pointer">
-                                                    <input type="radio" name="data[<?= $no ?>][ket]" value="alpha" class="peer hidden" <?= $row['ket'] === 'alpha' ? 'checked' : '' ?> <?= $isReadOnly ? 'disabled' : '' ?>>
+                                                    <input type="radio" name="data[<?= $no ?>][ket]" value="alpha" class="peer hidden" <?= $row['ket'] === 'alpha' ? 'checked' : '' ?> <?= $rowDisabled ? 'disabled' : '' ?>>
                                                     <span class="inline-flex items-center justify-center h-8 w-8 rounded-xl border border-rose-500/30 text-xs font-bold text-rose-600 peer-checked:bg-rose-600 peer-checked:border-rose-600 peer-checked:text-white peer-disabled:opacity-60 transition shadow-sm">
                                                         A
                                                     </span>

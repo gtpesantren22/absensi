@@ -49,6 +49,7 @@
             <tbody class="bg-white dark:bg-gray-900">
                 <?php
                 $hariini = $tanggal;
+                $id_semester_aktif = $this->session->userdata('id_semester_aktif');
                 foreach ($data as $row) :
                     $guru = $row['id_guru'];
 
@@ -57,17 +58,39 @@
                             ->query("SELECT * FROM mengajar WHERE id_guru='$guru' AND tanggal='$hariini' AND jam=$i AND id_lembaga = '$id_lembaga'")
                             ->row();
                     }
+
+                    // Get daily attendance status
+                    $cek_hadir = $this->db->get_where('kehadiran_guru', [
+                        'id_guru' => $guru,
+                        'tanggal' => $hariini,
+                        'id_semester' => $id_semester_aktif
+                    ])->row();
+
+                    $forcedLabel = '';
+                    if ($cek_hadir && in_array(strtolower($cek_hadir->ket), ['izin', 'sakit', 'alpha', 'alfa', 'cuti'])) {
+                        $ketAbsen = strtolower($cek_hadir->ket);
+                        $badgeColor = 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+                        if ($ketAbsen === 'izin') {
+                            $badgeColor = 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+                        } else if ($ketAbsen === 'sakit') {
+                            $badgeColor = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
+                        }
+                        $forcedLabel = ' <span class="text-[10px] px-1.5 py-0.5 rounded font-semibold capitalize ' . $badgeColor . '">' . $ketAbsen . '</span>';
+                    }
                 ?>
 
                     <tr class="odd:bg-white even:bg-slate-50 dark:odd:bg-gray-900 dark:even:bg-gray-800 hover:bg-slate-100 dark:hover:bg-gray-700 transition">
 
                         <!-- Nama Guru -->
                         <td class="px-3 py-2 border border-gray-300 dark:border-gray-600 font-medium">
-                            <a
-                                data-guru="<?= $row['id_guru'] ?>"
-                                class="hover:underline cursor-pointer show-rinci">
-                                <?= $row['nama'] ?>
-                            </a>
+                            <div class="flex items-center gap-1.5">
+                                <a
+                                    data-guru="<?= $row['id_guru'] ?>"
+                                    class="hover:underline cursor-pointer show-rinci">
+                                    <?= $row['nama'] ?>
+                                </a>
+                                <?= $forcedLabel ?>
+                            </div>
                         </td>
 
                         <!-- Jam 1 - 8 -->
