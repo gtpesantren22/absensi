@@ -142,18 +142,17 @@
             <!-- Attendance List Table (Tabular format matching Jurnal list) -->
             <div class="bg-white dark:bg-slate-800 rounded-3xl overflow-hidden border border-slate-200/60 dark:border-slate-700/60 shadow-sm">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs border-collapse">
+                    <table class="w-full text-left text-sm" id="attendanceTable">
                         <thead>
-                            <tr class="bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 text-xs font-extrabold uppercase text-slate-400">
-                                <th class="py-4.5 px-5">Tanggal</th>
-                                <th class="py-4.5 px-5">Jam Presensi</th>
-                                <th class="py-4.5 px-5 text-center">Status</th>
-                                <th class="py-4.5 px-5 text-right">Aksi</th>
+                            <tr class="bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 font-extrabold text-xs uppercase tracking-wider border-b border-slate-100 dark:border-slate-700/50">
+                                <th class="py-3.5 px-4">Tanggal</th>
+                                <th class="py-3.5 px-4">Hari & Jam Presensi</th>
+                                <th class="py-3.5 px-4 text-center">Status</th>
                             </tr>
                         </thead>
-                        <tbody id="attendanceTableBody">
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50" id="attendanceTableBody">
                             <tr>
-                                <td colspan="4" class="py-8 text-center text-slate-500 font-bold">Memuat...</td>
+                                <td colspan="3" class="py-8 text-center text-slate-500 font-bold">Memuat...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -209,18 +208,17 @@
             <!-- Journal List Table (Simplified Table list layout) -->
             <div class="bg-white dark:bg-slate-800 rounded-3xl overflow-hidden border border-slate-200/60 dark:border-slate-700/60 shadow-sm">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs border-collapse">
+                    <table class="w-full text-left text-sm" id="journalTable">
                         <thead>
-                            <tr class="bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 text-xs font-extrabold uppercase text-slate-400">
-                                <th class="py-4.5 px-5">Tanggal</th>
-                                <th class="py-4.5 px-5">Kelas / Mapel</th>
-                                <th class="py-4.5 px-5 text-center">Jam Ke</th>
-                                <th class="py-4.5 px-5 text-right">Aksi</th>
+                            <tr class="bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 font-extrabold text-xs uppercase tracking-wider border-b border-slate-100 dark:border-slate-700/50">
+                                <th class="py-3.5 px-4">Tanggal</th>
+                                <th class="py-3.5 px-4">Kelas / Mapel</th>
+                                <th class="py-3.5 px-4 text-center">Jam Ke</th>
                             </tr>
                         </thead>
-                        <tbody id="journalTableBody">
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50" id="journalTableBody">
                             <tr>
-                                <td colspan="4" class="py-8 text-center text-slate-500 font-bold">Memuat...</td>
+                                <td colspan="3" class="py-8 text-center text-slate-500 font-bold">Memuat...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -602,22 +600,19 @@
                 const jamPulang = rec.pulang ? rec.pulang.slice(0, 5) : '--:--';
 
                 html += `
-                    <tr class="border-b border-slate-100 dark:border-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-700/30 active:scale-[0.99] transition cursor-pointer"
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/40 transition cursor-pointer"
                         onclick="showAttendanceModal(${idx})">
-                        <td class="py-5.5 px-5 font-bold text-slate-650 dark:text-slate-300 text-sm whitespace-nowrap">
-                            ${formatDateShort(rec.tanggal)}
+                        <td class="py-3.5 px-4 font-extrabold text-slate-800 dark:text-white text-sm whitespace-nowrap">
+                            ${formatIndoDate(rec.tanggal)}
                         </td>
-                        <td class="py-5.5 px-5">
-                            <span class="font-extrabold text-slate-800 dark:text-slate-100 block text-[15px]">${formatDayOnly(rec.tanggal)}</span>
-                            <span class="text-xs font-bold text-slate-450 block mt-0.5 leading-relaxed">${jamHadir} - ${jamPulang}</span>
+                        <td class="py-3.5 px-4">
+                            <div class="flex flex-col">
+                                <span class="font-extrabold text-slate-700 dark:text-slate-200 text-sm">${formatDayOnly(rec.tanggal)}</span>
+                                <span class="text-xs font-bold text-slate-450 dark:text-slate-500 mt-0.5">${jamHadir} - ${jamPulang}</span>
+                            </div>
                         </td>
-                        <td class="py-5.5 px-5 text-center font-bold">
+                        <td class="py-3.5 px-4 text-center">
                             ${statusBadge}
-                        </td>
-                        <td class="py-5.5 px-5 text-right">
-                            <button class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary-50 dark:bg-slate-700 text-primary-600 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-slate-600 transition">
-                                <i class="fas fa-eye text-sm"></i>
-                            </button>
                         </td>
                     </tr>`;
             });
@@ -737,22 +732,21 @@
             let html = '';
             filtered.forEach((j, idx) => {
                 html += `
-                    <tr class="border-b border-slate-100 dark:border-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-700/30 active:scale-[0.99] transition cursor-pointer"
+                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/40 transition cursor-pointer"
                         onclick="showJournalModal('${j.kode}', '${j.kelas}', '${j.mapel}', '${j.tanggal}', '${j.jam_ke}')">
-                        <td class="py-5.5 px-5 font-bold text-slate-650 dark:text-slate-300 text-sm whitespace-nowrap">
-                            ${formatDateShort(j.tanggal)}
+                        <td class="py-3.5 px-4 font-extrabold text-slate-800 dark:text-white text-sm whitespace-nowrap">
+                            ${formatIndoDate(j.tanggal)}
                         </td>
-                        <td class="py-5.5 px-5">
-                            <span class="font-extrabold text-slate-800 dark:text-slate-100 block text-[15px]">${j.kelas}</span>
-                            <span class="text-xs font-bold text-slate-400 block mt-0.5 leading-relaxed">${j.mapel}</span>
+                        <td class="py-3.5 px-4">
+                            <div class="flex flex-col">
+                                <span class="font-extrabold text-slate-700 dark:text-slate-200 text-sm">${j.kelas}</span>
+                                <span class="text-xs font-bold text-slate-450 dark:text-slate-500 mt-0.5">${j.mapel}</span>
+                            </div>
                         </td>
-                        <td class="py-5.5 px-5 text-center font-bold text-slate-500 dark:text-slate-400 text-sm">
-                            ${j.jam_ke}
-                        </td>
-                        <td class="py-5.5 px-5 text-right">
-                            <button class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary-50 dark:bg-slate-700 text-primary-600 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-slate-600 transition">
-                                <i class="fas fa-eye text-sm"></i>
-                            </button>
+                        <td class="py-3.5 px-4 text-center font-extrabold text-slate-750 dark:text-slate-300 text-sm">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
+                                Jam ${j.jam_ke}
+                            </span>
                         </td>
                     </tr>`;
             });
