@@ -286,7 +286,7 @@
                     </div>
                 </td>
                 <td class="p-2">
-                    <button onclick="syncOneGuru('${row.id_guru}')" class="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600"><i class="fa fa-refresh"></i></button>
+                    <button onclick="syncOneGuru('${row.id_guru}', this)" class="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition" title="Sinkronkan PTK"><i class="fa fa-refresh mr-1"></i>Sync</button>
                     <button onclick="editData('${row.id_guru}')" class="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Edit</button>
                     <button data-id="${row.id_guru}" class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 tombol-hapus">Hapus</button>
                     <button data-id="${row.id_guru}" class="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 tombol-akun">Akun</button>
@@ -559,7 +559,14 @@
 
     }
 
-    function syncOneGuru(id_guru) {
+    function syncOneGuru(id_guru, btn) {
+        const $btn = $(btn);
+        const $icon = $btn.find('i');
+        const originalClass = $icon.attr('class') || 'fa fa-refresh mr-1';
+
+        // Start loading animation
+        $btn.prop('disabled', true).addClass('opacity-70 cursor-not-allowed');
+        $icon.attr('class', 'fa fa-refresh fa-spin mr-1');
 
         $.ajax({
             url: '<?= base_url('sinkron/sync_guru') ?>',
@@ -575,12 +582,71 @@
             success: function(res) {
                 let r = typeof res === 'string' ? JSON.parse(res) : res;
 
+                if (r.status === 'deleted') {
+                    // Deleted status animation
+                    $icon.attr('class', 'fa fa-trash text-white mr-1');
+                    $btn.removeClass('bg-green-500 hover:bg-green-600').addClass('bg-orange-500');
+                    $('#log').append("⚠️ " + r.msg + "\n");
+
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Data Dihapus',
+                        text: r.msg,
+                        timer: 2000,
+                        showConfirmButton: false,
+                        position: 'top-end',
+                        toast: true
+                    });
+
+                    setTimeout(function() {
+                        $icon.attr('class', originalClass);
+                        $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed bg-orange-500').addClass('bg-green-500 hover:bg-green-600');
+                        loadData();
+                    }, 1500);
+                    return;
+                }
+
+                // Success animation
+                $icon.attr('class', 'fa fa-check text-white mr-1');
+                $btn.removeClass('bg-green-500 hover:bg-green-600').addClass('bg-emerald-600');
                 $('#log').append("✅ " + r.msg + "\n");
 
-                loadData();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Sinkron Selesai',
+                    text: r.msg,
+                    timer: 1500,
+                    showConfirmButton: false,
+                    position: 'top-end',
+                    toast: true
+                });
+
+                setTimeout(function() {
+                    $icon.attr('class', originalClass);
+                    $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed bg-emerald-600').addClass('bg-green-500 hover:bg-green-600');
+                    loadData();
+                }, 1000);
             },
             error: function() {
+                // Error animation
+                $icon.attr('class', 'fa fa-exclamation-triangle text-white mr-1');
+                $btn.removeClass('bg-green-500 hover:bg-green-600').addClass('bg-rose-600');
                 $('#log').append("❌ Error, retry...\n");
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: 'Koneksi terputus atau error server.',
+                    timer: 1500,
+                    showConfirmButton: false,
+                    position: 'top-end',
+                    toast: true
+                });
+
+                setTimeout(function() {
+                    $icon.attr('class', originalClass);
+                    $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed bg-rose-600').addClass('bg-green-500 hover:bg-green-600');
+                }, 1500);
             }
         });
 

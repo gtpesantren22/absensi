@@ -345,8 +345,20 @@ class Sinkron extends MY_Controller
 		// 2. AMBIL DETAIL GURU
 		// ======================
 		$detail = $this->getDetail("https://data.ppdwk.com/api/ptk/show/" . $guru['id_guru']);
-		// var_dump($detail);
-		// exit();
+		
+		if ($detail === 'NOT_FOUND') {
+			$this->db->trans_start();
+			$this->db->where('id_guru', $idGuru)->delete('registrasi');
+			$this->db->where('id_guru', $idGuru)->delete('user');
+			$this->db->where('id_guru', $idGuru)->delete('guru');
+			$this->db->trans_complete();
+
+			echo json_encode([
+				'status' => 'deleted',
+				'msg' => 'Guru ' . $guru['nama'] . ' tidak ditemukan di pusat. Data lokal telah dihapus.'
+			]);
+			return;
+		}
 
 		if ($detail && isset($detail['registrasi_ptk'])) {
 
@@ -371,7 +383,22 @@ class Sinkron extends MY_Controller
 						'satminkal' => $induk,
 						'created_at' => date('Y-m-d H:i:s'),
 					]);
+				} else {
+					$this->db->where([
+						'id_guru'    => $idGuru,
+						'id_lembaga' => $idLembaga
+					])->update('registrasi', [
+						'satminkal' => $induk
+					]);
 				}
+			}
+
+			// Update user's id_lembaga based on satminkal = 1 (or '1')
+			$satminkal_reg = $this->db->query("SELECT id_lembaga FROM registrasi WHERE id_guru = ? AND (satminkal = 1 OR satminkal = '1')", [$idGuru])->row();
+			if ($satminkal_reg) {
+				$this->db->where('id_guru', $idGuru)->update('user', [
+					'id_lembaga' => $satminkal_reg->id_lembaga
+				]);
 			}
 		}
 
@@ -558,12 +585,19 @@ class Sinkron extends MY_Controller
 		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 		curl_close($ch);
 
+		if ($httpCode === 404) {
+			return 'NOT_FOUND';
+		}
+
 		if ($httpCode !== 200) {
 			log_message('error', "DETAIL PTK FAIL [$url]: " . $result);
 			return null;
 		}
 
 		$json = json_decode($result, true);
+		if ($json && isset($json['status']) && $json['status'] === false) {
+			return 'NOT_FOUND';
+		}
 		return $json ?? null;
 	}
 
@@ -701,14 +735,24 @@ class Sinkron extends MY_Controller
 
 		$idGuru = $guru['id_guru'];
 		$detail = $this->getDetail("https://data.ppdwk.com/api/ptk/show/" . $guru['id_guru']);
-		$this->db
-			->where('id_guru', $idGuru)
-			->delete('registrasi');
-		// var_dump($detail);
-		// var_dump($detail);
-		// exit();
+
+		if ($detail === 'NOT_FOUND') {
+			$this->db->trans_start();
+			$this->db->where('id_guru', $idGuru)->delete('registrasi');
+			$this->db->where('id_guru', $idGuru)->delete('user');
+			$this->db->where('id_guru', $idGuru)->delete('guru');
+			$this->db->trans_complete();
+
+			echo json_encode([
+				'status' => 'deleted',
+				'msg' => 'Guru tidak ditemukan di pusat. Data lokal telah dihapus.'
+			]);
+			return;
+		}
 
 		if ($detail && isset($detail['registrasi_ptk'])) {
+
+			$this->db->where('id_guru', $idGuru)->delete('registrasi');
 
 			$dataGuru = [
 				'nama'     => $detail['nama'],
@@ -755,7 +799,22 @@ class Sinkron extends MY_Controller
 						'satminkal' => $induk,
 						'created_at' => date('Y-m-d H:i:s'),
 					]);
+				} else {
+					$this->db->where([
+						'id_guru'    => $idGuru,
+						'id_lembaga' => $idLembaga
+					])->update('registrasi', [
+						'satminkal' => $induk
+					]);
 				}
+			}
+
+			// Update user's id_lembaga based on satminkal = 1 (or '1')
+			$satminkal_reg = $this->db->query("SELECT id_lembaga FROM registrasi WHERE id_guru = ? AND (satminkal = 1 OR satminkal = '1')", [$idGuru])->row();
+			if ($satminkal_reg) {
+				$this->db->where('id_guru', $idGuru)->update('user', [
+					'id_lembaga' => $satminkal_reg->id_lembaga
+				]);
 			}
 		}
 
