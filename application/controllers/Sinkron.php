@@ -1066,19 +1066,97 @@ class Sinkron extends MY_Controller
 		// Generate clean abbreviation/initials code using helper function
 		$kode = generate_kode_mapel($nama, $id);
 
+		$jenis_lembaga_json = is_array($jenis_lembaga) ? json_encode($jenis_lembaga) : $jenis_lembaga;
 		$data = [
 			'nama' => $nama,
-			'jenis_lembaga' => is_array($jenis_lembaga) ? json_encode($jenis_lembaga) : $jenis_lembaga
+			'jenis_lembaga' => $jenis_lembaga_json
 		];
+
+		$this->db->trans_start();
 
 		if ($cek) {
 			$this->db->where('id_master_mapel', $id)->update('master_mapel', $data);
-			$this->db->where('id_master_mapel', $id)->update('mapel', ['nama' => $nama]);
-			echo json_encode(['status' => true, 'msg' => 'Update ' . $nama . ' sukses']);
 		} else {
 			$data['id_master_mapel'] = $id;
 			$data['kode_mapel'] = $kode;
 			$this->db->insert('master_mapel', $data);
+		}
+
+		// Sync master mapel to the local mapel table for eligible institutions based on jenis_lembaga
+		$allowed_jenjangs = [];
+		if (!empty($jenis_lembaga_json)) {
+			$allowed = json_decode($jenis_lembaga_json, TRUE) ?: [];
+			foreach ($allowed as $item) {
+				$allowed_jenjangs[] = strtoupper(is_array($item) ? ($item['nama'] ?? '') : (is_object($item) ? ($item->nama ?? '') : (is_string($item) ? $item : '')));
+			}
+		}
+
+		$lembaga_list = $this->db->get('lembaga')->result_array();
+		foreach ($lembaga_list as $l) {
+			$jenjang = '';
+			if (!empty($l['jenis_lembaga'])) {
+				if (strpos($l['jenis_lembaga'], '{') !== false) {
+					$jl = json_decode($l['jenis_lembaga'], TRUE);
+					$jenjang = is_array($jl) ? ($jl['nama'] ?? '') : $l['jenis_lembaga'];
+				} else {
+					$jenjang = $l['jenis_lembaga'];
+				}
+			}
+			if (empty($jenjang)) {
+				$jenjang = $l['jenjang'];
+			}
+			$jenjang_clean = trim(preg_replace('/\/.*$/', '', strtoupper($jenjang)));
+
+			if (empty($allowed_jenjangs) || in_array($jenjang_clean, $allowed_jenjangs)) {
+				// Ensure it exists in local mapel table for this institution
+				$exists = $this->db->get_where('mapel', [
+					'id_master_mapel' => $id,
+					'id_lembaga' => $l['id_lembaga']
+				])->row();
+
+				if (!$exists) {
+					$this->db->insert('mapel', [
+						'id_master_mapel' => $id,
+						'kode_mapel' => $kode,
+						'nama' => $nama,
+						'id_lembaga' => $l['id_lembaga']
+					]);
+				} else {
+					// Update name and code
+					$this->db->where([
+						'id_master_mapel' => $id,
+						'id_lembaga' => $l['id_lembaga']
+					])->update('mapel', [
+						'kode_mapel' => $kode,
+						'nama' => $nama
+					]);
+				}
+			} else {
+				// Clean up if it is no longer allowed for this institution type
+				$exists = $this->db->get_where('mapel', [
+					'id_master_mapel' => $id,
+					'id_lembaga' => $l['id_lembaga']
+				])->row();
+
+				if ($exists) {
+					$used_in_jadwal = $this->db->get_where('jadwal', ['id_mapel' => $exists->id_mapel])->num_rows();
+					$used_in_harian = 0;
+					if ($this->db->table_exists('harian')) {
+						$used_in_harian = $this->db->get_where('harian', ['id_mapel' => $exists->id_mapel])->num_rows();
+					}
+
+					if ($used_in_jadwal == 0 && $used_in_harian == 0) {
+						$this->db->where('id_mapel', $exists->id_mapel)->delete('mapel');
+					}
+				}
+			}
+		}
+
+		$this->db->trans_complete();
+
+		if ($cek) {
+			echo json_encode(['status' => true, 'msg' => 'Update ' . $nama . ' sukses']);
+		} else {
 			echo json_encode(['status' => true, 'msg' => 'Insert ' . $nama . ' sukses']);
 		}
 	}

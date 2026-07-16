@@ -179,15 +179,45 @@
         const pag = document.getElementById('pagination');
         pag.innerHTML = '';
 
-        for (let i = 1; i <= meta.lastPage; i++) {
+        const current = meta.page;
+        const last = meta.lastPage;
+        const delta = 1; // number of pages left-right
+
+        function addButton(label, page = null, active = false, disabled = false) {
             pag.innerHTML += `
-            <button onclick="goPage(${i})"
-                class="px-3 py-1 border rounded text-xs transition duration-150
-                ${i === meta.page ? 'bg-primary-500 border-primary-500 text-white font-semibold' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}">
-                ${i}
-            </button>
+                <button
+                    ${page ? `onclick="goPage(${page})"` : ''}
+                    class="px-3 py-1 border rounded text-xs transition duration-150
+                    ${active ? 'bg-primary-500 border-primary-500 text-white font-semibold' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}
+                    ${disabled ? 'opacity-50 cursor-not-allowed' : ''}"
+                    ${disabled ? 'disabled' : ''}>
+                    ${label}
+                </button>
             `;
         }
+
+        // Prev
+        addButton('«', current - 1, false, current === 1);
+
+        // Page 1
+        addButton(1, 1, current === 1);
+
+        let start = Math.max(2, current - delta);
+        let end = Math.min(last - 1, current + delta);
+
+        if (start > 2) addButton('...', null, false, true);
+
+        for (let i = start; i <= end; i++) {
+            addButton(i, i, current === i);
+        }
+
+        if (end < last - 1) addButton('...', null, false, true);
+
+        // Last page
+        if (last > 1) addButton(last, last, current === last);
+
+        // Next
+        addButton('»', current + 1, false, current === last);
     }
 
     function goPage(page) {
