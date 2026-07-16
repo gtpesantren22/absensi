@@ -271,6 +271,19 @@ class Kbm extends MY_Controller
 		$jmlAbs = ($sampai - $dari) + 1;
 
 		$id_semester_aktif = $this->session->userdata('id_semester_aktif');
+
+		// Resolve correct id_lembaga from jadwal to prevent session-satminkal override
+		$jadwal_row = $this->db->get_where('jadwal', [
+			'id_guru' => $guru,
+			'id_mapel' => $mapel,
+			'id_kelas' => $kelas,
+			'jam_dari' => $dari,
+			'id_semester' => $id_semester_aktif
+		])->row();
+		if ($jadwal_row && !empty($jadwal_row->id_lembaga)) {
+			$id_lembaga = $jadwal_row->id_lembaga;
+		}
+
 		$cek = $this->db->query("SELECT * FROM harian WHERE id_guru = '$guru' AND id_mapel = '$mapel' AND id_kelas = '$kelas' AND tanggal = '$tanggal' AND dari = '$dari' AND id_lembaga = '$id_lembaga' AND id_semester = '$id_semester_aktif' ")->row();
 
 		$nmGuru = $this->db->query("SELECT * FROM guru WHERE id_guru = '$guru' ")->row();
@@ -412,25 +425,27 @@ Jam ke : ' . $dari . ' - ' . $sampai . '
 
 					$selected_groups = json_decode($selected_groups_db, true) ?: [];
 
-					// Send to each selected group
-					foreach ($selected_groups as $group) {
-						$groupId = $group['id'];
+					if (!empty($wa_api_url) && !empty($wa_api_key) && !empty($selected_groups)) {
+						// Send to each selected group
+						foreach ($selected_groups as $group) {
+							$groupId = $group['id'];
 
-						$ch = curl_init();
-						curl_setopt_array($ch, [
-							CURLOPT_URL => $wa_api_url . '/send-group',
-							CURLOPT_RETURNTRANSFER => true,
-							CURLOPT_CUSTOMREQUEST => 'POST',
-							CURLOPT_POSTFIELDS => http_build_query([
-								'groupId' => $groupId,
-								'message' => $psn,
-								'apiKey' => $wa_api_key,
-								'sessionId' => $sessionId
-							]),
-							CURLOPT_TIMEOUT => 20
-						]);
-						curl_exec($ch);
-						curl_close($ch);
+							$ch = curl_init();
+							curl_setopt_array($ch, [
+								CURLOPT_URL => $wa_api_url . '/send-group',
+								CURLOPT_RETURNTRANSFER => true,
+								CURLOPT_CUSTOMREQUEST => 'POST',
+								CURLOPT_POSTFIELDS => http_build_query([
+									'groupId' => $groupId,
+									'message' => $psn,
+									'apiKey' => $wa_api_key,
+									'sessionId' => $sessionId
+								]),
+								CURLOPT_TIMEOUT => 5
+							]);
+							curl_exec($ch);
+							curl_close($ch);
+						}
 					}
 
 					$this->session->set_flashdata('ok', 'Input Absen Berhasil');
@@ -477,6 +492,10 @@ Jam ke : ' . $dari . ' - ' . $sampai . '
 		$isi = $this->input->post('isi', true);
 
 		$jmlAbs = ($sampai - $dari) + 1;
+
+		// Resolve the correct id_lembaga from existing harian record
+		$harian_row = $this->db->get_where('harian', ['kode' => $kode])->row();
+		$id_lembaga = ($harian_row && !empty($harian_row->id_lembaga)) ? $harian_row->id_lembaga : $this->id_lembaga;
 
 		if (!empty($data)) {
 			foreach ($data as $item) {
@@ -578,36 +597,38 @@ Jam ke : ' . $dari . ' - ' . $sampai . '
 				$wa_api_key = $wa_api_key_db ?: (getenv('WA_API_KEY') ?: '');
 
 				// Get session ID from lembaga
-				$lembaga = $this->db->get_where('lembaga', ['id_lembaga' => $this->id_lembaga])->row();
+				$lembaga = $this->db->get_where('lembaga', ['id_lembaga' => $id_lembaga])->row();
 				$sessionId = ($lembaga && !empty($lembaga->session_id)) ? $lembaga->session_id : "default";
 
 				// Get selected groups for this institution
 				$selected_groups_db = $this->db->get_where('setting', [
 					'key' => 'wa_selected_groups',
-					'id_lembaga' => $this->id_lembaga
+					'id_lembaga' => $id_lembaga
 				])->row('isi');
 
 				$selected_groups = json_decode($selected_groups_db, true) ?: [];
 
-				// Send to each selected group
-				foreach ($selected_groups as $group) {
-					$groupId = $group['id'];
+				if (!empty($wa_api_url) && !empty($wa_api_key) && !empty($selected_groups)) {
+					// Send to each selected group
+					foreach ($selected_groups as $group) {
+						$groupId = $group['id'];
 
-					$ch = curl_init();
-					curl_setopt_array($ch, [
-						CURLOPT_URL => $wa_api_url . '/send-group',
-						CURLOPT_RETURNTRANSFER => true,
-						CURLOPT_CUSTOMREQUEST => 'POST',
-						CURLOPT_POSTFIELDS => http_build_query([
-							'groupId' => $groupId,
-							'message' => $psn,
-							'apiKey' => $wa_api_key,
-							'sessionId' => $sessionId
-						]),
-						CURLOPT_TIMEOUT => 20
-					]);
-					curl_exec($ch);
-					curl_close($ch);
+						$ch = curl_init();
+						curl_setopt_array($ch, [
+							CURLOPT_URL => $wa_api_url . '/send-group',
+							CURLOPT_RETURNTRANSFER => true,
+							CURLOPT_CUSTOMREQUEST => 'POST',
+							CURLOPT_POSTFIELDS => http_build_query([
+								'groupId' => $groupId,
+								'message' => $psn,
+								'apiKey' => $wa_api_key,
+								'sessionId' => $sessionId
+							]),
+							CURLOPT_TIMEOUT => 5
+						]);
+						curl_exec($ch);
+						curl_close($ch);
+					}
 				}
 
 				$this->session->set_flashdata('ok', 'Input Absen Berhasil');
