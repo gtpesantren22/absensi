@@ -226,6 +226,13 @@ class Keaktifanguru extends MY_Controller
             return;
         }
 
+        // Get all registered institutions for this teacher to support cross-institution schedules/journals
+        $reg_lembagas = $this->db->select('id_lembaga')->get_where('registrasi', ['id_guru' => $cekGuru->id_guru])->result_array();
+        $lembaga_ids = array_column($reg_lembagas, 'id_lembaga');
+        if (empty($lembaga_ids)) {
+            $lembaga_ids = [$this->id_lembaga];
+        }
+
         // 1. Get all daily attendance records (sorted DESC, optionally filtered by month)
         $this->db->where('id_guru', $cekGuru->id_guru);
         $this->db->where('id_lembaga', $this->id_lembaga);
@@ -247,16 +254,15 @@ class Keaktifanguru extends MY_Controller
             $start_date = date('Y-m-d', strtotime('-30 days'));
         }
 
-        // 2. Get total scheduled JP from start of semester to today
+        // 2. Get total scheduled JP from start of semester to today across all registered institutions
         $total_scheduled_jp = 0;
         $start_time = strtotime($start_date);
         $end_time = time();
         
-        $schedules = $this->db->get_where('jadwal', [
-            'id_guru' => $cekGuru->id_guru,
-            'id_lembaga' => $this->id_lembaga,
-            'id_semester' => $id_semester_aktif
-        ])->result_array();
+        $this->db->where('id_guru', $cekGuru->id_guru);
+        $this->db->where_in('id_lembaga', $lembaga_ids);
+        $this->db->where('id_semester', $id_semester_aktif);
+        $schedules = $this->db->get('jadwal')->result_array();
 
         for ($t = $start_time; $t <= $end_time; $t += 86400) {
             $day_name = date('l', $t);
@@ -267,26 +273,26 @@ class Keaktifanguru extends MY_Controller
             }
         }
 
-        // 3. Get total filled JP in this semester
+        // 3. Get total filled JP in this semester across all registered institutions
         $this->db->select('COUNT(*) AS total');
         $this->db->from('mengajar');
         $this->db->where('id_guru', $cekGuru->id_guru);
         $this->db->where('tanggal >=', $start_date);
         $this->db->where('tanggal <=', date('Y-m-d'));
-        $this->db->where('id_lembaga', $this->id_lembaga);
+        $this->db->where_in('id_lembaga', $lembaga_ids);
         $this->db->where('id_semester', $id_semester_aktif);
         $filled_jp_row = $this->db->get()->row();
         $total_filled_jp = $filled_jp_row ? (int)$filled_jp_row->total : 0;
 
-        // 4. Get list of filled journals (no month filter, grouped safely, sorted DESC)
-        $this->db->select('h.kode, h.tanggal, h.dari, h.sampai, h.id_kelas, h.id_mapel, k.nama AS nama_kelas, mp.nama AS nama_mapel');
+        // 4. Get list of filled journals across all registered institutions
+        $this->db->select('h.kode, h.tanggal, h.dari, h.sampai, h.id_kelas, h.id_mapel, h.id_lembaga, k.nama AS nama_kelas, mp.nama AS nama_mapel');
         $this->db->from('harian h');
         $this->db->join('kelas k', 'h.id_kelas = k.id_kelas', 'left');
         $this->db->join('mapel mp', 'h.id_mapel = mp.id_mapel', 'left');
         $this->db->where('h.id_guru', $cekGuru->id_guru);
-        $this->db->where('h.id_lembaga', $this->id_lembaga);
+        $this->db->where_in('h.id_lembaga', $lembaga_ids);
         $this->db->where('h.id_semester', $id_semester_aktif);
-        $this->db->group_by(array('h.kode', 'h.tanggal', 'h.dari', 'h.sampai', 'h.id_kelas', 'h.id_mapel', 'k.nama', 'mp.nama'));
+        $this->db->group_by(array('h.kode', 'h.tanggal', 'h.dari', 'h.sampai', 'h.id_kelas', 'h.id_mapel', 'h.id_lembaga', 'k.nama', 'mp.nama'));
         $this->db->order_by('h.tanggal', 'DESC');
         $sessions = $this->db->get()->result_array();
 
@@ -300,7 +306,7 @@ class Keaktifanguru extends MY_Controller
                     SUM(CASE WHEN ket = 'alpha' THEN 1 ELSE 0 END) as alpha,
                     SUM(CASE WHEN ket = 'telat' THEN 1 ELSE 0 END) as telat
                 FROM harian 
-                WHERE kode = '{$session['kode']}' AND id_lembaga = '{$this->id_lembaga}'
+                WHERE kode = '{$session['kode']}' AND id_lembaga = '{$session['id_lembaga']}'
             ")->row();
 
             $siswa_stats = null;
@@ -314,10 +320,10 @@ class Keaktifanguru extends MY_Controller
                 ];
             }
 
-            // Get journal content from database
+            // Get journal content from database matching the specific institution of this session
             $jurnal_row = $this->db->get_where('jurnal_guru', [
                 'kode_absen' => $session['kode'],
-                'id_lembaga' => $this->id_lembaga,
+                'id_lembaga' => $session['id_lembaga'],
                 'id_semester' => $id_semester_aktif
             ])->row();
             
@@ -328,7 +334,7 @@ class Keaktifanguru extends MY_Controller
                     'tanggal' => $session['tanggal'],
                     'id_kelas' => $session['id_kelas'],
                     'id_mapel' => $session['id_mapel'],
-                    'id_lembaga' => $this->id_lembaga,
+                    'id_lembaga' => $session['id_lembaga'],
                     'id_semester' => $id_semester_aktif
                 ])->result_array();
 
@@ -375,11 +381,10 @@ class Keaktifanguru extends MY_Controller
 
         $id_semester_aktif = $this->session->userdata('id_semester_aktif');
 
-        // Fetch students attendance for this session code
+        // Fetch students attendance for this session code (globally unique UUID)
         $this->db->select('nama_siswa, ket');
         $this->db->from('harian');
         $this->db->where('kode', $kode);
-        $this->db->where('id_lembaga', $this->id_lembaga);
         $this->db->where('id_semester', $id_semester_aktif);
         $this->db->order_by('nama_siswa', 'ASC');
         $students = $this->db->get()->result_array();
@@ -387,7 +392,6 @@ class Keaktifanguru extends MY_Controller
         // Fetch journal text
         $jurnal = $this->db->get_where('jurnal_guru', [
             'kode_absen' => $kode,
-            'id_lembaga' => $this->id_lembaga,
             'id_semester' => $id_semester_aktif
         ])->row();
         $isi_jurnal = $jurnal ? $jurnal->isi : '-';

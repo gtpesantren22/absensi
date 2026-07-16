@@ -457,8 +457,18 @@ class Sinkron extends MY_Controller
 		// ======================
 		$detail = $this->getDetail("https://data.ppdwk.com/api/pd/show/" . $siswa['id_siswa']);
 
-		// var_dump($detail);
-		// exit();
+		if ($detail === 'NOT_FOUND') {
+			$this->db->trans_start();
+			$this->db->where('id_siswa', $idsiswa)->delete('registrasi_siswa');
+			$this->db->where('id_siswa', $idsiswa)->delete('siswa');
+			$this->db->trans_complete();
+
+			echo json_encode([
+				'status' => 'deleted',
+				'msg' => 'Siswa ' . $siswa['nama'] . ' tidak ditemukan di pusat. Data lokal telah dihapus.'
+			]);
+			return;
+		}
 
 		if ($detail && isset($detail['registrasi_pd'])) {
 
@@ -660,11 +670,23 @@ class Sinkron extends MY_Controller
 		// ======================
 		$idsiswa = $siswa['id_siswa'];
 		$detail = $this->getDetail("https://data.ppdwk.com/api/pd/show/" . $siswa['id_siswa']);
+
+		if ($detail === 'NOT_FOUND') {
+			$this->db->trans_start();
+			$this->db->where('id_siswa', $idsiswa)->delete('registrasi_siswa');
+			$this->db->where('id_siswa', $idsiswa)->delete('siswa');
+			$this->db->trans_complete();
+
+			echo json_encode([
+				'status' => 'deleted',
+				'msg' => 'Siswa tidak ditemukan di pusat. Data lokal telah dihapus.'
+			]);
+			return;
+		}
+
 		$this->db
 			->where('id_siswa', $idsiswa)
 			->delete('registrasi_siswa');
-		// var_dump($detail);
-		// exit();
 
 		if ($detail && isset($detail['registrasi_pd'])) {
 
