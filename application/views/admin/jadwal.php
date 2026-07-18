@@ -1,4 +1,7 @@
 <?php $this->load->view('admin/head'); ?>
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
 <style>
     .jadwal-item {
         transition: all 0.2s ease;
@@ -49,6 +52,99 @@
 
     .dark .schedule-time {
         background-color: #374151;
+    }
+
+    /* Custom Select2 Tailwind & Dark Mode integration styling */
+    .select2-container--default .select2-selection--single {
+        background-color: #ffffff !important;
+        border: 1px solid #d1d5db !important; /* border-gray-300 */
+        border-radius: 0.5rem !important; /* rounded-lg */
+        height: 42px !important;
+        display: flex !important;
+        align-items: center !important;
+        outline: none !important;
+        transition: all 0.2s;
+    }
+
+    .dark .select2-container--default .select2-selection--single {
+        background-color: #1f2937 !important; /* bg-gray-800 */
+        border-color: #4b5563 !important; /* border-gray-600 */
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #374151 !important; /* text-gray-700 */
+        padding-left: 1rem !important;
+        padding-right: 1.5rem !important;
+        font-weight: 500 !important;
+    }
+
+    .dark .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #f3f4f6 !important; /* text-gray-100 */
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 40px !important;
+        right: 8px !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow b {
+        border-color: #9ca3af transparent transparent transparent !important;
+    }
+
+    .select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
+        border-color: transparent transparent #9ca3af transparent !important;
+    }
+
+    .select2-dropdown {
+        background-color: #ffffff !important;
+        border-color: #d1d5db !important;
+        border-radius: 0.5rem !important;
+        overflow: hidden !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+        z-index: 99999 !important;
+    }
+
+    .dark .select2-dropdown {
+        background-color: #1f2937 !important;
+        border-color: #4b5563 !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5) !important;
+    }
+
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: #2563eb !important; /* bg-primary-600 */
+        color: #ffffff !important;
+    }
+
+    .select2-container--default .select2-results__option[aria-selected="true"] {
+        background-color: #eff6ff !important;
+        color: #1d4ed8 !important;
+    }
+
+    .dark .select2-container--default .select2-results__option[aria-selected="true"] {
+        background-color: #1e293b !important;
+        color: #3b82f6 !important;
+    }
+
+    .select2-container--default .select2-results__option {
+        padding: 8px 12px !important;
+        color: #374151 !important;
+    }
+
+    .dark .select2-container--default .select2-results__option {
+        color: #d1d5db !important;
+    }
+
+    .select2-container--default .select2-search--dropdown .select2-search__field {
+        border: 1px solid #d1d5db !important;
+        border-radius: 0.375rem !important;
+        padding: 6px 12px !important;
+        outline: none !important;
+    }
+
+    .dark .select2-container--default .select2-search--dropdown .select2-search__field {
+        background-color: #111827 !important; /* bg-gray-900 */
+        border-color: #4b5563 !important;
+        color: #ffffff !important;
     }
 </style>
 
@@ -131,7 +227,7 @@
                 <!-- Pilih Kelas -->
                 <div>
                     <label class="block text-sm font-medium mb-2">Pilih Kelas <span class="text-red-500">*</span></label>
-                    <select id="selectKelas" name="id_kelas" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" required>
+                    <select id="selectKelas" name="id_kelas" class="select2-select w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" required>
                         <option value="">-- Pilih Kelas --</option>
                         <?php foreach ($kelas as $k) : ?>
                             <option value="<?= $k->id_kelas ?>"><?= $k->nama ?></option>
@@ -161,7 +257,7 @@
                 <!-- Pilih Guru -->
                 <div>
                     <label class="block text-sm font-medium mb-2">Pilih Guru <span class="text-red-500">*</span></label>
-                    <select id="selectGuru" name="id_guru" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" required>
+                    <select id="selectGuru" name="id_guru" class="select2-select w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" required>
                         <option value="">-- Pilih Guru --</option>
                         <?php foreach ($guru as $g) : ?>
                             <option value="<?= $g->id_guru ?>"><?= $g->nama ?></option>
@@ -172,8 +268,8 @@
                 <!-- Pilih Mata Pelajaran -->
                 <div>
                     <label class="block text-sm font-medium mb-2">Pilih MaPel <span class="text-red-500">*</span></label>
-                    <select id="selectMapel" name="id_mapel" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" required>
-                        <option value="">-- Pilih Mata Pelajaran --</option>
+                    <select id="selectMapel" name="id_mapel" class="select2-select w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" required>
+                        <option value="">-- Pilih Mapel --</option>
                         <?php foreach ($mapel as $m) : ?>
                             <option value="<?= $m->id_mapel ?>"><?= $m->nama ?></option>
                         <?php endforeach; ?>
@@ -276,7 +372,7 @@
                     <!-- Pilih Kelas -->
                     <div>
                         <label class="block text-sm font-medium mb-2">Pilih Kelas <span class="text-red-500">*</span></label>
-                        <select id="selectKelas" name="id_kelas" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" required>
+                        <select id="selectKelasEdit" name="id_kelas" class="select2-select w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" required>
                             <option value="">-- Pilih Kelas --</option>
                             <?php foreach ($kelas as $k) : ?>
                                 <option value="<?= $k->id_kelas ?>"><?= $k->nama ?></option>
@@ -306,7 +402,7 @@
                     <!-- Pilih Guru -->
                     <div>
                         <label class="block text-sm font-medium mb-2">Pilih Guru <span class="text-red-500">*</span></label>
-                        <select id="selectGuru" name="id_guru" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" required>
+                        <select id="selectGuruEdit" name="id_guru" class="select2-select w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" required>
                             <option value="">-- Pilih Guru --</option>
                             <?php foreach ($guru as $g) : ?>
                                 <option value="<?= $g->id_guru ?>"><?= $g->nama ?></option>
@@ -317,8 +413,8 @@
                     <!-- Pilih Mata Pelajaran -->
                     <div>
                         <label class="block text-sm font-medium mb-2">Pilih Mata Pelajaran <span class="text-red-500">*</span></label>
-                        <select id="selectMapel" name="id_mapel" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" required>
-                            <option value="">-- Pilih Mata Pelajaran --</option>
+                        <select id="selectMapelEdit" name="id_mapel" class="select2-select w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" required>
+                            <option value="">-- Pilih Mapel --</option>
                             <?php foreach ($mapel as $m) : ?>
                                 <option value="<?= $m->id_mapel ?>"><?= $m->nama ?></option>
                             <?php endforeach; ?>
@@ -398,9 +494,33 @@
 
 <?php $this->load->view('admin/foot'); ?>
 
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
     let selectedDayLive = '';
     let currentIdJadwal = null;
+
+    $(document).ready(function() {
+        // Initialize Select2 for insert form
+        $('#selectKelas').select2({ width: '100%' });
+        $('#selectGuru').select2({ width: '100%' });
+        $('#selectMapel').select2({ width: '100%' });
+
+        // Initialize Select2 for edit form inside modal
+        $('#selectKelasEdit').select2({
+            width: '100%',
+            dropdownParent: $('#editJadwalModal')
+        });
+        $('#selectGuruEdit').select2({
+            width: '100%',
+            dropdownParent: $('#editJadwalModal')
+        });
+        $('#selectMapelEdit').select2({
+            width: '100%',
+            dropdownParent: $('#editJadwalModal')
+        });
+    });
 
     document.getElementById('selectDay').addEventListener('change', function() {
         var selectedDay = this.value;
@@ -448,6 +568,12 @@
                 if (data.status == 'success') {
                     // alert('Jadwal berhasil ditambahkan!');
                     // closeModal('tambahJadwalModal');
+                    
+                    // Reset Select2 inputs after saving
+                    $('#selectKelas').val('').trigger('change');
+                    $('#selectGuru').val('').trigger('change');
+                    $('#selectMapel').val('').trigger('change');
+                    
                     showJadwal(formData.get('hari'));
                 } else {
                     // alert('Gagal menambahkan jadwal: ' + data.message);
@@ -501,9 +627,12 @@
                 // Isi form di modal edit dengan data yang diterima
                 document.querySelector('#editJadwalModal input[name="id_jadwal"]').value = data.id_jadwal;
                 document.querySelector('#editJadwalModal select[name="hari"]').value = data.hari;
-                document.querySelector('#editJadwalModal select[name="id_kelas"]').value = data.id_kelas;
-                document.querySelector('#editJadwalModal select[name="id_guru"]').value = data.id_guru;
-                document.querySelector('#editJadwalModal select[name="id_mapel"]').value = data.id_mapel;
+                
+                // Update Select2 elements with val().trigger('change')
+                $('#selectKelasEdit').val(data.id_kelas).trigger('change');
+                $('#selectGuruEdit').val(data.id_guru).trigger('change');
+                $('#selectMapelEdit').val(data.id_mapel).trigger('change');
+
                 document.querySelector('#editJadwalModal input[name="jam_dari"]').value = data.jam_dari;
                 document.querySelector('#editJadwalModal input[name="jam_sampai"]').value = data.jam_sampai;
             })

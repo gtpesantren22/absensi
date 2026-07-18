@@ -41,6 +41,7 @@ class Jadwal extends MY_Controller
         $data['mapel'] = $this->db
             ->select('id_mapel, nama')
             ->where('id_lembaga', $this->id_lembaga)
+            ->where('id_master_mapel IS NOT NULL', NULL, FALSE)
             ->order_by('nama', 'ASC')
             ->get('mapel')
             ->result();
