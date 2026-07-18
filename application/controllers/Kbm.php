@@ -55,9 +55,13 @@ class Kbm extends MY_Controller
 		$jdwal = $this->db->query("SELECT * FROM jadwal WHERE hari = '$days' AND id_guru = '$userData->id_guru' AND id_semester = '$id_semester_aktif' ORDER BY jam_dari ASC ")->result();
 		foreach ($jdwal as $jdwl) {
 			$dtl = $this->db->query("SELECT * FROM jadwal_dtl WHERE id_jadwal = '$jdwl->id_jadwal' ")->row();
+			$kelas_label = $dtl ? $dtl->id_kelas : '-';
+			if ($dtl && !empty($dtl->id_lembaga)) {
+				$kelas_label .= ' - ' . $dtl->id_lembaga;
+			}
 			$kls[] = [
 				'id_jadwal' => $jdwl->id_jadwal,
-				'kelas' => $dtl->id_kelas,
+				'kelas' => $kelas_label,
 				'jam_dari' => $jdwl->jam_dari,
 				'jam_sampai' => $jdwl->jam_sampai,
 			];
@@ -121,7 +125,7 @@ class Kbm extends MY_Controller
 		$id_tahun_aktif = $this->session->userdata('id_tahun_aktif');
 		$id_semester_aktif = $this->session->userdata('id_semester_aktif');
 
-		$listdata = $this->db->query("SELECT * FROM rombel WHERE id_kelas = $jadwal->id_kelas AND id_tahun = '$id_tahun_aktif' ");
+		$listdata = $this->db->query("SELECT * FROM rombel WHERE id_kelas = $jadwal->id_kelas AND id_tahun = '$id_tahun_aktif' AND id_lembaga = '$jadwal->id_lembaga' ");
 
 		$cek = $this->db->query("SELECT * FROM harian WHERE id_guru = '$jadwal->id_guru' AND id_mapel = '$jadwal->id_mapel' AND id_kelas = '$jadwal->id_kelas' AND tanggal = '$dyas' AND dari = '$jadwal->jam_dari' AND id_lembaga = '$jadwal->id_lembaga' AND id_semester = '$id_semester_aktif' ")->row();
 
