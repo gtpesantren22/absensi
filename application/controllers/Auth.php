@@ -102,6 +102,23 @@ class Auth extends CI_Controller
 
         if ($user && password_verify($password, $user->password) && $user->aktif === 'Y') {
 
+            // Check if maintenance mode is active and user is not super_admin
+            $maintenance_mode = false;
+            if ($this->db->table_exists('setting')) {
+                $row_maint = $this->db->get_where('setting', ['key' => 'maintenance_mode'])->row();
+                if ($row_maint && $row_maint->isi === '1') {
+                    $maintenance_mode = true;
+                }
+            }
+            if ($maintenance_mode && $user->level !== 'super_admin') {
+                $this->auth->logAttempt($username);
+                echo json_encode([
+                    'status' => false,
+                    'message' => 'Sistem sedang dalam pemeliharaan (Maintenance Mode). Hanya Super Admin yang dapat masuk saat ini.'
+                ]);
+                exit;
+            }
+
             $this->session->sess_regenerate(true);
 
             $this->session->set_userdata([

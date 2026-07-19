@@ -66,6 +66,41 @@ class MY_Controller extends CI_Controller
                 ]);
             }
         }
+
+        // Global Maintenance Mode check
+        $maintenance_mode = false;
+        if ($this->db->table_exists('setting')) {
+            $row_maint = $this->db->get_where('setting', ['key' => 'maintenance_mode'])->row();
+            if ($row_maint && $row_maint->isi === '1') {
+                $maintenance_mode = true;
+            }
+        }
+
+        if ($maintenance_mode) {
+            $current_controller = $this->router->fetch_class();
+            $current_method = $this->router->fetch_method();
+
+            $is_auth_page = (strtolower($current_controller) === 'auth');
+            $is_maintenance_page = (strtolower($current_controller) === 'welcome' && strtolower($current_method) === 'maintenance');
+            $is_super_admin = ($this->session->userdata('level') === 'super_admin');
+
+            if (!$is_super_admin && !$is_auth_page && !$is_maintenance_page) {
+                // If it is an AJAX/API request, return JSON response
+                if ($this->input->is_ajax_request()) {
+                    $this->output
+                        ->set_content_type('application/json')
+                        ->set_status_header(503)
+                        ->set_output(json_encode([
+                            'status' => false,
+                            'message' => 'Sistem sedang dalam pemeliharaan (Maintenance Mode). Silakan coba lagi nanti.'
+                        ]))
+                        ->_display();
+                    exit;
+                } else {
+                    redirect('welcome/maintenance');
+                }
+            }
+        }
     }
     protected function mustLogin()
     {

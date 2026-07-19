@@ -38,6 +38,10 @@ class Sistem extends MY_Controller
 		$api_token_config = $this->config->item('api_token', 'api') ?: 'absensi_api_token_secret_xyz';
 		$data['api_token'] = $api_token_db ?: $api_token_config;
 
+		// Retrieve maintenance mode settings
+		$maint_db = $this->model->getBy('setting', 'key', 'maintenance_mode')->row();
+		$data['maintenance_mode'] = ($maint_db && $maint_db->isi === '1') ? true : false;
+
 		$this->load->view('admin/sistem', $data);
 	}
 
@@ -315,5 +319,26 @@ class Sistem extends MY_Controller
 
 		$this->session->set_flashdata('ok', 'Pengaturan aplikasi berhasil disimpan');
 		redirect('sistem');
+	}
+
+	public function toggle_maintenance()
+	{
+		header('Content-Type: application/json');
+		$status = $this->input->post('status', TRUE);
+		$val = ($status == 1) ? '1' : '0';
+		$msg = ($status == 1) ? 'Mode Maintenance berhasil diaktifkan.' : 'Mode Maintenance berhasil dinonaktifkan.';
+
+		$cek = $this->model->getBy('setting', 'key', 'maintenance_mode')->row();
+		if ($cek) {
+			$this->model->edit('setting', 'key', 'maintenance_mode', ['isi' => $val]);
+		} else {
+			$this->model->tambah('setting', ['key' => 'maintenance_mode', 'isi' => $val]);
+		}
+
+		echo json_encode([
+			'status' => true,
+			'message' => $msg
+		]);
+		exit;
 	}
 }

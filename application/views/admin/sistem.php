@@ -229,6 +229,30 @@
     </form>
 </div>
 
+<!-- Card Maintenance Mode -->
+<div class="w-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-sm p-6 mb-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-start gap-3">
+            <div class="p-3 bg-red-50 dark:bg-red-950/30 text-red-500 rounded-xl shrink-0 mt-0.5">
+                <i class="fas fa-tools text-xl"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-gray-800 dark:text-gray-200 text-base">Mode Pemeliharaan (Maintenance Mode)</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">
+                    Aktifkan untuk menutup semua akses aplikasi bagi pengguna biasa (guru, admin lembaga, dll.). Hanya akun <strong class="text-red-500">Super Admin</strong> yang tetap dapat masuk dan mengoperasikan sistem.
+                </p>
+            </div>
+        </div>
+        <div class="flex items-center justify-end shrink-0">
+            <!-- Custom Toggle Switch -->
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="maintenanceToggle" class="sr-only peer" <?= !empty($maintenance_mode) ? 'checked' : '' ?>>
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+            </label>
+        </div>
+    </div>
+</div>
+
 
 <!-- Modal Tahun Ajaran -->
 <div id="modalTahun" class="fixed inset-0 z-50 overflow-y-auto hidden">
@@ -396,6 +420,54 @@
 
     function closeModalSemester() {
         document.getElementById('modalSemester').classList.add('hidden');
+    }
+
+    // Toggle Maintenance Mode
+    const maintToggle = document.getElementById('maintenanceToggle');
+    if (maintToggle) {
+        maintToggle.addEventListener('change', function() {
+            const isChecked = this.checked;
+            const actionText = isChecked ? 'mengaktifkan' : 'menonaktifkan';
+            const confirmColor = isChecked ? '#dc2626' : '#2563eb';
+            
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: `Anda akan ${actionText} Mode Maintenance.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: confirmColor,
+                cancelButtonColor: '#4b5563',
+                confirmButtonText: 'Ya, Lanjutkan!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const formData = new FormData();
+                    formData.append('status', isChecked ? 1 : 0);
+                    
+                    fetch('<?= base_url("sistem/toggle_maintenance") ?>', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(res => {
+                        if (res.status) {
+                            Swal.fire('Berhasil', res.message, 'success').then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire('Gagal', res.message, 'error');
+                            maintToggle.checked = !isChecked;
+                        }
+                    })
+                    .catch(err => {
+                        Swal.fire('Error', 'Terjadi kesalahan jaringan.', 'error');
+                        maintToggle.checked = !isChecked;
+                    });
+                } else {
+                    maintToggle.checked = !isChecked;
+                }
+            });
+        });
     }
 </script>
 

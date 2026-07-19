@@ -30,4 +30,38 @@ class Welcome extends CI_Controller
 	{
 		$this->load->view('no-akses');
 	}
+
+	public function maintenance()
+	{
+		$maintenance_mode = false;
+		if ($this->db->table_exists('setting')) {
+			$row_maint = $this->db->get_where('setting', ['key' => 'maintenance_mode'])->row();
+			if ($row_maint && $row_maint->isi === '1') {
+				$maintenance_mode = true;
+			}
+		}
+		if (!$maintenance_mode) {
+			redirect(base_url());
+			exit;
+		}
+
+		// Load settings for the view
+		$app_name = 'Absensi Sekolah';
+		$app_logo = '';
+		if ($this->db->table_exists('setting')) {
+			$row_name = $this->db->get_where('setting', ['key' => 'app_name'])->row();
+			if ($row_name) {
+				$app_name = $row_name->isi;
+			}
+			$row_logo = $this->db->get_where('setting', ['key' => 'app_logo'])->row();
+			if ($row_logo) {
+				$app_logo = $row_logo->isi;
+			}
+		}
+
+		$data['app_name'] = $app_name;
+		$data['app_logo'] = $app_logo;
+
+		$this->load->view('maintenance', $data);
+	}
 }
