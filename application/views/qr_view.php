@@ -146,11 +146,8 @@
                 }
             }
 
-            // Coba langsung fullscreen (Browser kemungkinan memblokir ini jika auto-load)
             enterFS();
 
-            // Fallback: Jika diblokir oleh browser karena autoplay policy, 
-            // sentuhan pertama user di mana saja akan memastikan halaman jadi fullscreen.
             document.addEventListener('click', enterFS, {
                 once: true
             });
@@ -223,7 +220,6 @@
                     if (!data.ready) {
                         loadQR();
                     } else if (!isLoadingQR) {
-                        // Jika koneksi sempat terputus namun kembali normal dan token belum dipakai
                         document.getElementById('qrcode').classList.remove('opacity-10');
                         setStatus('active');
                     }
@@ -256,16 +252,14 @@
         // INIT
         loadQR();
 
-        // Refresh status tiap detik
+        // Refresh status
         setInterval(checkStatus, 1000);
         setInterval(tampilQR, 2000);
-
 
         setTimeout(() => {
             document.body.classList.add('opacity-20');
             setTimeout(() => location.reload(), 1000);
         }, 60 * 60 * 1000);
-        // }, 10000);
     </script>
     <script>
         function toggleFullscreen() {

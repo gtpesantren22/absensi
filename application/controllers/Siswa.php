@@ -44,6 +44,7 @@ class Siswa extends MY_Controller
 		if (!empty($search)) {
 			$this->db->group_start()
 				->like('siswa.nama', $search)
+				->or_like('siswa.nis', $search)
 				->or_like('siswa.jkl', $search)
 				->or_like('siswa.alamat', $search)
 				->group_end();
@@ -86,6 +87,7 @@ class Siswa extends MY_Controller
 		$alamat        = $this->input->post('alamat', true);
 		$jenis_kelamin = $this->input->post('jenis_kelamin', true);
 		$nisn 	   = $this->input->post('nisn', true);
+		$nis 	   = $this->input->post('nis', true);
 
 		$data = [
 			'id_siswa'    => $this->uuid->v4(),
@@ -93,6 +95,7 @@ class Siswa extends MY_Controller
 			'alamat'        => $alamat,
 			'jkl' => $jenis_kelamin,
 			'nisn'		=> $nisn,
+			'nis'		=> $nis,
 		];
 
 		$sql = $this->model->tambah('siswa', $data);
@@ -120,40 +123,42 @@ class Siswa extends MY_Controller
 		}
 	}
 
-	// public function getById($id)
-	// {
-	// 	$data = $this->model->getBy('siswa', 'id_siswa', $id)->row_array();
+	public function getById($id)
+	{
+		$data = $this->model->getBy('siswa', 'id_siswa', $id)->row_array();
 
-	// 	$this->output
-	// 		->set_content_type('application/json')
-	// 		->set_output(json_encode($data));
-	// }
+		$this->output
+			->set_content_type('application/json')
+			->set_output(json_encode($data));
+	}
 
-	// public function update($id)
-	// {
-	// 	$id_siswa    = $id;
-	// 	$nama         = $this->input->post('nama', true);
-	// 	$alamat        = $this->input->post('alamat', true);
-	// 	$jenis_kelamin = $this->input->post('jenis_kelamin', true);
-	// 	$nisn 	   = $this->input->post('nisn', true);
+	public function update($id)
+	{
+		$id_siswa    = $id;
+		$nama         = $this->input->post('nama', true);
+		$alamat        = $this->input->post('alamat', true);
+		$jenis_kelamin = $this->input->post('jenis_kelamin', true);
+		$nisn 	   = $this->input->post('nisn', true);
+		$nis 	   = $this->input->post('nis', true);
 
-	// 	$data = [
-	// 		'nama'         => $nama,
-	// 		'alamat'        => $alamat,
-	// 		'jkl' => $jenis_kelamin,
-	// 		'nisn'		=> $nisn,
-	// 	];
+		$data = [
+			'nama'         => $nama,
+			'alamat'        => $alamat,
+			'jkl' => $jenis_kelamin,
+			'nisn'		=> $nisn,
+			'nis'		=> $nis,
+		];
 
-	// 	$sql = $this->model->edit('siswa', 'id_siswa', $id_siswa, $data);
+		$sql = $this->model->edit('siswa', 'id_siswa', $id_siswa, $data);
 
-	// 	if (!$sql) {
-	// 		$this->session->set_flashdata('error', 'Data siswa gagal diupdate.');
-	// 		redirect('siswa');
-	// 	} else {
-	// 		$this->session->set_flashdata('ok', 'Data siswa berhasil diupdate.');
-	// 		redirect('siswa');
-	// 	}
-	// }
+		if (!$sql) {
+			$this->session->set_flashdata('error', 'Data siswa gagal diupdate.');
+			redirect('siswa');
+		} else {
+			$this->session->set_flashdata('ok', 'Data siswa berhasil diupdate.');
+			redirect('siswa');
+		}
+	}
 
 	// public function downloadTemplate()
 	// {

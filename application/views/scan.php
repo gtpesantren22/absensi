@@ -45,6 +45,14 @@
 </main>
 <?php $this->load->view('admin/foot'); ?>
 <script>
+    if (typeof Html5QrcodeScannerState === 'undefined') {
+        window.Html5QrcodeScannerState = {
+            UNKNOWN: 1,
+            NOT_STARTED: 2,
+            SCANNING: 3,
+            PAUSED: 4
+        };
+    }
     const html5QrCode = new Html5Qrcode("reader");
     const cameraSelect = document.getElementById("cameraSelect");
     const statusEl = document.getElementById("scanStatus");
@@ -105,27 +113,85 @@
 
         html5QrCode.stop(); // stop setelah sukses
 
+        // Show SweetAlert2 loading indicator
+        Swal.fire({
+            title: 'Memproses Absensi',
+            html: 'Mohon tunggu sebentar, kehadiran Anda sedang diproses...',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        if (!navigator.geolocation) {
+            sendScanPayload(decodedText, null, null, null);
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            pos => {
+                sendScanPayload(decodedText, pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
+            },
+            err => {
+                sendScanPayload(decodedText, null, null, null);
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
+    }
+
+    function sendScanPayload(decodedText, lat, lon, accuracy) {
+
         fetch("<?= base_url('qrcode/sendScan/' . $jenis) ?>", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    token: decodedText
+                    token: decodedText,
+                    lat: lat,
+                    lon: lon,
+                    accuracy: accuracy
                 })
             })
             .then(res => res.json())
             .then(res => {
                 if (res.valid) {
                     setStatus(res.message, "success");
-                    // console.log(res.hasil);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Sukses!',
+                        text: res.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
                     setTimeout(() => {
                         location.href = '<?= base_url() ?>';
-                    }, 1000);
+                    }, 2000);
                 } else {
                     setStatus(res.message, "error");
-                    startScanner()
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Scan Gagal',
+                        text: res.message
+                    }).then(() => {
+                        startScanner();
+                    });
                 }
+            })
+            .catch(err => {
+                setStatus("Kesalahan koneksi jaringan", "error");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Kesalahan Jaringan',
+                    text: 'Gagal menghubungi server. Silakan coba lagi.'
+                }).then(() => {
+                    startScanner();
+                });
             });
     }
 </script>

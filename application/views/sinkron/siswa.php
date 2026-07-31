@@ -21,15 +21,22 @@
     </div>
 
     <div class="flex flex-wrap items-center gap-2 mt-4 md:mt-0">
+        <input type="number" id="onePage" class="p-2 w-full md:w-20 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Page...">
 
-        <input type="number" id="onePage" class="p-4 py-2 w-full md:w-64 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Input nomor page...">
-        <button id="sincOne" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
-            <i class="fas fa-refresh mr-2"></i>
-            Sinc One Page
+        <!-- Group 1: Data Utama (Fast) -->
+        <button id="sincOneUtama" class="bg-teal-605 hover:bg-teal-700 text-white px-3 py-2 rounded-lg font-medium text-xs flex items-center">
+            <i class="fas fa-refresh mr-1"></i> Utama Page
         </button>
-        <button id="start" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium flex items-center">
-            <i class="fas fa-refresh mr-2"></i>
-            Sinkron Data Siswa
+        <button id="startUtama" class="bg-primary-600 hover:bg-primary-700 text-white px-3 py-2 rounded-lg font-medium text-xs flex items-center">
+            <i class="fas fa-users mr-1"></i> 1. Sync Data Utama
+        </button>
+
+        <!-- Group 2: Alamat & Registrasi (Detail) -->
+        <button id="sincOneDetail" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-lg font-medium text-xs flex items-center">
+            <i class="fas fa-refresh mr-1"></i> Detail Page
+        </button>
+        <button id="startDetail" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg font-medium text-xs flex items-center">
+            <i class="fas fa-map-marker-alt mr-1"></i> 2. Sync Alamat & Reg
         </button>
     </div>
 </div>
@@ -335,36 +342,76 @@
     let siswas = [];
     let total = 0;
     let done = 0;
+    let syncType = 'utama'; // 'utama' atau 'detail'
+    let isSinglePage = false;
 
-    $('#start').click(function() {
+    $('#startUtama').click(function() {
         page = 1;
         done = 0;
         total = 0;
+        syncType = 'utama';
+        isSinglePage = false;
         $('#log').html('');
         $('#pageInfo').removeClass('hidden');
         updateProgress();
         loadPage();
     });
-    $('#sincOne').click(function() {
-        page = $('#onePage').val();
+
+    $('#sincOneUtama').click(function() {
+        const inputPage = $('#onePage').val();
+        if (!inputPage || inputPage < 1) {
+            Swal.fire('Oops', 'Masukkan nomor halaman yang valid!', 'warning');
+            return;
+        }
+        page = inputPage;
         done = 0;
         total = 0;
+        syncType = 'utama';
+        isSinglePage = true;
         $('#log').html('');
         $('#pageInfo').removeClass('hidden');
         updateProgress();
         loadPage();
-        // alert(page)
+    });
+
+    $('#startDetail').click(function() {
+        page = 1;
+        done = 0;
+        total = 0;
+        syncType = 'detail';
+        isSinglePage = false;
+        $('#log').html('');
+        $('#pageInfo').removeClass('hidden');
+        updateProgress();
+        loadPage();
+    });
+
+    $('#sincOneDetail').click(function() {
+        const inputPage = $('#onePage').val();
+        if (!inputPage || inputPage < 1) {
+            Swal.fire('Oops', 'Masukkan nomor halaman yang valid!', 'warning');
+            return;
+        }
+        page = inputPage;
+        done = 0;
+        total = 0;
+        syncType = 'detail';
+        isSinglePage = true;
+        $('#log').html('');
+        $('#pageInfo').removeClass('hidden');
+        updateProgress();
+        loadPage();
     });
 
     function loadPage() {
-        $('#log').append(`📦 Ambil page ${page}\n`);
+        $('#log').append(`📦 Ambil page ${page} (${syncType === 'utama' ? 'Data Utama' : 'Alamat & Reg'})\n`);
 
         $.post('<?= base_url('sinkron/fetch_page_siswa') ?>', {
             page
         }, function(res) {
             let r = JSON.parse(res);
 
-            if (!r.data || r.data.length === 0) {
+            if (!r.data || !r.data.data || r.data.data.length === 0) {
                 $('#log').append("🎉 Sinkron selesai\n");
                 return;
             }
@@ -374,13 +421,15 @@
             index = 0;
             updateProgress();
             syncNext();
-            // console.log(siswas);
-
         });
     }
 
     function syncNext() {
         if (index >= siswas.length) {
+            if (isSinglePage) {
+                $('#log').append(`🎉 Sinkron Halaman ${page} Selesai!\n`);
+                return;
+            }
             page++;
             loadPage();
             return;
@@ -388,21 +437,34 @@
 
         let siswa = siswas[index];
 
-        // console.log(siswa.ptk_id);
+        let targetUrl = '';
+        let postData = {};
 
-        $.ajax({
-            url: '<?= base_url('sinkron/sync_one_siswa') ?>',
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({
+        if (syncType === 'utama') {
+            targetUrl = '<?= base_url('sinkron/sync_one_siswa') ?>';
+            postData = {
                 siswa: {
                     id_siswa: siswa.peserta_didik_id,
                     nama: siswa.nama,
                     nisn: siswa.nisn,
                     jkl: siswa.jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan',
+                    nis: siswa.nipd || siswa.nis || siswa.no_induk || null
                 }
-            }),
+            };
+        } else {
+            targetUrl = '<?= base_url('sinkron/sync_detail_siswa') ?>';
+            postData = {
+                siswa: {
+                    id_siswa: siswa.peserta_didik_id
+                }
+            };
+        }
 
+        $.ajax({
+            url: targetUrl,
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(postData),
             timeout: 20000,
             success: function(res) {
                 let r = typeof res === 'string' ? JSON.parse(res) : res;

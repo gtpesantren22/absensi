@@ -9,7 +9,7 @@ class Api extends CI_Controller
         
         // Setup headers for API output
         header('Access-Control-Allow-Origin: *');
-        header('Access-Control-Allow-Methods: GET, OPTIONS');
+        header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
         header('Access-Control-Allow-Headers: Authorization, X-API-KEY, Content-Type');
         
         if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -290,4 +290,201 @@ class Api extends CI_Controller
 				'data' => $jadwal
 			]));
 	}
+
+    public function pembiasaan_siswa()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->output
+                ->set_status_header(405)
+                ->set_content_type('application/json')
+                ->set_output(json_encode([
+                    'status' => false,
+                    'message' => 'Method Not Allowed: Use POST method'
+                ]));
+            return;
+        }
+
+        if (!$this->_authenticate()) {
+            return;
+        }
+
+        $raw = file_get_contents('php://input');
+        $data = json_decode($raw, true);
+
+        if (!is_array($data)) {
+            $this->output
+                ->set_status_header(400)
+                ->set_content_type('application/json')
+                ->set_output(json_encode([
+                    'status' => false,
+                    'message' => 'Bad Request: Invalid JSON payload'
+                ]));
+            return;
+        }
+
+        $token = trim($data['identifier'] ?? ($data['token'] ?? ''));
+        $mode = strtolower(trim($data['mode'] ?? 'masuk')); // 'masuk' or 'pulang'
+        $ket = strtolower(trim($data['ket'] ?? 'hadir')); // default 'hadir'
+
+        if (empty($token)) {
+            $this->output
+                ->set_status_header(400)
+                ->set_content_type('application/json')
+                ->set_output(json_encode([
+                    'status' => false,
+                    'message' => 'Bad Request: missing identifier/token'
+                ]));
+            return;
+        }
+
+        if (!in_array($mode, ['masuk', 'pulang'])) {
+            $this->output
+                ->set_status_header(400)
+                ->set_content_type('application/json')
+                ->set_output(json_encode([
+                    'status' => false,
+                    'message' => 'Bad Request: mode must be either masuk or pulang'
+                ]));
+            return;
+        }
+
+        // Search student by id_siswa (UUID) or nis (Nomor Induk Santri)
+        $siswa = $this->db->query("SELECT * FROM siswa WHERE id_siswa = ? OR nis = ? LIMIT 1", [$token, $token])->row();
+
+        if (!$siswa) {
+            $this->output
+                ->set_status_header(404)
+                ->set_content_type('application/json')
+                ->set_output(json_encode([
+                    'status' => false,
+                    'message' => 'Not Found: Siswa/Santri tidak terdaftar'
+                ]));
+            return;
+        }
+
+        // Get registration
+        $regSiswa = $this->db->get_where('registrasi_siswa', ['id_siswa' => $siswa->id_siswa])->row();
+        if (!$regSiswa) {
+            $this->output
+                ->set_status_header(404)
+                ->set_content_type('application/json')
+                ->set_output(json_encode([
+                    'status' => false,
+                    'message' => 'Not Found: Siswa tidak memiliki registrasi lembaga'
+                ]));
+            return;
+        }
+
+        $id_lembaga_siswa = $regSiswa->id_lembaga;
+
+        // Get active semester
+        $active_sem = $this->db->get_where('semester', ['is_active' => 1])->row();
+        $id_semester_aktif = $active_sem ? $active_sem->id_semester : null;
+
+        // Check exist
+        $cekExist = $this->db->get_where('pembiasaan_siswa', [
+            'id_siswa' => $siswa->id_siswa,
+            'tanggal' => date('Y-m-d')
+        ])->row();
+
+        $currentTime = date('H:i:s');
+        $success = false;
+        $msg = '';
+
+        if ($mode === 'masuk') {
+            if ($cekExist && !empty($cekExist->jam_masuk) && $cekExist->jam_masuk !== '00:00:00') {
+                $this->output
+                    ->set_status_header(422)
+                    ->set_content_type('application/json')
+                    ->set_output(json_encode([
+                        'status' => false,
+                        'message' => 'Siswa ' . $siswa->nama . ' sudah melakukan Absensi Masuk hari ini pukul ' . $cekExist->jam_masuk
+                    ]));
+                return;
+            }
+
+            if ($cekExist) {
+                $updateData = [
+                    'jam_masuk' => $currentTime,
+                    'ket' => $ket,
+                    'id_lembaga' => $id_lembaga_siswa
+                ];
+                if (!empty($id_semester_aktif)) {
+                    $updateData['id_semester'] = $id_semester_aktif;
+                }
+                $success = $this->db->update('pembiasaan_siswa', $updateData, ['id_pembiasaan_siswa' => $cekExist->id_pembiasaan_siswa]);
+            } else {
+                $insertData = [
+                    'id_siswa' => $siswa->id_siswa,
+                    'tanggal' => date('Y-m-d'),
+                    'jam_masuk' => $currentTime,
+                    'ket' => $ket,
+                    'id_lembaga' => $id_lembaga_siswa
+                ];
+                if (!empty($id_semester_aktif)) {
+                    $insertData['id_semester'] = $id_semester_aktif;
+                }
+                $success = $this->db->insert('pembiasaan_siswa', $insertData);
+            }
+            $msg = 'Absen MASUK Berhasil: ' . $siswa->nama;
+
+        } else { // pulang
+            if ($cekExist && !empty($cekExist->jam_pulang) && $cekExist->jam_pulang !== '00:00:00') {
+                $this->output
+                    ->set_status_header(422)
+                    ->set_content_type('application/json')
+                    ->set_output(json_encode([
+                        'status' => false,
+                        'message' => 'Siswa ' . $siswa->nama . ' sudah melakukan Absensi Pulang hari ini pukul ' . $cekExist->jam_pulang
+                    ]));
+                return;
+            }
+
+            if ($cekExist) {
+                $updateData = [
+                    'jam_pulang' => $currentTime,
+                    'id_lembaga' => $id_lembaga_siswa
+                ];
+                if (!empty($id_semester_aktif)) {
+                    $updateData['id_semester'] = $id_semester_aktif;
+                }
+                $success = $this->db->update('pembiasaan_siswa', $updateData, ['id_pembiasaan_siswa' => $cekExist->id_pembiasaan_siswa]);
+            } else {
+                $insertData = [
+                    'id_siswa' => $siswa->id_siswa,
+                    'tanggal' => date('Y-m-d'),
+                    'jam_pulang' => $currentTime,
+                    'ket' => $ket,
+                    'id_lembaga' => $id_lembaga_siswa
+                ];
+                if (!empty($id_semester_aktif)) {
+                    $insertData['id_semester'] = $id_semester_aktif;
+                }
+                $success = $this->db->insert('pembiasaan_siswa', $insertData);
+            }
+            $msg = 'Absen PULANG Berhasil: ' . $siswa->nama;
+        }
+
+        if ($success) {
+            $this->output
+                ->set_status_header(200)
+                ->set_content_type('application/json')
+                ->set_output(json_encode([
+                    'status' => true,
+                    'message' => $msg,
+                    'siswa' => $siswa->nama,
+                    'nis' => $siswa->nis ?: '-',
+                    'waktu' => $currentTime,
+                    'mode' => strtoupper($mode)
+                ]));
+        } else {
+            $this->output
+                ->set_status_header(500)
+                ->set_content_type('application/json')
+                ->set_output(json_encode([
+                    'status' => false,
+                    'message' => 'Gagal menyimpan absensi'
+                ]));
+        }
+    }
 }

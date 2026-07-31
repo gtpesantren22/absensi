@@ -188,6 +188,14 @@
     <script src="<?= base_url('assets/js/jquery-3.7.1.min.js') ?>"></script>
     <script src="<?= base_url('assets/sw/sweetalert2.all.min.js') ?>"></script>
     <script>
+        if (typeof Html5QrcodeScannerState === 'undefined') {
+            window.Html5QrcodeScannerState = {
+                UNKNOWN: 1,
+                NOT_STARTED: 2,
+                SCANNING: 3,
+                PAUSED: 4
+            };
+        }
         const html5QrCode = new Html5Qrcode("reader");
         const cameraSelect = document.getElementById("cameraSelect");
         const statusEl = document.getElementById("scanStatus");
@@ -318,6 +326,40 @@
                 html5QrCode.stop();
             }
 
+            // Show SweetAlert2 loading indicator
+            Swal.fire({
+                title: 'Memproses Absensi',
+                html: 'Mohon tunggu sebentar, kehadiran Anda sedang diproses...',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            setStatus("Memproses absensi...", "loading");
+
+            if (!navigator.geolocation) {
+                sendScanPayload(decodedText, null, null, null);
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    sendScanPayload(decodedText, pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
+                },
+                err => {
+                    sendScanPayload(decodedText, null, null, null);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        }
+
+        function sendScanPayload(decodedText, lat, lon, accuracy) {
             setStatus("Mengirim data kehadiran...", "loading");
 
             fetch("<?= base_url('qrcode/sendScan/' . $jenis) ?>", {
@@ -326,7 +368,10 @@
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    token: decodedText
+                    token: decodedText,
+                    lat: lat,
+                    lon: lon,
+                    accuracy: accuracy
                 })
             })
             .then(res => res.json())
@@ -337,32 +382,30 @@
                         icon: 'success',
                         title: 'Sukses!',
                         text: res.message,
-                        timer: 1500,
+                        timer: 2000,
                         showConfirmButton: false
                     });
                     setTimeout(() => {
                         location.href = '<?= base_url() ?>';
-                    }, 1500);
+                    }, 2000);
                 } else {
                     setStatus(res.message, "error");
                     Swal.fire({
                         icon: 'error',
                         title: 'Scan Gagal',
-                        text: res.message,
-                        confirmButtonText: 'Coba Lagi'
+                        text: res.message
                     }).then(() => {
-                        // Restart rear scanner
+                        // Restart scanner on failure so user can try again
                         startScannerEnv();
                     });
                 }
             })
             .catch(err => {
-                setStatus("Gagal terhubung ke server", "error");
+                setStatus("Terjadi kesalahan koneksi", "error");
                 Swal.fire({
                     icon: 'error',
-                    title: 'Kesalahan Sistem',
-                    text: 'Gagal menghubungi server absensi.',
-                    confirmButtonText: 'Coba Lagi'
+                    title: 'Kesalahan Jaringan',
+                    text: 'Gagal menghubungi server. Silakan coba lagi.'
                 }).then(() => {
                     startScannerEnv();
                 });

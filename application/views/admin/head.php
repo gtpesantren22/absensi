@@ -182,16 +182,16 @@
                     $current_sem_id = $this->session->userdata('id_semester_aktif');
                     ?>
                     <?php if (!empty($list_semesters)): ?>
-                    <div class="hidden sm:block relative">
-                        <select onchange="gantiSesiAkademik(this.value)"
-                            class="px-3 py-1.5 bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 text-sky-800 dark:text-sky-300 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500 max-w-[220px]">
-                            <?php foreach ($list_semesters as $ls): ?>
-                                <option value="<?= $ls->id_semester ?>" <?= $ls->id_semester == $current_sem_id ? 'selected' : '' ?> class="text-gray-800 dark:text-gray-200">
-                                    <?= $ls->nama_tahun ?> (<?= $ls->nama_semester ?>)
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
+                        <div class="hidden sm:block relative">
+                            <select onchange="gantiSesiAkademik(this.value)"
+                                class="px-3 py-1.5 bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800 text-sky-800 dark:text-sky-300 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500 max-w-[220px]">
+                                <?php foreach ($list_semesters as $ls): ?>
+                                    <option value="<?= $ls->id_semester ?>" <?= $ls->id_semester == $current_sem_id ? 'selected' : '' ?> class="text-gray-800 dark:text-gray-200">
+                                        <?= $ls->nama_tahun ?> (<?= $ls->nama_semester ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
                     <?php endif; ?>
 
                     <!-- Dark/Light Mode Toggle -->
@@ -410,7 +410,7 @@
 
                                 <div data-dropdown-menu class="dropdown-menu open <?= $menu != 'absensisiswa' ? 'hidden' : '' ?>">
                                     <div class="pl-5 pr-4 py-2 space-y-1">
-                                        <a href="#" class="flex items-center sidebar-item <?= $sub == '-' ? 'active' : '' ?> px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                                        <a href="<?= base_url('kbm/pembiasaan_siswa') ?>" class="flex items-center sidebar-item <?= $sub == 'pembiasaan_siswa' ? 'active' : '' ?> px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
                                             <i class="fas fa-arrow-right mr-2"></i>
                                             Pembiasaan
                                         </a>
@@ -447,7 +447,7 @@
                                                 <i class="fas fa-arrow-right mr-2"></i>
                                                 Jam Mengajar Guru
                                             </a>
-                                            <a href="#" class="flex items-center sidebar-item <?= $sub == 'pembiasaan_siswa' ? 'active' : '' ?> px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                                            <a href="<?= base_url('rekap/pembiasaan_siswa') ?>" class="flex items-center sidebar-item <?= $sub == 'pembiasaan_siswa' ? 'active' : '' ?> px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
                                                 <i class="fas fa-arrow-right mr-2"></i>
                                                 Pembiasaan Siswa
                                             </a>

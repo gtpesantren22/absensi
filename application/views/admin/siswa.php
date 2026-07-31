@@ -48,9 +48,13 @@
                         <div class="p-6">
                             <form id="formTambahSiswa" action="<?= base_url('siswa/add') ?>" method="POST">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                    <div class="md:col-span-2">
+                                    <div>
                                         <label class="block text-sm font-medium mb-2">NISN</label>
                                         <input type="text" name="nisn" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Masukkan NISN" required>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">NIS</label>
+                                        <input type="text" name="nis" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Masukkan NIS (ID Santri)">
                                     </div>
                                     <div class="md:col-span-2">
                                         <label class="block text-sm font-medium mb-2">Nama Lengkap</label>
@@ -104,9 +108,13 @@
                         <div class="p-6">
                             <form id="formEditSiswa" action="<?= base_url('siswa/update') ?>" method="POST">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                    <div class="md:col-span-2">
+                                    <div>
                                         <label class="block text-sm font-medium mb-2">NISN</label>
                                         <input type="text" name="nisn" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Masukkan NISN" required>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-2">NIS</label>
+                                        <input type="text" name="nis" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="Masukkan NIS (ID Santri)">
                                     </div>
                                     <div class="md:col-span-2">
                                         <label class="block text-sm font-medium mb-2">Nama Lengkap</label>
@@ -182,6 +190,7 @@
                 <thead>
                     <tr class="bg-gray-50 dark:bg-gray-700/50 text-left text-sm text-gray-500 dark:text-gray-400">
                         <th onclick="sort('nisn')" class="py-3 px-4 font-medium cursor-pointer">NISN</th>
+                        <th onclick="sort('nis')" class="py-3 px-4 font-medium cursor-pointer">NIS</th>
                         <th onclick="sort('nama')" class="py-3 px-4 font-medium cursor-pointer">Nama Siswa</th>
                         <th onclick="sort('jkl')" class="py-3 px-4 font-medium cursor-pointer">Jenis Kelamin</th>
                         <th onclick="sort('alamat')" class="py-3 px-4 font-medium cursor-pointer">Alamat</th>
@@ -244,6 +253,9 @@
                     ${row.nisn}
                 </td>
                 <td class="p-2"> 
+                    ${row.nis || '-'}
+                </td>
+                <td class="p-2"> 
                     ${row.nama}
                 </td>
                 <td class="p-2"> 
@@ -270,6 +282,7 @@
                 form.nama.value = data.nama;
                 form.alamat.value = data.alamat;
                 form.nisn.value = data.nisn;
+                form.nis.value = data.nis || '';
 
                 // Set radio button jenis kelamin
                 const jenisKelaminOptions = form.jenis_kelamin;

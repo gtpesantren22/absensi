@@ -46,6 +46,11 @@
                 <span>Absensi KBM</span>
             </a>
 
+            <a href="<?= site_url('qrcode/pembiasaan_siswa_hasil') ?>" class="flex items-center space-x-3 px-4 py-3 rounded-xl font-bold transition <?= ($menu == 'pembiasaan_siswa_hasil') ? 'bg-primary-50 text-primary-600 dark:bg-slate-700 dark:text-primary-400' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-105 dark:hover:bg-slate-700/60' ?>">
+                <i class="fas fa-praying-hands text-lg"></i>
+                <span>Pembiasaan Siswa</span>
+            </a>
+
             <a href="<?= site_url('kbm/hasil') ?>" class="flex items-center space-x-3 px-4 py-3 rounded-xl font-bold transition <?= ($menu == 'hasil') ? 'bg-primary-50 text-primary-600 dark:bg-slate-700 dark:text-primary-400' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-105 dark:hover:bg-slate-700/60' ?>">
                 <i class="fas fa-history text-lg"></i>
                 <span>Hasil Absensi</span>

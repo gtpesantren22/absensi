@@ -648,4 +648,260 @@ Jam ke : ' . $dari . ' - ' . $sampai . '
 		$this->session->set_flashdata('ok', 'Hapus Absen Berhasil');
 		redirect('kbm/hasil');
 	}
+
+	public function pembiasaan_siswa()
+	{
+		$data['menu'] = 'absensisiswa';
+		$data['sub'] = 'pembiasaan_siswa';
+		$data['lembagas'] = $this->db->order_by('nama', 'ASC')->get('lembaga')->result();
+
+		$this->load->view('absensi/pembiasaan_siswa', $data);
+	}
+
+	public function ajaxHasilPembiasaanSiswa()
+	{
+		$dari   = $this->input->post('dari', true) ?: date('Y-m-d', strtotime('-30 days'));
+		$sampai = $this->input->post('sampai', true) ?: date('Y-m-d');
+		$id_lembaga = $this->input->post('id_lembaga', true);
+
+		// If user is Admin Lembaga, force filter by their institution
+		if ($this->session->userdata('level') !== 'superadmin' && $this->id_lembaga) {
+			$id_lembaga = $this->id_lembaga;
+		}
+
+		$this->db->select('tanggal, COUNT(id_siswa) as total_siswa');
+		$this->db->from('pembiasaan_siswa');
+		$this->db->where('tanggal >=', $dari);
+		$this->db->where('tanggal <=', $sampai);
+		if (!empty($id_lembaga)) {
+			$this->db->where('id_lembaga', $id_lembaga);
+		}
+		$this->db->group_by('tanggal');
+		$this->db->order_by('tanggal', 'DESC');
+		$data = $this->db->get()->result_array();
+
+		echo json_encode([
+			'status' => true,
+			'data' => $data
+		]);
+	}
+
+	public function pembiasaan_siswa_detail($date, $id_lembaga = null)
+	{
+		$data['menu'] = 'absensisiswa';
+		$data['sub'] = 'pembiasaan_siswa';
+		$data['date'] = $date;
+
+		// Handle role restrictions
+		if ($this->session->userdata('level') !== 'superadmin' && $this->id_lembaga) {
+			$id_lembaga = $this->id_lembaga;
+		}
+		$data['id_lembaga'] = $id_lembaga;
+
+		// Fetch institution detail
+		$data['lembaga_selected'] = null;
+		if ($id_lembaga) {
+			$data['lembaga_selected'] = $this->db->get_where('lembaga', ['id_lembaga' => $id_lembaga])->row();
+		}
+
+		// Fetch student list for this date & institution
+		$this->db->select('ps.*, s.nama, s.nis, s.jkl');
+		$this->db->from('pembiasaan_siswa ps');
+		$this->db->join('siswa s', 'ps.id_siswa COLLATE utf8mb4_general_ci = s.id_siswa COLLATE utf8mb4_general_ci', 'inner', FALSE);
+		$this->db->where('ps.tanggal', $date);
+		if ($id_lembaga) {
+			$this->db->where('ps.id_lembaga', $id_lembaga);
+		}
+		$this->db->order_by('s.nama', 'ASC');
+		$data['list'] = $this->db->get()->result();
+
+		$this->load->view('absensi/pembiasaan_siswa_detail', $data);
+	}
+
+	public function pembiasaan_siswa_update()
+	{
+		$id_pembiasaan_siswa = $this->input->post('id_pembiasaan_siswa');
+		$ket = $this->input->post('ket');
+		$jam_masuk = $this->input->post('jam_masuk') ?: null;
+		$jam_pulang = $this->input->post('jam_pulang') ?: null;
+
+		$data = [
+			'ket' => $ket,
+			'jam_masuk' => $jam_masuk,
+			'jam_pulang' => $jam_pulang
+		];
+
+		$this->db->where('id_pembiasaan_siswa', $id_pembiasaan_siswa);
+		$success = $this->db->update('pembiasaan_siswa', $data);
+
+		if ($success) {
+			$this->session->set_flashdata('ok', 'Data absensi siswa berhasil diperbarui.');
+		} else {
+			$this->session->set_flashdata('error', 'Gagal memperbarui data absensi.');
+		}
+
+		// Redirect back
+		redirect($_SERVER['HTTP_REFERER']);
+	}
+
+	public function pembiasaan_siswa_delete($date, $id_lembaga = null)
+	{
+		if ($this->session->userdata('level') !== 'superadmin' && $this->id_lembaga) {
+			$id_lembaga = $this->id_lembaga;
+		}
+
+		$this->db->where('tanggal', $date);
+		if ($id_lembaga) {
+			$this->db->where('id_lembaga', $id_lembaga);
+		}
+		$success = $this->db->delete('pembiasaan_siswa');
+
+		if ($success) {
+			$this->session->set_flashdata('ok', 'Data absensi tanggal ' . $date . ' berhasil dihapus.');
+		} else {
+			$this->session->set_flashdata('error', 'Gagal menghapus data.');
+		}
+
+		redirect('kbm/pembiasaan_siswa');
+	}
+
+	public function pembiasaan_siswa_excel($date, $id_lembaga = null)
+	{
+		if ($this->session->userdata('level') !== 'superadmin' && $this->id_lembaga) {
+			$id_lembaga = $this->id_lembaga;
+		}
+
+		// Fetch institution detail
+		$lembaga_nama = 'Semua Lembaga';
+		if ($id_lembaga) {
+			$lembaga = $this->db->get_where('lembaga', ['id_lembaga' => $id_lembaga])->row();
+			if ($lembaga) $lembaga_nama = $lembaga->nama;
+		}
+
+		// Fetch list
+		$this->db->select('ps.*, s.nama, s.nis, s.jkl');
+		$this->db->from('pembiasaan_siswa ps');
+		$this->db->join('siswa s', 'ps.id_siswa COLLATE utf8mb4_general_ci = s.id_siswa COLLATE utf8mb4_general_ci', 'inner', FALSE);
+		$this->db->where('ps.tanggal', $date);
+		if ($id_lembaga) {
+			$this->db->where('ps.id_lembaga', $id_lembaga);
+		}
+		$this->db->order_by('s.nama', 'ASC');
+		$list = $this->db->get()->result_array();
+
+		$spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+		$sheet = $spreadsheet->getActiveSheet();
+
+		// Header
+		$sheet->mergeCells('A1:F1')->setCellValue('A1', 'REKAP ABSENSI PEMBIASAAN SISWA');
+		$sheet->mergeCells('A2:F2')->setCellValue('A2', 'Lembaga: ' . $lembaga_nama);
+		$sheet->mergeCells('A3:F3')->setCellValue('A3', 'Tanggal: ' . tanggal_indo($date));
+
+		$sheet->getStyle('A1:A3')->applyFromArray([
+			'font' => ['bold' => true, 'size' => 12],
+			'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+		]);
+
+		$sheet->setCellValue('A5', 'No')
+			  ->setCellValue('B5', 'Nama Siswa')
+			  ->setCellValue('C5', 'NIS (ID)')
+			  ->setCellValue('D5', 'Jam Masuk')
+			  ->setCellValue('E5', 'Jam Pulang')
+			  ->setCellValue('F5', 'Keterangan');
+
+		$sheet->getStyle('A5:F5')->applyFromArray([
+			'font' => ['bold' => true],
+			'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+		]);
+
+		$rowNum = 6;
+		$no = 1;
+		foreach ($list as $row) {
+			$sheet->setCellValue('A' . $rowNum, $no++)
+				  ->setCellValue('B' . $rowNum, $row['nama'])
+				  ->setCellValue('C' . $rowNum, $row['nis'] ?: '-')
+				  ->setCellValue('D' . $rowNum, $row['jam_masuk'] ?: '-')
+				  ->setCellValue('E' . $rowNum, $row['jam_pulang'] ?: '-')
+				  ->setCellValue('F' . $rowNum, ucfirst($row['ket']));
+			$rowNum++;
+		}
+
+		// Styling columns
+		foreach (range('A', 'F') as $col) {
+			$sheet->getColumnDimension($col)->setAutoSize(true);
+		}
+
+		$filename = 'Rekap_Pembiasaan_Siswa_' . $date . '.xlsx';
+		header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+		header('Content-Disposition: attachment;filename="' . $filename . '"');
+		header('Cache-Control: max-age=0');
+
+		$writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+		$writer->save('php://output');
+		exit;
+	}
+
+	public function download_pembiasaan_siswa_screen($tgl, $id_lembaga = null)
+	{
+		if ($this->session->userdata('level') !== 'superadmin' && $this->id_lembaga) {
+			$id_lembaga = $this->id_lembaga;
+		}
+
+		if (!$id_lembaga) {
+			show_error('Parameter lembaga tidak ditemukan.');
+		}
+
+		$lembaga = $this->db->get_where('lembaga', ['id_lembaga' => $id_lembaga])->row();
+		$nick = $lembaga ? $lembaga->nickname : 'SISWA';
+
+		$curl = curl_init();
+		$targetUrl = base_url() . 'screen/pembiasaan_siswa/' . $tgl . '/' . $id_lembaga;
+		$captureUrl = 'https://capture.ppdwk.site/capture?url=' . $targetUrl . '&filename=PEMBIASAAN-SISWA-' . $nick . '_' . $tgl;
+		curl_setopt_array($curl, [
+			CURLOPT_URL => $captureUrl,
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_ENCODING => '',
+			CURLOPT_MAXREDIRS => 10,
+			CURLOPT_TIMEOUT => 90,
+			CURLOPT_FOLLOWLOCATION => true,
+			CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+			CURLOPT_CUSTOMREQUEST => 'GET'
+		]);
+
+		$response = curl_exec($curl);
+		curl_close($curl);
+
+		$result = json_decode($response, true);
+
+		if ($result && isset($result['status']) && $result['status'] === true) {
+			$fileUrl = "https://capture.ppdwk.site/capture-result/PEMBIASAAN-SISWA-$nick"  . "_$tgl.png";
+			$fileName = "PEMBIASAAN-SISWA-$nick"  . "_$tgl.png";
+
+			$ch = curl_init($fileUrl);
+			curl_setopt_array($ch, [
+				CURLOPT_RETURNTRANSFER => true,
+				CURLOPT_FOLLOWLOCATION => true,
+				CURLOPT_SSL_VERIFYPEER => false,
+				CURLOPT_TIMEOUT => 90,
+			]);
+
+			$fileData = curl_exec($ch);
+			$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+			curl_close($ch);
+
+			if ($fileData !== false && $httpCode === 200) {
+				header('Content-Description: File Transfer');
+				header('Content-Type: image/png');
+				header('Content-Disposition: attachment; filename="' . $fileName . '"');
+				header('Content-Length: ' . strlen($fileData));
+				header('Cache-Control: must-revalidate');
+				header('Pragma: public');
+
+				echo $fileData;
+				exit;
+			}
+		}
+
+		show_error('Gagal mengambil tangkapan layar rekap absensi. Silakan coba lagi.');
+	}
 }

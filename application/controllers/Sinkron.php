@@ -9,7 +9,7 @@ class Sinkron extends MY_Controller
 		$this->load->model('Modeldata', 'model');
 
 		$this->config->load('api', true);
-		
+
 		// Load token dynamically from setting table, getenv, or config
 		$token_db = $this->db->get_where('setting', ['key' => 'ppdwk_token'])->row('isi');
 		$this->token = $token_db ?: (getenv('PPDWK_TOKEN') ?: $this->config->item('ppdwk_token', 'api'));
@@ -345,7 +345,7 @@ class Sinkron extends MY_Controller
 		// 2. AMBIL DETAIL GURU
 		// ======================
 		$detail = $this->getDetail("https://data.ppdwk.com/api/ptk/show/" . $guru['id_guru']);
-		
+
 		if ($detail === 'NOT_FOUND') {
 			$this->db->trans_start();
 			$this->db->where('id_guru', $idGuru)->delete('registrasi');
@@ -426,18 +426,18 @@ class Sinkron extends MY_Controller
 			return;
 		}
 
-
 		$this->db->trans_start();
-
-		// ======================
-		// 1. SIMPAN / UPDATE siswa
-		// ======================
 
 		$datasiswa = [
 			'nama'     => $siswa['nama'],
 			'nisn'     => $siswa['nisn'],
+			'nis'      => $siswa['nis'],
 			'jkl'     => $siswa['jkl'],
 		];
+
+		if (isset($siswa['nis'])) {
+			$datasiswa['nis'] = $siswa['nis'];
+		}
 
 		$ceksiswa = $this->db
 			->get_where('siswa', ['id_siswa' => $siswa['id_siswa']])
@@ -452,10 +452,38 @@ class Sinkron extends MY_Controller
 			$idsiswa = $siswa['id_siswa'];
 		}
 
-		// ======================
-		// 2. AMBIL DETAIL siswa
-		// ======================
-		$detail = $this->getDetail("https://data.ppdwk.com/api/pd/show/" . $siswa['id_siswa']);
+		$this->db->trans_complete();
+
+		echo json_encode([
+			'status' => true,
+			'msg' => 'Siswa ' . $siswa['nama'] . ' (Data Utama) tersinkron'
+		]);
+	}
+
+	public function sync_detail_siswa()
+	{
+		$raw = file_get_contents('php://input');
+		$payload = json_decode($raw, true);
+
+		if (!is_array($payload)) {
+			echo json_encode(['status' => false, 'msg' => 'Payload tidak valid']);
+			return;
+		}
+
+		$siswa = $payload['siswa'] ?? null;
+
+		if (!$siswa || !isset($siswa['id_siswa'])) {
+			echo json_encode(['status' => false, 'msg' => 'Data siswa kosong']);
+			return;
+		}
+
+		$idsiswa = $siswa['id_siswa'];
+
+		// Get student current local name
+		$ceksiswa = $this->db->get_where('siswa', ['id_siswa' => $idsiswa])->row();
+		$nama_siswa = $ceksiswa ? $ceksiswa->nama : 'Siswa';
+
+		$detail = $this->getDetail("https://data.ppdwk.com/api/pd/show/" . $idsiswa);
 
 		if ($detail === 'NOT_FOUND') {
 			$this->db->trans_start();
@@ -465,18 +493,23 @@ class Sinkron extends MY_Controller
 
 			echo json_encode([
 				'status' => 'deleted',
-				'msg' => 'Siswa ' . $siswa['nama'] . ' tidak ditemukan di pusat. Data lokal telah dihapus.'
+				'msg' => 'Siswa ' . $nama_siswa . ' tidak ditemukan di pusat. Data lokal telah dihapus.'
 			]);
 			return;
 		}
 
+		$this->db->trans_start();
+
 		if ($detail && isset($detail['registrasi_pd'])) {
 
-			if ($detail['wilayah']) {
+			if (isset($detail['wilayah']) && $detail['wilayah']) {
 				$this->db->where('id_siswa', $idsiswa)->update('siswa', [
 					'alamat' => $detail['wilayah']['nama'] . '-' . $detail['wilayah']['parrent_recursive']['nama'] . '-' . $detail['wilayah']['parrent_recursive']['parrent_recursive']['nama']
 				]);
 			}
+
+			// Clean up previous registration data first
+			$this->db->where('id_siswa', $idsiswa)->delete('registrasi_siswa');
 
 			foreach ($detail['registrasi_pd'] as $reg) {
 
@@ -486,21 +519,11 @@ class Sinkron extends MY_Controller
 				$keluarpd = $reg['jenis_keluar'] ?? null;
 				if ($keluarpd != null) continue;
 
-				// ======================
-				// 3. SIMPAN REGISTRASI
-				// ======================
-				$exists = $this->db->get_where('registrasi_siswa', [
+				$this->db->insert('registrasi_siswa', [
 					'id_siswa'    => $idsiswa,
-					'id_lembaga' => $idLembaga
-				])->row();
-
-				if (!$exists) {
-					$this->db->insert('registrasi_siswa', [
-						'id_siswa'    => $idsiswa,
-						'id_lembaga' => $idLembaga,
-						'created_at' => date('Y-m-d H:i:s')
-					]);
-				}
+					'id_lembaga' => $idLembaga,
+					'created_at' => date('Y-m-d H:i:s')
+				]);
 			}
 		}
 
@@ -508,7 +531,7 @@ class Sinkron extends MY_Controller
 
 		echo json_encode([
 			'status' => true,
-			'msg' => 'Siswa ' . $siswa['nama'] . ' + registrasi tersinkron'
+			'msg' => 'Siswa ' . $nama_siswa . ' (Alamat & Registrasi) tersinkron'
 		]);
 	}
 
@@ -693,7 +716,8 @@ class Sinkron extends MY_Controller
 			$this->db->where('id_siswa', $idsiswa)->update('siswa', [
 				'nama'     => $detail['nama'],
 				'nisn'     => $detail['nisn'],
-				'jkl'     => $detail['jenis_kelamin'] == 'L' ? 'Laki-laki' : 'Perempuan'
+				'jkl'     => $detail['jenis_kelamin'] == 'L' ? 'Laki-laki' : 'Perempuan',
+				'nis'      => $detail['nis'] ?? $detail['nisn']
 			]);
 			if ($detail['wilayah']) {
 				$this->db->where('id_siswa', $idsiswa)->update('siswa', [
@@ -927,12 +951,36 @@ class Sinkron extends MY_Controller
 			$mid2 = $v - $vsf;
 
 			switch ($sextant) {
-				case 0: $r = $v; $g = $mid1; $b = $m; break;
-				case 1: $r = $mid2; $g = $v; $b = $m; break;
-				case 2: $r = $m; $g = $v; $b = $mid1; break;
-				case 3: $r = $m; $g = $mid2; $b = $v; break;
-				case 4: $r = $mid1; $g = $m; $b = $v; break;
-				case 5: $r = $v; $g = $m; $b = $mid2; break;
+				case 0:
+					$r = $v;
+					$g = $mid1;
+					$b = $m;
+					break;
+				case 1:
+					$r = $mid2;
+					$g = $v;
+					$b = $m;
+					break;
+				case 2:
+					$r = $m;
+					$g = $v;
+					$b = $mid1;
+					break;
+				case 3:
+					$r = $m;
+					$g = $mid2;
+					$b = $v;
+					break;
+				case 4:
+					$r = $mid1;
+					$g = $m;
+					$b = $v;
+					break;
+				case 5:
+					$r = $v;
+					$g = $m;
+					$b = $mid2;
+					break;
 			}
 		}
 
