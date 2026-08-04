@@ -374,15 +374,38 @@
                     return;
                 }
 
-                cameras.forEach(cam => {
+                let preferredId = localStorage.getItem('pref_pembiasaan_camera_id') || '';
+                let defaultSelectedIndex = 0;
+
+                // Populate select option & find best default camera (prefer rear/back camera for scanning cards)
+                cameras.forEach((cam, idx) => {
                     const opt = document.createElement("option");
                     opt.value = cam.id;
-                    opt.text = cam.label || `Kamera ${cameraSelect.length + 1}`;
+                    opt.text = cam.label || `Kamera ${idx + 1}`;
                     cameraSelect.appendChild(opt);
+
+                    // Check if label indicates a back/rear camera
+                    const labelLower = (cam.label || '').toLowerCase();
+                    if (!preferredId && (
+                        labelLower.includes('back') || 
+                        labelLower.includes('rear') || 
+                        labelLower.includes('environment') || 
+                        labelLower.includes('belakang') || 
+                        labelLower.includes('main')
+                    )) {
+                        defaultSelectedIndex = idx;
+                    }
                 });
 
+                // Apply selected camera
+                if (preferredId && Array.from(cameraSelect.options).some(opt => opt.value === preferredId)) {
+                    cameraSelect.value = preferredId;
+                } else {
+                    cameraSelect.selectedIndex = defaultSelectedIndex;
+                }
+
                 setStatus("Menginisialisasi kamera...", "loading");
-                startScannerEnv();
+                startScannerId();
 
             }).catch(err => {
                 setStatus("Gagal memuat kamera: " + err, "error");
@@ -391,9 +414,16 @@
 
         function startScannerId() {
             if (!html5QrCode) return;
+            
+            const selectedCamId = cameraSelect.value;
+            if (!selectedCamId) {
+                setStatus("Pilih kamera terlebih dahulu.", "error");
+                return;
+            }
+
             setStatus("Memulai kamera terpilih...", "loading");
             html5QrCode.start(
-                cameraSelect.value, 
+                selectedCamId, 
                 {
                     fps: 10,
                     qrbox: (width, height) => {
@@ -406,44 +436,18 @@
                 onScanFailure
             ).then(() => {
                 setStatus("Arahkan kamera ke QR Code Kartu Santri", "info");
+                // Save preferred camera ID
+                localStorage.setItem('pref_pembiasaan_camera_id', selectedCamId);
             }).catch(err => {
                 setStatus("Kamera gagal diaktifkan: " + err, "error");
             });
         }
 
-        function startScannerEnv() {
-            if (!html5QrCode) return;
-            html5QrCode.start(
-                { facingMode: "environment" }, 
-                {
-                    fps: 10,
-                    qrbox: (width, height) => {
-                        const minDim = Math.min(width, height);
-                        const qrboxSize = Math.floor(minDim * 0.65);
-                        return { width: qrboxSize, height: qrboxSize };
-                    }
-                },
-                onScanSuccess,
-                onScanFailure
-            ).then(() => {
-                setStatus("Kamera aktif. Arahkan ke QR Code Kartu Santri", "info");
-                if (html5QrCode.getActiveCamera()) {
-                    cameraSelect.value = html5QrCode.getActiveCamera().id;
-                }
-            }).catch(err => {
-                if (cameraSelect.options.length > 0 && cameraSelect.options[0].value) {
-                    cameraSelect.selectedIndex = 0;
-                    startScannerId();
-                } else {
-                    setStatus("Kamera tidak merespon izin akses.", "error");
-                }
-            });
-        }
-
         function stopCameraScanner() {
             if (html5QrCode && (html5QrCode.getState() === Html5QrcodeScannerState.SCANNING || html5QrCode.getState() === Html5QrcodeScannerState.PAUSED)) {
-                html5QrCode.stop().catch(err => console.warn(err));
+                return html5QrCode.stop().catch(err => console.warn(err));
             }
+            return Promise.resolve();
         }
 
         function onScanFailure(error) {
@@ -457,9 +461,7 @@
             playBeepSound('success');
             setStatus("QR Code terdeteksi!", "success");
             
-            // Stop camera scan immediately to avoid duplicate submits
-            stopCameraScanner();
-
+            // Keep the camera running continuously for instant next scans, no stopCameraScanner() here!
             sendScanPayload(decodedText);
         }
 
@@ -593,7 +595,9 @@
             setStatus("Menunggu scan kartu berikutnya...", "info");
             
             if (activeTab === 'camera') {
-                startScannerEnv();
+                if (html5QrCode && html5QrCode.getState() !== Html5QrcodeScannerState.SCANNING) {
+                    startScannerId();
+                }
             } else {
                 focusUsbInput();
             }
@@ -603,7 +607,9 @@
         cameraSelect.addEventListener("change", function() {
             if (!this.value) return;
             stopCameraScanner();
-            startScannerId();
+            setTimeout(() => {
+                startScannerId();
+            }, 150);
         });
 
         // Theme switching logic
