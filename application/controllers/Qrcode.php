@@ -150,12 +150,14 @@ class Qrcode extends MY_Controller
         $lon = $data['lon'] ?? null;
         $accuracy = $data['accuracy'] ?? null;
 
-        // Perform GPS location & Anti-Fake-GPS validation
+        // Perform GPS location & Anti-Fake-GPS validation (Disabled)
+        /*
         $checkLoc = $this->checkLocationValid($lat, $lon, $accuracy);
         if (!$checkLoc['allow']) {
             echo json_encode(['valid' => false, 'message' => $checkLoc['message']]);
             exit;
         }
+        */
 
         $cekToken = $this->db->query("SELECT * FROM qrcode WHERE token = '$token' ")->row();
         $dtlUser = $this->db->query("SELECT * FROM user WHERE id_user = '$this->iduser' ")->row();
@@ -271,19 +273,8 @@ class Qrcode extends MY_Controller
 
     public function verifyLocation()
     {
-        $input = json_decode(file_get_contents('php://input'), true);
-
-        if (!isset($input['lat'], $input['lon'])) {
-            $this->json(false, 'Data lokasi tidak lengkap');
-            return;
-        }
-
-        $userLat = floatval($input['lat']);
-        $userLon = floatval($input['lon']);
-        $accuracy = isset($input['accuracy']) ? $input['accuracy'] : null;
-
-        $check = $this->checkLocationValid($userLat, $userLon, $accuracy);
-        $this->json($check['allow'], $check['message']);
+        // verification disabled as requested
+        $this->json(true, 'Lokasi valid');
     }
 
     private function distance($lat1, $lon1, $lat2, $lon2)

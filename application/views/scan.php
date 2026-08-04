@@ -124,24 +124,7 @@
             }
         });
 
-        if (!navigator.geolocation) {
-            sendScanPayload(decodedText, null, null, null);
-            return;
-        }
-
-        navigator.geolocation.getCurrentPosition(
-            pos => {
-                sendScanPayload(decodedText, pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
-            },
-            err => {
-                sendScanPayload(decodedText, null, null, null);
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0
-            }
-        );
+        sendScanPayload(decodedText, null, null, null);
     }
 
     function sendScanPayload(decodedText, lat, lon, accuracy) {

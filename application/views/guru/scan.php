@@ -325,7 +325,7 @@
             if (html5QrCode.getState() === Html5QrcodeScannerState.SCANNING) {
                 html5QrCode.stop();
             }
-
+ 
             // Show SweetAlert2 loading indicator
             Swal.fire({
                 title: 'Memproses Absensi',
@@ -336,27 +336,9 @@
                     Swal.showLoading();
                 }
             });
-
+ 
             setStatus("Memproses absensi...", "loading");
-
-            if (!navigator.geolocation) {
-                sendScanPayload(decodedText, null, null, null);
-                return;
-            }
-
-            navigator.geolocation.getCurrentPosition(
-                pos => {
-                    sendScanPayload(decodedText, pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
-                },
-                err => {
-                    sendScanPayload(decodedText, null, null, null);
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 0
-                }
-            );
+            sendScanPayload(decodedText, null, null, null);
         }
 
         function sendScanPayload(decodedText, lat, lon, accuracy) {
