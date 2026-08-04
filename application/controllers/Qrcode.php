@@ -846,9 +846,22 @@ class Qrcode extends MY_Controller
 
         $id_lembaga_siswa = $regSiswa->id_lembaga;
 
-        // Role restriction: Admin Lembaga can only scan their own institution's students
-        if ($this->session->userdata('level') !== 'superadmin' && $this->id_lembaga && $id_lembaga_siswa !== $this->id_lembaga) {
-            echo json_encode(['valid' => false, 'message' => 'Siswa ' . $siswa->nama . ' bukan dari lembaga Anda.']);
+        // Enforce satminkal restriction for non-superadmin users: They can only scan their own satminkal (base institution) students
+        $satminkal = null;
+        $dtlUser = $this->db->query("SELECT * FROM user WHERE id_user = ?", [$this->iduser])->row();
+        if ($dtlUser && $dtlUser->level === 'guru') {
+            $reg = $this->db->query("SELECT id_lembaga FROM registrasi WHERE id_guru = ? AND (satminkal = 1 OR satminkal = '1') LIMIT 1", [$dtlUser->id_guru])->row();
+            if ($reg) {
+                $satminkal = $reg->id_lembaga;
+            }
+        }
+
+        if (empty($satminkal)) {
+            $satminkal = $this->id_lembaga;
+        }
+
+        if ($this->session->userdata('level') !== 'superadmin' && !empty($satminkal) && $id_lembaga_siswa !== $satminkal) {
+            echo json_encode(['valid' => false, 'message' => 'Siswa ' . $siswa->nama . ' bukan dari lembaga satminkal Anda.']);
             exit;
         }
 
