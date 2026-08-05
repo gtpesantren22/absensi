@@ -163,7 +163,7 @@
             </div>
 
             <!-- Terminal Cards Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 items-stretch flex-1">
+            <div class="grid grid-cols-1 landscape:grid-cols-2 lg:grid-cols-2 gap-4 lg:gap-6 items-stretch flex-1">
 
                 <!-- CARD 1: SYSTEM QR CODE (FOR TEACHERS WITH PHONES) -->
                 <div class="glass-card rounded-3xl shadow-lg p-5 md:p-6 lg:p-8 flex flex-col justify-between text-center relative overflow-hidden">
@@ -420,8 +420,11 @@
                         document.getElementById('qrcode').innerHTML = '';
                         document.getElementById('qrcode').classList.remove('opacity-10');
 
-                        // Determine responsive QR size based on window width for 9.7 inch tablets
-                        let qrWidth = window.innerWidth >= 1200 ? 250 : (window.innerWidth >= 1024 ? 200 : 240);
+                        // Determine responsive QR size based on window width and orientation
+                        let isLandscape = window.innerWidth > window.innerHeight;
+                        let qrWidth = window.innerWidth >= 1200 ? 250 : 
+                                      (window.innerWidth >= 1024 ? 200 : 
+                                      (isLandscape && window.innerWidth >= 768 ? 160 : 240));
 
                         qr = new QRCode(document.getElementById("qrcode"), {
                             text: data.token,
@@ -590,7 +593,10 @@
             if (!cardCamSelect.value) return;
 
             // Adjust qrbox size for smaller tablet landscape viewport
-            let boxSize = window.innerWidth >= 1024 && window.innerWidth < 1200 ? 170 : 200;
+            let isLandscape = window.innerWidth > window.innerHeight;
+            let boxSize = window.innerWidth >= 1200 ? 200 : 
+                          (window.innerWidth >= 1024 ? 170 : 
+                          (isLandscape && window.innerWidth >= 768 ? 130 : 180));
 
             html5CardQrCode.start(
                 cardCamSelect.value, {
