@@ -181,7 +181,7 @@
                         <!-- System QR Canvas -->
                         <div class="flex justify-center mb-4">
                             <div class="p-3 bg-white rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center">
-                                <div id="qrcode" class="w-[200px] h-[200px] md:w-[220px] md:h-[220px] lg:w-[250px] lg:h-[250px] flex items-center justify-center transition-opacity duration-300"></div>
+                                <div id="qrcode" class="flex items-center justify-center transition-opacity duration-300"></div>
                             </div>
                         </div>
                     </div>
@@ -417,16 +417,21 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.token) {
-                        document.getElementById('qrcode').innerHTML = '';
-                        document.getElementById('qrcode').classList.remove('opacity-10');
+                        const qrContainer = document.getElementById('qrcode');
+                        qrContainer.innerHTML = '';
+                        qrContainer.classList.remove('opacity-10');
 
-                        // Determine responsive QR size based on window width and orientation
+                        // Determine responsive QR size based on window width and orientation (Enlarged)
                         let isLandscape = window.innerWidth > window.innerHeight;
-                        let qrWidth = window.innerWidth >= 1200 ? 250 : 
-                                      (window.innerWidth >= 1024 ? 200 : 
-                                      (isLandscape && window.innerWidth >= 768 ? 160 : 240));
+                        let qrWidth = window.innerWidth >= 1200 ? 320 : 
+                                      (window.innerWidth >= 1024 ? 280 : 
+                                      (isLandscape && window.innerWidth >= 768 ? 220 : 280));
 
-                        qr = new QRCode(document.getElementById("qrcode"), {
+                        // Apply dynamic sizes to container
+                        qrContainer.style.width = qrWidth + "px";
+                        qrContainer.style.height = qrWidth + "px";
+
+                        qr = new QRCode(qrContainer, {
                             text: data.token,
                             width: qrWidth,
                             height: qrWidth,
