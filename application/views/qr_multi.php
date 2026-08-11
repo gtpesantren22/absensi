@@ -421,11 +421,11 @@
                         qrContainer.innerHTML = '';
                         qrContainer.classList.remove('opacity-10');
 
-                        // Determine responsive QR size based on window width and orientation (Enlarged)
+                        // Determine responsive QR size based on window width and orientation (Enlarged even more)
                         let isLandscape = window.innerWidth > window.innerHeight;
-                        let qrWidth = window.innerWidth >= 1200 ? 320 : 
-                                      (window.innerWidth >= 1024 ? 280 : 
-                                      (isLandscape && window.innerWidth >= 768 ? 220 : 280));
+                        let qrWidth = window.innerWidth >= 1200 ? 400 : 
+                                      (window.innerWidth >= 1024 ? 350 : 
+                                      (isLandscape && window.innerWidth >= 768 ? 260 : 320));
 
                         // Apply dynamic sizes to container
                         qrContainer.style.width = qrWidth + "px";
