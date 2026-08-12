@@ -92,6 +92,7 @@
                 <tr class="bg-gray-50 dark:bg-gray-700/50 text-left text-sm text-gray-500 dark:text-gray-400">
                     <th onclick="sort('nama')" class="py-3 px-4 font-medium cursor-pointer">Nama Kelas</th>
                     <th onclick="sort('jenis')" class="py-3 px-4 font-medium cursor-pointer">Jenis</th>
+                    <th onclick="sort('tingkatan')" class="py-3 px-4 font-medium cursor-pointer">Tingkatan</th>
                     <th class="py-3 px-4 font-medium">Anggota Rombel</th>
                     <th class="py-3 px-4 font-medium">Aksi</th>
                 </tr>
@@ -139,6 +140,15 @@
                             <option value='Campuran'>Campuran</option>
                         </select>
                     </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">Tingkatan</label>
+                        <select name="tingkatan" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" required>
+                            <option value="0">0 (TK)</option>
+                            <?php for ($i = 1; $i <= 12; $i++): ?>
+                                <option value="<?= $i ?>">Tingkat <?= $i ?></option>
+                            <?php endfor; ?>
+                        </select>
+                    </div>
 
                 </div>
 
@@ -179,6 +189,15 @@
                         <select name="jenis" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" required>
                             <option value='Utama'>Utama</option>
                             <option value='Campuran'>Campuran</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium mb-2">Tingkatan</label>
+                        <select name="tingkatan" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary-500" required>
+                            <option value="0">0 (TK)</option>
+                            <?php for ($i = 1; $i <= 12; $i++): ?>
+                                <option value="<?= $i ?>">Tingkat <?= $i ?></option>
+                            <?php endfor; ?>
                         </select>
                     </div>
                 </div>
@@ -309,6 +328,7 @@
         if (!Array.isArray(data)) return;
 
         data.forEach(row => {
+            let tingkatanLabel = row.tingkatan == 0 ? '0 (TK)' : `Tingkat ${row.tingkatan}`;
             tbody.innerHTML += `
             <tr class="border-b">
                 <td class="p-2"> 
@@ -316,6 +336,9 @@
                 </td>
                     <td class="p-2"> 
                         ${row.jenis}
+                    </td>
+                    <td class="p-2"> 
+                        ${tingkatanLabel}
                     </td>
                     <td class="p-2"> 
                         ${row.jumlah_anggota}
@@ -375,6 +398,7 @@
                 form.action = `<?= base_url('kelas/update/') ?>${id}`;
                 form.nama.value = data.nama;
                 form.jenis.value = data.jenis;
+                form.tingkatan.value = data.tingkatan || 0;
 
                 // Tampilkan modal edit
                 openModal('editKelasModal');

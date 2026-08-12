@@ -16,6 +16,11 @@ class Kelas extends MY_Controller
 		$this->AdminOrSuper();
 		$this->iduser = $this->session->userdata('id_user');
 		$this->id_lembaga = $this->session->userdata('id_lembaga');
+
+		// Auto schema update: add tingkatan column if it doesn't exist
+		if (!$this->db->field_exists('tingkatan', 'kelas')) {
+			$this->db->query("ALTER TABLE kelas ADD COLUMN tingkatan INT DEFAULT 0 AFTER jenis");
+		}
 	}
 
 	public function index()
@@ -90,12 +95,14 @@ class Kelas extends MY_Controller
 	{
 		$nama         = $this->input->post('nama', true);
 		$jenis        = $this->input->post('jenis', true);
+		$tingkatan    = $this->input->post('tingkatan', true);
 
 		$id_tahun_aktif = $this->session->userdata('id_tahun_aktif');
 
 		$data = [
 			'nama'         => $nama,
 			'jenis'        => $jenis,
+			'tingkatan'    => $tingkatan,
 			'id_lembaga'   => $this->id_lembaga,
 			'id_tahun'     => $id_tahun_aktif
 		];
@@ -140,11 +147,13 @@ class Kelas extends MY_Controller
 	{
 		$id_kelas    = $id;
 		$nama         = $this->input->post('nama', true);
-		$jenis    = $this->input->post('jenis', true);
+		$jenis        = $this->input->post('jenis', true);
+		$tingkatan    = $this->input->post('tingkatan', true);
 
 		$data = [
 			'nama'         => $nama,
 			'jenis'        => $jenis,
+			'tingkatan'    => $tingkatan,
 		];
 
 		$sql = $this->model->edit('kelas', 'id_kelas', $id_kelas, $data);
@@ -167,8 +176,9 @@ class Kelas extends MY_Controller
 		// Header kolom
 		$sheet->setCellValue('A1', 'Nama Kelas');
 		$sheet->setCellValue('B1', 'Jenis');
+		$sheet->setCellValue('C1', 'Tingkatan (0-12)');
 		// Set lebar kolom
-		foreach (range('A', 'B') as $col) {
+		foreach (range('A', 'C') as $col) {
 			$sheet->getColumnDimension($col)->setAutoSize(true);
 		}
 
@@ -236,8 +246,9 @@ class Kelas extends MY_Controller
 			if (empty($row[1])) continue;
 
 			$dataInsert[] = [
-				'nama' => $row[0],
+				'nama'       => $row[0],
 				'jenis'      => trim($row[1]),
+				'tingkatan'  => isset($row[2]) ? (int)$row[2] : 0,
 				'id_lembaga' => $this->id_lembaga,
 				'id_tahun'   => $id_tahun_aktif
 			];

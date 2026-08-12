@@ -48,12 +48,12 @@
                                     <?php if ($t->is_active == 1): ?>
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">Aktif</span>
                                     <?php else: ?>
-                                        <a href="<?= base_url('sistem/toggle_tahun_active/'.$t->id_tahun) ?>" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-slate-700 dark:text-gray-300 hover:bg-blue-100 hover:text-blue-800">Set Aktif</a>
+                                        <a href="<?= base_url('sistem/toggle_tahun_active/' . $t->id_tahun) ?>" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-slate-700 dark:text-gray-300 hover:bg-blue-100 hover:text-blue-800">Set Aktif</a>
                                     <?php endif; ?>
                                 </td>
                                 <td class="py-3 px-4 text-right space-x-1 whitespace-nowrap">
                                     <button onclick="openModalTahun(<?= htmlspecialchars(json_encode($t)) ?>)" class="text-blue-600 hover:text-blue-900 dark:text-blue-400"><i class="fas fa-edit"></i></button>
-                                    <a href="<?= base_url('sistem/hapus_tahun/'.$t->id_tahun) ?>" onclick="return confirm('Apakah Anda yakin ingin menghapus tahun ajaran ini? Semua semester di dalamnya akan terhapus.')" class="text-red-600 hover:text-red-900 dark:text-red-400"><i class="fas fa-trash"></i></a>
+                                    <a href="<?= base_url('sistem/hapus_tahun/' . $t->id_tahun) ?>" onclick="return confirm('Apakah Anda yakin ingin menghapus tahun ajaran ini? Semua semester di dalamnya akan terhapus.')" class="text-red-600 hover:text-red-900 dark:text-red-400"><i class="fas fa-trash"></i></a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -102,12 +102,12 @@
                                     <?php if ($s->is_active == 1): ?>
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">Aktif</span>
                                     <?php else: ?>
-                                        <a href="<?= base_url('sistem/toggle_semester_active/'.$s->id_semester) ?>" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-slate-700 dark:text-gray-300 hover:bg-blue-100 hover:text-blue-800">Set Aktif</a>
+                                        <a href="<?= base_url('sistem/toggle_semester_active/' . $s->id_semester) ?>" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-slate-700 dark:text-gray-300 hover:bg-blue-100 hover:text-blue-800">Set Aktif</a>
                                     <?php endif; ?>
                                 </td>
                                 <td class="py-3 px-4 text-right space-x-1 whitespace-nowrap">
                                     <button onclick="openModalSemester(<?= htmlspecialchars(json_encode($s)) ?>)" class="text-blue-600 hover:text-blue-900 dark:text-blue-400"><i class="fas fa-edit"></i></button>
-                                    <a href="<?= base_url('sistem/hapus_semester/'.$s->id_semester) ?>" onclick="return confirm('Apakah Anda yakin ingin menghapus semester ini?')" class="text-red-600 hover:text-red-900 dark:text-red-400"><i class="fas fa-trash"></i></a>
+                                    <a href="<?= base_url('sistem/hapus_semester/' . $s->id_semester) ?>" onclick="return confirm('Apakah Anda yakin ingin menghapus semester ini?')" class="text-red-600 hover:text-red-900 dark:text-red-400"><i class="fas fa-trash"></i></a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -177,15 +177,21 @@
                 </div>
             </div>
             <div>
-                <span class="block text-[10px] text-gray-500 dark:text-gray-400 mb-1">3. Rekap Rombel &amp; Jumlah Anggota (per Lembaga)</span>
+                <span class="block text-[10px] text-gray-500 dark:text-gray-400 mb-1">3. Rekap Kelas &amp; Jumlah Anggota (per Lembaga)</span>
                 <div class="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 p-2.5 rounded-lg border border-gray-200 dark:border-gray-800 select-all font-mono text-xs text-gray-700 dark:text-gray-300 overflow-x-auto">
-                    <span>GET <?= base_url('api/rombel') ?></span>
+                    <span>GET <?= base_url('api/kelas') ?></span>
                 </div>
             </div>
             <div>
                 <span class="block text-[10px] text-gray-500 dark:text-gray-400 mb-1">4. Data Jadwal Pelajaran (dengan Filter)</span>
                 <div class="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 p-2.5 rounded-lg border border-gray-200 dark:border-gray-800 select-all font-mono text-xs text-gray-700 dark:text-gray-300 overflow-x-auto">
                     <span>GET <?= base_url('api/jadwal?id_lembaga=&amp;hari=&amp;id_kelas=&amp;id_guru=') ?></span>
+                </div>
+            </div>
+            <div>
+                <span class="block text-[10px] text-gray-500 dark:text-gray-400 mb-1">5. Data Rombel Siswa (id_kelas &amp; id_siswa)</span>
+                <div class="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 p-2.5 rounded-lg border border-gray-200 dark:border-gray-800 select-all font-mono text-xs text-gray-700 dark:text-gray-300 overflow-x-auto">
+                    <span>GET <?= base_url('api/rombel?id_kelas=') ?></span>
                 </div>
             </div>
         </div>
@@ -429,7 +435,7 @@
             const isChecked = this.checked;
             const actionText = isChecked ? 'mengaktifkan' : 'menonaktifkan';
             const confirmColor = isChecked ? '#dc2626' : '#2563eb';
-            
+
             Swal.fire({
                 title: 'Apakah Anda yakin?',
                 text: `Anda akan ${actionText} Mode Maintenance.`,
@@ -443,26 +449,26 @@
                 if (result.isConfirmed) {
                     const formData = new FormData();
                     formData.append('status', isChecked ? 1 : 0);
-                    
+
                     fetch('<?= base_url("sistem/toggle_maintenance") ?>', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(res => res.json())
-                    .then(res => {
-                        if (res.status) {
-                            Swal.fire('Berhasil', res.message, 'success').then(() => {
-                                location.reload();
-                            });
-                        } else {
-                            Swal.fire('Gagal', res.message, 'error');
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(res => res.json())
+                        .then(res => {
+                            if (res.status) {
+                                Swal.fire('Berhasil', res.message, 'success').then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire('Gagal', res.message, 'error');
+                                maintToggle.checked = !isChecked;
+                            }
+                        })
+                        .catch(err => {
+                            Swal.fire('Error', 'Terjadi kesalahan jaringan.', 'error');
                             maintToggle.checked = !isChecked;
-                        }
-                    })
-                    .catch(err => {
-                        Swal.fire('Error', 'Terjadi kesalahan jaringan.', 'error');
-                        maintToggle.checked = !isChecked;
-                    });
+                        });
                 } else {
                     maintToggle.checked = !isChecked;
                 }
