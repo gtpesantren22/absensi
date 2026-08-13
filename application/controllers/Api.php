@@ -203,6 +203,51 @@ class Api extends CI_Controller
 			JOIN lembaga l ON k.id_lembaga = l.id_lembaga
 			LEFT JOIN rombel r ON r.id_kelas = k.id_kelas
 			WHERE k.id_tahun = (SELECT id_tahun FROM tahun_ajaran WHERE is_active = 1 LIMIT 1)
+			GROUP BY k.id_kelas, l.id_lembaga, l.nama, k.nama, k.jenis
+			ORDER BY l.nama ASC, k.nama ASC
+		")->result_array();
+
+        $data = [];
+        foreach ($results as $row) {
+            $id_lembaga = $row['id_lembaga'];
+            if (!isset($data[$id_lembaga])) {
+                $data[$id_lembaga] = [
+                    'id_lembaga' => $id_lembaga,
+                    'nama_lembaga' => $row['nama_lembaga'],
+                    'rombel' => []
+                ];
+            }
+            $data[$id_lembaga]['rombel'][] = [
+                'id_kelas' => $row['id_kelas'],
+                'nama_kelas' => $row['nama_kelas'],
+                'jenis' => $row['jenis'],
+                'jumlah_anggota' => (int)$row['jumlah_anggota'],
+                'tingkatan' => (int)$row['tingkatan']
+            ];
+        }
+
+        $this->output
+            ->set_status_header(200)
+            ->set_content_type('application/json')
+            ->set_output(json_encode([
+                'status' => true,
+                'data' => array_values($data)
+            ]));
+    }
+
+    public function kelas_utama()
+    {
+        if (!$this->_authenticate()) {
+            return;
+        }
+
+        $results = $this->db->query("
+			SELECT l.id_lembaga, l.nama as nama_lembaga, k.id_kelas, k.nama as nama_kelas, k.jenis, k.tingkatan,
+				   COUNT(r.id_siswa) as jumlah_anggota
+			FROM kelas k
+			JOIN lembaga l ON k.id_lembaga = l.id_lembaga
+			LEFT JOIN rombel r ON r.id_kelas = k.id_kelas
+			WHERE k.id_tahun = (SELECT id_tahun FROM tahun_ajaran WHERE is_active = 1 LIMIT 1)
             AND k.jenis = 'Utama'
 			GROUP BY k.id_kelas, l.id_lembaga, l.nama, k.nama, k.jenis
 			ORDER BY l.nama ASC, k.nama ASC
@@ -223,7 +268,54 @@ class Api extends CI_Controller
                 'nama_kelas' => $row['nama_kelas'],
                 'jenis' => $row['jenis'],
                 'jumlah_anggota' => (int)$row['jumlah_anggota'],
-                'tingkatan' => (int)$row['tingkatan'],
+                'tingkatan' => (int)$row['tingkatan']
+            ];
+        }
+
+        $this->output
+            ->set_status_header(200)
+            ->set_content_type('application/json')
+            ->set_output(json_encode([
+                'status' => true,
+                'data' => array_values($data)
+            ]));
+    }
+
+    public function kelas_khusus()
+    {
+        if (!$this->_authenticate()) {
+            return;
+        }
+
+        $results = $this->db->query("
+			SELECT l.id_lembaga, l.nama as nama_lembaga, k.id_kelas, k.nama as nama_kelas, k.jenis, k.tingkatan,
+				   COUNT(r.id_siswa) as jumlah_anggota
+			FROM kelas k
+			JOIN lembaga l ON k.id_lembaga = l.id_lembaga
+			LEFT JOIN rombel r ON r.id_kelas = k.id_kelas
+			WHERE k.id_tahun = (SELECT id_tahun FROM tahun_ajaran WHERE is_active = 1 LIMIT 1)
+            AND k.jenis = 'Utama'
+            AND k.id_lembaga IN ('06323710-24ce-49ff-91e0-a2a2efef6b50','c79a6654-713e-419d-9b86-a3d90c918a1d','e62eb000-b0e8-4855-8959-8b1bf6087490','f59cc0b6-5559-42e2-8f91-5391110ae2fa')
+			GROUP BY k.id_kelas, l.id_lembaga, l.nama, k.nama, k.jenis
+			ORDER BY l.nama ASC, k.nama ASC
+		")->result_array();
+
+        $data = [];
+        foreach ($results as $row) {
+            $id_lembaga = $row['id_lembaga'];
+            if (!isset($data[$id_lembaga])) {
+                $data[$id_lembaga] = [
+                    'id_lembaga' => $id_lembaga,
+                    'nama_lembaga' => $row['nama_lembaga'],
+                    'rombel' => []
+                ];
+            }
+            $data[$id_lembaga]['rombel'][] = [
+                'id_kelas' => $row['id_kelas'],
+                'nama_kelas' => $row['nama_kelas'],
+                'jenis' => $row['jenis'],
+                'jumlah_anggota' => (int)$row['jumlah_anggota'],
+                'tingkatan' => (int)$row['tingkatan']
             ];
         }
 
