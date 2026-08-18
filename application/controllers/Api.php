@@ -295,7 +295,7 @@ class Api extends CI_Controller
 			LEFT JOIN rombel r ON r.id_kelas = k.id_kelas
 			WHERE k.id_tahun = (SELECT id_tahun FROM tahun_ajaran WHERE is_active = 1 LIMIT 1)
             AND k.jenis = 'Utama'
-            AND k.id_lembaga IN ('06323710-24ce-49ff-91e0-a2a2efef6b50','c79a6654-713e-419d-9b86-a3d90c918a1d','e62eb000-b0e8-4855-8959-8b1bf6087490','f59cc0b6-5559-42e2-8f91-5391110ae2fa')
+            AND k.id_lembaga IN ('06323710-24ce-49ff-91e0-a2a2efef6b50','c79a6654-713e-419d-9b86-a3d90c918a1d','e62eb000-b0e8-4855-8959-8b1bf6087490','f59cc0b6-5559-42e2-8f91-5391110ae2fa','889bb0fb-7c0c-4e4a-83c7-04e70027a642')
 			GROUP BY k.id_kelas, l.id_lembaga, l.nama, k.nama, k.jenis
 			ORDER BY l.nama ASC, k.nama ASC
 		")->result_array();
