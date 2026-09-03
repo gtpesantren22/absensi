@@ -422,6 +422,12 @@
                                 </div>
                             </div>
 
+                            <!-- Pelanggaran Siswa -->
+                            <a href="<?= base_url('pelanggaran') ?>" class="sidebar-item <?= $menu == 'pelanggaran' ? 'active' : '' ?> flex items-center px-4 py-3 text-sm font-medium border-l-4 border-transparent hover:border-primary-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <i class="fas fa-shield-alt mr-3 text-rose-500"></i>
+                                Pelanggaran Siswa
+                            </a>
+
                             <?php if ($this->session->userdata('level') === 'admin' || $this->session->userdata('level') === 'super_admin'): ?>
                                 <!-- Laporan -->
                                 <div class="master-data-dropdown">

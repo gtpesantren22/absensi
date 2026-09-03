@@ -61,6 +61,11 @@
                 <span>Keaktifan Saya</span>
             </a>
 
+            <a href="<?= site_url('pelanggaran') ?>" class="flex items-center space-x-3 px-4 py-3 rounded-xl font-bold transition <?= ($menu == 'pelanggaran') ? 'bg-primary-50 text-primary-600 dark:bg-slate-700 dark:text-primary-400' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-105 dark:hover:bg-slate-700/60' ?>">
+                <i class="fas fa-shield-alt text-lg text-rose-500"></i>
+                <span>Pelanggaran Siswa</span>
+            </a>
+
             <?php if ($is_piket): ?>
             <div class="h-px bg-slate-100 dark:bg-slate-700 my-4"></div>
             <span class="px-4 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500">Absensi Guru</span>
